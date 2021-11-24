@@ -2,8 +2,6 @@ package views;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import mdlaf.themes.AbstractMaterialTheme;
-import mdlaf.utils.MaterialColors;
 
 public class StudentPanel extends JFrame {
 
@@ -36,5 +34,18 @@ public class StudentPanel extends JFrame {
     row[2] = "Monday - 13:00";
 
     studentTableModel.addRow(row);
+
+    // Fill rows missing to fix white space
+    int rowCount = studentTableModel.getRowCount();
+
+    if (rowCount < 17) {
+      for (int i = 0; i < 17 - rowCount; i++) {
+        row[0] = "";
+        row[1] = "";
+        row[2] = "";
+
+        studentTableModel.addRow(row);
+      }
+    }
   }
 }
