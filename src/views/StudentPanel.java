@@ -1,6 +1,7 @@
 package views;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 public class StudentPanel extends JFrame {
@@ -9,6 +10,7 @@ public class StudentPanel extends JFrame {
   private JPanel studentPanel;
   private JLabel usernameLabel;
   private JButton homeButton;
+  private JScrollPane scrollPane;
 
   public StudentPanel() {
     add(studentPanel);
@@ -17,6 +19,7 @@ public class StudentPanel extends JFrame {
     setLocationRelativeTo(null);
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     usernameLabel.setText("IceDBorn");
+    scrollPane.setBorder(new EmptyBorder(0,0,0,0));
   }
 
   private void createUIComponents() {
@@ -24,8 +27,9 @@ public class StudentPanel extends JFrame {
     String[] studentTableColumns = {"Lesson", "Class", "Date"};
     DefaultTableModel studentTableModel = new DefaultTableModel(studentTableColumns, 0);
     scheduleTable = new JTable(studentTableModel);
-    // Make table cells non-editable
-    scheduleTable.setDefaultEditor(Object.class, null);
+    // Stop users from interacting with the table
+    scheduleTable.getTableHeader().setReorderingAllowed(false);
+    scheduleTable.setEnabled(false);
 
     // Add rows
     Object[] row = new Object[3];
