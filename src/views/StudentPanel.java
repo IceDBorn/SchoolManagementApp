@@ -24,6 +24,8 @@ public class StudentPanel extends JFrame {
     String[] studentTableColumns = {"Lesson", "Class", "Date"};
     DefaultTableModel studentTableModel = new DefaultTableModel(studentTableColumns, 0);
     scheduleTable = new JTable(studentTableModel);
+    // Make table cells non-editable
+    scheduleTable.setDefaultEditor(Object.class, null);
 
     // Add rows
     Object[] row = new Object[3];
