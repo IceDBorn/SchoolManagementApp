@@ -2,6 +2,8 @@ package views;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import mdlaf.themes.AbstractMaterialTheme;
+import mdlaf.utils.MaterialColors;
 
 public class StudentPanel extends JFrame {
 
