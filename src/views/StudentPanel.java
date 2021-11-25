@@ -20,9 +20,8 @@ public class StudentPanel extends JFrame {
     private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String dbUser = "postgres";
     private static final String dbPass = "kekw123";
-    private static Connection dbConnection;
-    private static Statement dbStatement;
-    private static ResultSet dbResult;
+
+    private static int studentId = 6;
 
     public StudentPanel() {
         add(studentPanel);
@@ -32,7 +31,7 @@ public class StudentPanel extends JFrame {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     }
 
-    public String getDay(int day) {
+    private String getDay(int day) {
         return switch (day) {
             case 0 -> "Monday";
             case 1 -> "Tuesday";
@@ -43,7 +42,7 @@ public class StudentPanel extends JFrame {
         };
     }
 
-    public String getTime(int time) {
+    private String getTime(int time) {
         return String.format("%d:00", time);
     }
 
@@ -61,12 +60,15 @@ public class StudentPanel extends JFrame {
         scheduleTable = new JTable(studentTableModel);
 
         try {
-            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery("SELECT name, subject, day, time\n" +
-                    "FROM \"Courses\"\n" +
-                    "INNER JOIN \"Classrooms\" on \"Classrooms\".id = \"Courses\".\"classroomId\"\n" +
-                    "INNER JOIN \"Teachers\" T on T.id = \"Courses\".\"teacherId\"");
+            Connection dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            Statement dbStatement = dbConnection.createStatement();
+            ResultSet dbResult = dbStatement.executeQuery(String.format("SELECT \"Lessons\".name, \"Classrooms\".name, \"Courses\".day, \"Courses\".time\n" +
+                    "FROM \"StudentLessons\"\n" +
+                    "INNER JOIN \"Users\" on \"StudentLessons\".\"studentId\" = \"Users\".id\n" +
+                    "INNER JOIN \"Lessons\" on \"StudentLessons\".\"lessonId\" = \"Lessons\".id\n" +
+                    "INNER Join \"Classrooms\" on \"StudentLessons\".\"lessonId\" = \"Classrooms\".\"lessonId\"\n" +
+                    "INNER Join \"Courses\" on \"Classrooms\".id = \"Courses\".\"classroomId\"\n" +
+                    "WHERE \"StudentLessons\".\"studentId\" = %d", studentId));
 
             // Add rows
             while (dbResult.next()) {
