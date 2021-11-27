@@ -4,7 +4,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import mdlaf.MaterialLookAndFeel;
 import mdlaf.themes.MaterialOceanicTheme;
-import views.StudentPanel;
+import views.*;
 
 public class Main {
     public static void main(String[] args)
@@ -19,8 +19,10 @@ public class Main {
         }
 
         SwingUtilities.invokeLater(() -> {
-            StudentPanel student = new StudentPanel();
-            student.setVisible(true);
+//            schedulePanel schedule = new schedulePanel();
+//            schedule.setVisible(true);
+            gradesPanel grades = new gradesPanel();
+            grades.setVisible(true);
         });
     }
 }
