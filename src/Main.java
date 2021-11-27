@@ -19,10 +19,10 @@ public class Main {
         }
 
         SwingUtilities.invokeLater(() -> {
-            schedulePanel schedule = new schedulePanel();
-            schedule.setVisible(true);
-//            gradesPanel grades = new gradesPanel();
-//            grades.setVisible(true);
+//            schedulePanel schedule = new schedulePanel();
+//            schedule.setVisible(true);
+            gradesPanel grades = new gradesPanel();
+            grades.setVisible(true);
         });
     }
 }

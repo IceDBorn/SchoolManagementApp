@@ -13,6 +13,7 @@ public class gradesPanel extends JFrame {
     private JScrollPane infoScrollPane;
     private JScrollPane gradeScrollPane;
     private JTable gradeTable;
+    private JButton saveButton;
 
     private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String dbUser = "postgres";
@@ -87,8 +88,8 @@ public class gradesPanel extends JFrame {
             // Fill rows missing fixing white space
             int rowCount = infoTableModel.getRowCount();
 
-            if (rowCount < 17) {
-                for (int i = 0; i < 17 - rowCount; i++) {
+            if (rowCount < 16) {
+                for (int i = 0; i < 16 - rowCount; i++) {
                     infoRows[0] = "";
                     infoRows[1] = "";
                     gradeRow[0] = "";
@@ -106,7 +107,7 @@ public class gradesPanel extends JFrame {
 
             Object[] infoRows = new Object[2];
             Object[] gradeRow = new Object[1];
-            for (int i = 0; i < 17; i++) {
+            for (int i = 0; i < 16; i++) {
                 infoRows[0] = "";
                 infoRows[1] = "";
                 gradeRow[0] = "";
