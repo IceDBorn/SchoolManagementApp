@@ -49,7 +49,7 @@ public class gradesPanel extends JFrame {
 
     private void createUIComponents() {
         // Add columns
-        String[] infoTableColumns = {"Student", "Subject"};
+        String[] infoTableColumns = {"ID", "Student", "Subject"};
         String[] gradeTableColumns = {"Grade"};
         DefaultTableModel infoTableModel = new DefaultTableModel(infoTableColumns, 0);
         DefaultTableModel gradeTableModel = new DefaultTableModel(gradeTableColumns, 0);
@@ -79,7 +79,8 @@ public class gradesPanel extends JFrame {
             while (dbResult.next()) {
                 infoRows[0] = dbResult.getString(1);
                 infoRows[1] = dbResult.getString(2);
-                gradeRow[0] = dbResult.getString(3);
+                infoRows[2] = dbResult.getString(3);
+                gradeRow[0] = dbResult.getString(4);
 
                 infoTableModel.addRow(infoRows);
                 gradeTableModel.addRow(gradeRow);
@@ -92,6 +93,7 @@ public class gradesPanel extends JFrame {
                 for (int i = 0; i < 16 - rowCount; i++) {
                     infoRows[0] = "";
                     infoRows[1] = "";
+                    infoRows[2] = "";
                     gradeRow[0] = "";
 
                     infoTableModel.addRow(infoRows);
@@ -105,11 +107,12 @@ public class gradesPanel extends JFrame {
         } catch (SQLException e) {
             System.out.printf("SQL Exception:%nError: %s%n", e.getMessage());
 
-            Object[] infoRows = new Object[2];
+            Object[] infoRows = new Object[3];
             Object[] gradeRow = new Object[1];
             for (int i = 0; i < 16; i++) {
                 infoRows[0] = "";
                 infoRows[1] = "";
+                infoRows[2] = "";
                 gradeRow[0] = "";
 
                 infoTableModel.addRow(infoRows);
