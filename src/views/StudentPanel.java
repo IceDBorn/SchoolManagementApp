@@ -9,11 +9,10 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.stream.IntStream;
 
-public class schedulePanel extends JFrame {
+public class StudentPanel extends JFrame {
     private JTable scheduleTable;
-    private JPanel schedulePanel;
+    private JPanel studentPanel;
     private JLabel usernameLabel;
     private JButton homeButton;
     private JScrollPane scrollPane;
@@ -22,21 +21,28 @@ public class schedulePanel extends JFrame {
     private static final String dbUser = "postgres";
     private static final String dbPass = "kekw123";
 
-    private final int studentId;
+    private static final int studentId = 6;
 
     private Connection dbConnection;
     private Statement dbStatement;
     private ResultSet dbResult;
 
-    public schedulePanel(int studentId, String studentName) {
-        this.studentId = studentId;
-
-        add(schedulePanel);
+    public StudentPanel() {
+        add(studentPanel);
         setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        usernameLabel.setText(studentName);
+
+        try {
+            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            dbStatement = dbConnection.createStatement();
+            dbResult = dbStatement.executeQuery(String.format("SELECT name FROM \"Users\" WHERE id = %d", studentId));
+            dbResult.next();
+            usernameLabel.setText(dbResult.getString(1));
+        } catch (SQLException e) {
+            System.out.printf("SQL Exception:%nError: %s%n", e.getMessage());
+        }
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
     }
 
@@ -57,9 +63,9 @@ public class schedulePanel extends JFrame {
 
     private void createUIComponents() {
         // Add columns
-        String[] scheduleTableColumns = {"Classroom", "Subject", "Day", "Time"};
-        DefaultTableModel scheduleTableModel = new DefaultTableModel(scheduleTableColumns, 0);
-        scheduleTable = new JTable(scheduleTableModel);
+        String[] studentTableColumns = {"Classroom", "Subject", "Day", "Time"};
+        DefaultTableModel studentTableModel = new DefaultTableModel(studentTableColumns, 0);
+        scheduleTable = new JTable(studentTableModel);
         // Stop users from interacting with the table
         scheduleTable.getTableHeader().setReorderingAllowed(false);
         scheduleTable.setEnabled(false);
@@ -74,7 +80,7 @@ public class schedulePanel extends JFrame {
                     INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
                     INNER Join "Classrooms" ON "StudentLessons"."lessonId" = "Classrooms"."lessonId"
                     INNER Join "Courses" ON "Classrooms".id = "Courses"."classroomId"
-                    WHERE "StudentLessons"."studentId" = %d""", this.studentId));
+                    WHERE "StudentLessons"."studentId" = %d""", studentId));
 
             // Add rows
             Object[] row = new Object[4];
@@ -85,11 +91,11 @@ public class schedulePanel extends JFrame {
                 row[2] = this.getDay(dbResult.getInt(3));
                 row[3] = this.getTime(dbResult.getInt(4));
 
-                scheduleTableModel.addRow(row);
+                studentTableModel.addRow(row);
             }
 
             // Fill rows missing fixing white space
-            int rowCount = scheduleTableModel.getRowCount();
+            int rowCount = studentTableModel.getRowCount();
 
             if (rowCount < 17) {
                 for (int i = 0; i < 17 - rowCount; i++) {
@@ -98,7 +104,7 @@ public class schedulePanel extends JFrame {
                     row[2] = "";
                     row[3] = "";
 
-                    scheduleTableModel.addRow(row);
+                    studentTableModel.addRow(row);
                 }
             }
 
@@ -107,15 +113,6 @@ public class schedulePanel extends JFrame {
 
         } catch (SQLException e) {
             System.out.printf("SQL Exception:%nError: %s%n", e.getMessage());
-
-            Object[] row = new Object[4];
-            for (int i = 0; i < 17; i++) {
-                row[0] = "";
-                row[1] = "";
-                row[2] = "";
-                row[3] = "";
-                scheduleTableModel.addRow(row);
-            }
         }
     }
 }
