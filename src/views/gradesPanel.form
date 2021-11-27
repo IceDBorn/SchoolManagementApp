@@ -74,7 +74,7 @@
       <scrollpane id="d251f" binding="gradeScrollPane">
         <constraints>
           <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-            <preferred-size width="20" height="-1"/>
+            <preferred-size width="25" height="-1"/>
           </grid>
         </constraints>
         <properties>
