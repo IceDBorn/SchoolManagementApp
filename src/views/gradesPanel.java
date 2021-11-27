@@ -19,30 +19,25 @@ public class gradesPanel extends JFrame {
     private static final String dbUser = "postgres";
     private static final String dbPass = "kekw123";
 
-    private static final int teacherId = 6;
+    private static int teacherId;
 
     private Connection dbConnection;
     private Statement dbStatement;
     private ResultSet dbResult;
 
-    public gradesPanel() {
+    public gradesPanel(int teacherId, String teacherName) {
+        this.teacherId = teacherId;
+
         add(gradesPanel);
         setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        usernameLabel.setText(teacherName);
 
-        try {
-            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery(String.format("SELECT name FROM \"Users\" WHERE id = %d", teacherId));
-            dbResult.next();
-            usernameLabel.setText(dbResult.getString(1));
-        } catch (SQLException e) {
-            System.out.printf("SQL Exception:%nError: %s%n", e.getMessage());
-        }
         infoScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         gradeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+
         // Sync tables scrolling
         infoScrollPane.getVerticalScrollBar().setModel(gradeScrollPane.getVerticalScrollBar().getModel());
     }
@@ -64,12 +59,12 @@ public class gradesPanel extends JFrame {
             dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
             dbStatement = dbConnection.createStatement();
             dbResult = dbStatement.executeQuery(String.format("""
-                    SELECT "Lessons".name, "Classrooms".name, "Courses".day, "Courses".time
+                    SELECT "Users".id, "Lessons".name, "Classrooms".name, "Courses".day, "Courses".time, grade
                     FROM "StudentLessons"
                     INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
                     INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
-                    INNER Join "Classrooms" ON "StudentLessons"."lessonId" = "Classrooms"."lessonId"
-                    INNER Join "Courses" ON "Classrooms".id = "Courses"."classroomId"
+                    INNER JOIN "Classrooms" ON "StudentLessons"."lessonId" = "Classrooms"."lessonId"
+                    INNER JOIN "Courses" ON "Classrooms".id = "Courses"."classroomId"
                     WHERE "StudentLessons"."studentId" = %d""", teacherId));
 
             // Add rows
