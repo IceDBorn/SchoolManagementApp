@@ -3,33 +3,29 @@ package views;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import java.sql.*;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-public class schedulePanel extends JFrame {
-    private JTable scheduleTable;
-    private JPanel schedulePanel;
+public class gradesPanel extends JFrame {
+    private JTable infoTable;
+    private JPanel gradesPanel;
     private JLabel usernameLabel;
     private JButton homeButton;
-    private JScrollPane scrollPane;
+    private JScrollPane infoScrollPane;
+    private JScrollPane gradeScrollPane;
+    private JTable gradeTable;
 
     private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String dbUser = "postgres";
     private static final String dbPass = "kekw123";
 
-    private static final int personId = 6;
-    private static final String personType = "Teacher";
+    private static final int teacherId = 6;
 
     private Connection dbConnection;
     private Statement dbStatement;
     private ResultSet dbResult;
 
-    public schedulePanel() {
-        add(schedulePanel);
+    public gradesPanel() {
+        add(gradesPanel);
         setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
@@ -38,38 +34,30 @@ public class schedulePanel extends JFrame {
         try {
             dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
             dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery(String.format("SELECT name FROM \"Users\" WHERE id = %d", personId));
+            dbResult = dbStatement.executeQuery(String.format("SELECT name FROM \"Users\" WHERE id = %d", teacherId));
             dbResult.next();
             usernameLabel.setText(dbResult.getString(1));
         } catch (SQLException e) {
             System.out.printf("SQL Exception:%nError: %s%n", e.getMessage());
         }
-        scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
-    }
-
-    private String getDay(int day) {
-        return switch (day) {
-            case 0 -> "Monday";
-            case 1 -> "Tuesday";
-            case 2 -> "Wednesday";
-            case 3 -> "Thursday";
-            case 4 -> "Friday";
-            default -> "N/A";
-        };
-    }
-
-    private String getTime(int time) {
-        return String.format("%d:00", time);
+        infoScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+        gradeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+        // Sync tables scrolling
+        infoScrollPane.getVerticalScrollBar().setModel(gradeScrollPane.getVerticalScrollBar().getModel());
     }
 
     private void createUIComponents() {
         // Add columns
-        String[] scheduleTableColumns = {"Classroom", "Subject", "Day", "Time"};
-        DefaultTableModel scheduleTableModel = new DefaultTableModel(scheduleTableColumns, 0);
-        scheduleTable = new JTable(scheduleTableModel);
+        String[] infoTableColumns = {"Student", "Subject"};
+        String[] gradeTableColumns = {"Grade"};
+        DefaultTableModel infoTableModel = new DefaultTableModel(infoTableColumns, 0);
+        DefaultTableModel gradeTableModel = new DefaultTableModel(gradeTableColumns, 0);
+        infoTable = new JTable(infoTableModel);
+        gradeTable = new JTable(gradeTableModel);
         // Stop users from interacting with the table
-        scheduleTable.getTableHeader().setReorderingAllowed(false);
-        scheduleTable.setEnabled(false);
+        infoTable.getTableHeader().setReorderingAllowed(false);
+        gradeTable.getTableHeader().setReorderingAllowed(false);
+        infoTable.setEnabled(false);
 
         try {
             dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
@@ -81,31 +69,32 @@ public class schedulePanel extends JFrame {
                     INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
                     INNER Join "Classrooms" ON "StudentLessons"."lessonId" = "Classrooms"."lessonId"
                     INNER Join "Courses" ON "Classrooms".id = "Courses"."classroomId"
-                    WHERE "StudentLessons"."studentId" = %d""", personId));
+                    WHERE "StudentLessons"."studentId" = %d""", teacherId));
 
             // Add rows
-            Object[] row = new Object[4];
+            Object[] infoRows = new Object[3];
+            Object[] gradeRow = new Object[1];
 
             while (dbResult.next()) {
-                row[0] = dbResult.getString(1);
-                row[1] = dbResult.getString(2);
-                row[2] = this.getDay(dbResult.getInt(3));
-                row[3] = this.getTime(dbResult.getInt(4));
+                infoRows[0] = dbResult.getString(1);
+                infoRows[1] = dbResult.getString(2);
+                gradeRow[0] = dbResult.getString(3);
 
-                scheduleTableModel.addRow(row);
+                infoTableModel.addRow(infoRows);
+                gradeTableModel.addRow(gradeRow);
             }
 
             // Fill rows missing fixing white space
-            int rowCount = scheduleTableModel.getRowCount();
+            int rowCount = infoTableModel.getRowCount();
 
             if (rowCount < 17) {
                 for (int i = 0; i < 17 - rowCount; i++) {
-                    row[0] = "";
-                    row[1] = "";
-                    row[2] = "";
-                    row[3] = "";
+                    infoRows[0] = "";
+                    infoRows[1] = "";
+                    gradeRow[0] = "";
 
-                    scheduleTableModel.addRow(row);
+                    infoTableModel.addRow(infoRows);
+                    gradeTableModel.addRow(gradeRow);
                 }
             }
 
@@ -115,14 +104,15 @@ public class schedulePanel extends JFrame {
         } catch (SQLException e) {
             System.out.printf("SQL Exception:%nError: %s%n", e.getMessage());
 
-            Object[] row = new Object[4];
+            Object[] infoRows = new Object[2];
+            Object[] gradeRow = new Object[1];
             for (int i = 0; i < 17; i++) {
-                row[0] = "";
-                row[1] = "";
-                row[2] = "";
-                row[3] = "";
+                infoRows[0] = "";
+                infoRows[1] = "";
+                gradeRow[0] = "";
 
-                scheduleTableModel.addRow(row);
+                infoTableModel.addRow(infoRows);
+                gradeTableModel.addRow(gradeRow);
             }
         }
     }

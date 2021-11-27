@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="views.schedulePanel">
-  <grid id="27dc6" binding="schedulePanel" default-binding="true" layout-manager="GridLayoutManager" row-count="5" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="views.gradesPanel">
+  <grid id="27dc6" binding="gradesPanel" default-binding="true" layout-manager="GridLayoutManager" row-count="5" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
-      <xy x="20" y="20" width="1024" height="447"/>
+      <xy x="20" y="20" width="1054" height="447"/>
     </constraints>
     <properties/>
     <border type="none"/>
     <children>
-      <scrollpane id="76a8e" binding="scrollPane">
+      <scrollpane id="76a8e" binding="infoScrollPane">
         <constraints>
           <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <verticalScrollBarPolicy value="22"/>
+          <alignmentX value="0.0"/>
+          <horizontalScrollBarPolicy value="31"/>
+          <verticalScrollBarPolicy value="21"/>
         </properties>
         <border type="none"/>
         <children>
-          <component id="7f558" class="javax.swing.JTable" binding="scheduleTable" custom-create="true" default-binding="true">
+          <component id="7f558" class="javax.swing.JTable" binding="infoTable" custom-create="true">
             <constraints/>
             <properties>
               <focusable value="false"/>
@@ -81,6 +83,21 @@
           </grid>
         </constraints>
       </hspacer>
+      <scrollpane id="d251f" binding="gradeScrollPane">
+        <constraints>
+          <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <verticalScrollBarPolicy value="22"/>
+        </properties>
+        <border type="none"/>
+        <children>
+          <component id="6444f" class="javax.swing.JTable" binding="gradeTable" custom-create="true">
+            <constraints/>
+            <properties/>
+          </component>
+        </children>
+      </scrollpane>
     </children>
   </grid>
 </form>
