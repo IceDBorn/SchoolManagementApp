@@ -22,7 +22,7 @@ public class Main {
             String dbPass = "kekw123";
 
             Connection dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
-            Statement dbStatement = ((Connection) dbConnection).createStatement();
+            Statement dbStatement = dbConnection.createStatement();
             ResultSet dbResult = dbStatement.executeQuery(String.format("SELECT name, type FROM \"Users\" WHERE id = %d", userId));
             dbResult.next();
 
