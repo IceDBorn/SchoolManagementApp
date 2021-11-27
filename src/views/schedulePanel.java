@@ -10,7 +10,7 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class StudentPanel extends JFrame {
+public class schedulePanel extends JFrame {
     private JTable scheduleTable;
     private JPanel studentPanel;
     private JLabel usernameLabel;
@@ -27,7 +27,7 @@ public class StudentPanel extends JFrame {
     private Statement dbStatement;
     private ResultSet dbResult;
 
-    public StudentPanel() {
+    public schedulePanel() {
         add(studentPanel);
         setSize(1280, 720);
         setResizable(false);
