@@ -10,9 +10,9 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class StudentPanel extends JFrame {
+public class schedulePanel extends JFrame {
     private JTable scheduleTable;
-    private JPanel studentPanel;
+    private JPanel schedulePanel;
     private JLabel usernameLabel;
     private JButton homeButton;
     private JScrollPane scrollPane;
@@ -21,14 +21,15 @@ public class StudentPanel extends JFrame {
     private static final String dbUser = "postgres";
     private static final String dbPass = "kekw123";
 
-    private static final int studentId = 6;
+    private static final int personId = 6;
+    private static final String personType = "Teacher";
 
     private Connection dbConnection;
     private Statement dbStatement;
     private ResultSet dbResult;
 
-    public StudentPanel() {
-        add(studentPanel);
+    public schedulePanel() {
+        add(schedulePanel);
         setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
@@ -37,7 +38,7 @@ public class StudentPanel extends JFrame {
         try {
             dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
             dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery(String.format("SELECT name FROM \"Users\" WHERE id = %d", studentId));
+            dbResult = dbStatement.executeQuery(String.format("SELECT name FROM \"Users\" WHERE id = %d", personId));
             dbResult.next();
             usernameLabel.setText(dbResult.getString(1));
         } catch (SQLException e) {
@@ -63,9 +64,9 @@ public class StudentPanel extends JFrame {
 
     private void createUIComponents() {
         // Add columns
-        String[] studentTableColumns = {"Classroom", "Subject", "Day", "Time"};
-        DefaultTableModel studentTableModel = new DefaultTableModel(studentTableColumns, 0);
-        scheduleTable = new JTable(studentTableModel);
+        String[] scheduleTableColumns = {"Classroom", "Subject", "Day", "Time"};
+        DefaultTableModel scheduleTableModel = new DefaultTableModel(scheduleTableColumns, 0);
+        scheduleTable = new JTable(scheduleTableModel);
         // Stop users from interacting with the table
         scheduleTable.getTableHeader().setReorderingAllowed(false);
         scheduleTable.setEnabled(false);
@@ -80,7 +81,7 @@ public class StudentPanel extends JFrame {
                     INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
                     INNER Join "Classrooms" ON "StudentLessons"."lessonId" = "Classrooms"."lessonId"
                     INNER Join "Courses" ON "Classrooms".id = "Courses"."classroomId"
-                    WHERE "StudentLessons"."studentId" = %d""", studentId));
+                    WHERE "StudentLessons"."studentId" = %d""", personId));
 
             // Add rows
             Object[] row = new Object[4];
@@ -91,11 +92,11 @@ public class StudentPanel extends JFrame {
                 row[2] = this.getDay(dbResult.getInt(3));
                 row[3] = this.getTime(dbResult.getInt(4));
 
-                studentTableModel.addRow(row);
+                scheduleTableModel.addRow(row);
             }
 
             // Fill rows missing fixing white space
-            int rowCount = studentTableModel.getRowCount();
+            int rowCount = scheduleTableModel.getRowCount();
 
             if (rowCount < 17) {
                 for (int i = 0; i < 17 - rowCount; i++) {
@@ -104,7 +105,7 @@ public class StudentPanel extends JFrame {
                     row[2] = "";
                     row[3] = "";
 
-                    studentTableModel.addRow(row);
+                    scheduleTableModel.addRow(row);
                 }
             }
 
@@ -113,6 +114,16 @@ public class StudentPanel extends JFrame {
 
         } catch (SQLException e) {
             System.out.printf("SQL Exception:%nError: %s%n", e.getMessage());
+
+            Object[] row = new Object[4];
+            for (int i = 0; i < 17; i++) {
+                row[0] = "";
+                row[1] = "";
+                row[2] = "";
+                row[3] = "";
+
+                scheduleTableModel.addRow(row);
+            }
         }
     }
 }
