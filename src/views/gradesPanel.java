@@ -19,16 +19,28 @@ public class gradesPanel extends JFrame {
     private static final String dbUser = "postgres";
     private static final String dbPass = "kekw123";
 
-    private static int teacherId;
+    private static int userId;
+    private static boolean isTeacher;
 
     private Connection dbConnection;
     private Statement dbStatement;
     private PreparedStatement dbPreparedStatement;
     private ResultSet dbResult;
-    private String dbQuery;
 
-    public gradesPanel(int teacherId, String teacherName) {
-        this.teacherId = teacherId;
+    public gradesPanel(int userId, String teacherName) {
+        this.userId = userId;
+
+        try {
+            Connection dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            Statement dbStatement = dbConnection.createStatement();
+            ResultSet dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Teachers\" WHERE id = %d", userId));
+
+            isTeacher = dbResult.next();
+
+        } catch (SQLException err) {
+            System.out.println("SQL Exception:");
+            err.printStackTrace();
+        }
 
         add(gradesPanel);
         setSize(1280, 720);
@@ -41,6 +53,7 @@ public class gradesPanel extends JFrame {
         gradeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         saveButton.addActionListener(action -> {
+            if (!isTeacher) return;
             try {
                 dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
 
@@ -79,16 +92,28 @@ public class gradesPanel extends JFrame {
         gradeTable.getTableHeader().setReorderingAllowed(false);
         infoTable.setEnabled(false);
 
-        try {
-            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery(String.format("""
+        String dbQuery;
+        if (isTeacher) {
+            dbQuery = String.format("""
                     SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
                     FROM "StudentLessons"
                     INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
                     INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
                     INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
-                    WHERE "Courses"."teacherId" = %d""", teacherId));
+                    WHERE "Courses"."teacherId" = %d""", userId);
+        } else {
+            dbQuery = String.format("""
+                    SELECT "StudentLessons".id, "Users".name, "Lessons".name, grade
+                    FROM "StudentLessons"
+                    JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
+                    JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
+                    WHERE "studentId" = %d""", userId);
+        }
+
+        try {
+            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            dbStatement = dbConnection.createStatement();
+            dbResult = dbStatement.executeQuery(dbQuery);
 
             // Add rows
             Object[] infoRows = new Object[3];
