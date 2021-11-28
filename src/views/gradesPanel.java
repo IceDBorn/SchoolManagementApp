@@ -48,10 +48,12 @@ public class gradesPanel extends JFrame {
                     int studentId = Integer.parseInt(infoTable.getValueAt(i, 0).toString());
                     int studentGrade = Integer.parseInt(gradeTable.getValueAt(i, 0).toString());
 
-                    dbPreparedStatement = dbConnection.prepareStatement("UPDATE \"StudentLessons\" SET grade = ? WHERE id = ?");
-                    dbPreparedStatement.setInt(1, studentGrade);
-                    dbPreparedStatement.setInt(2, studentId);
-                    dbPreparedStatement.executeUpdate();
+                    if (studentGrade <= 20 && studentGrade >= 0) {
+                        dbPreparedStatement = dbConnection.prepareStatement("UPDATE \"StudentLessons\" SET grade = ? WHERE id = ?");
+                        dbPreparedStatement.setInt(1, studentGrade);
+                        dbPreparedStatement.setInt(2, studentId);
+                        dbPreparedStatement.executeUpdate();
+                    } else System.out.println("Skipped a student, doesn't meet grade criteria.");
 
                     // Checks if the next row has a null id to end the loop
                     if (infoTable.getValueAt(i + 1, 0) == "") break;
