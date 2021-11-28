@@ -6,13 +6,13 @@ import javax.swing.table.DefaultTableModel;
 import java.sql.*;
 
 public class gradesPanel extends JFrame {
-    private JTable infoTable;
     private JPanel gradesPanel;
     private JLabel usernameLabel;
-    private JButton homeButton;
     private JScrollPane infoScrollPane;
     private JScrollPane gradeScrollPane;
+    private JTable infoTable;
     private JTable gradeTable;
+    private JButton homeButton;
     private JButton saveButton;
 
     private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
@@ -23,7 +23,9 @@ public class gradesPanel extends JFrame {
 
     private Connection dbConnection;
     private Statement dbStatement;
+    private PreparedStatement dbPreparedStatement;
     private ResultSet dbResult;
+    private String dbQuery;
 
     public gradesPanel(int teacherId, String teacherName) {
         this.teacherId = teacherId;
@@ -38,8 +40,28 @@ public class gradesPanel extends JFrame {
         infoScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         gradeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
-        // Sync tables scrolling
-        infoScrollPane.getVerticalScrollBar().setModel(gradeScrollPane.getVerticalScrollBar().getModel());
+        saveButton.addActionListener(action -> {
+            try {
+                dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+
+                for (int i = 0; i < infoTable.getRowCount(); i++) {
+                    int studentId = Integer.parseInt(infoTable.getValueAt(i, 0).toString());
+                    int studentGrade = Integer.parseInt(gradeTable.getValueAt(i, 0).toString());
+
+                    dbPreparedStatement = dbConnection.prepareStatement("UPDATE \"StudentLessons\" SET grade = ? WHERE id = ?");
+                    dbPreparedStatement.setInt(1, studentGrade);
+                    dbPreparedStatement.setInt(2, studentId);
+                    dbPreparedStatement.executeUpdate();
+
+                    // Checks if the next row has a null id to end the loop
+                    if (infoTable.getValueAt(i + 1, 0) == "") break;
+                }
+                dbConnection.close();
+            } catch (SQLException err) {
+                System.out.println("SQL Exception:");
+                err.printStackTrace();
+            }
+        });
     }
 
     private void createUIComponents() {
@@ -59,13 +81,12 @@ public class gradesPanel extends JFrame {
             dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
             dbStatement = dbConnection.createStatement();
             dbResult = dbStatement.executeQuery(String.format("""
-                    SELECT "Users".id, "Lessons".name, "Classrooms".name, "Courses".day, "Courses".time, grade
+                    SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
                     FROM "StudentLessons"
-                    INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
+                    INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
                     INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
-                    INNER JOIN "Classrooms" ON "StudentLessons"."lessonId" = "Classrooms"."lessonId"
-                    INNER JOIN "Courses" ON "Classrooms".id = "Courses"."classroomId"
-                    WHERE "StudentLessons"."studentId" = %d""", teacherId));
+                    INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
+                    WHERE "Courses"."teacherId" = %d""", teacherId));
 
             // Add rows
             Object[] infoRows = new Object[3];
@@ -75,7 +96,7 @@ public class gradesPanel extends JFrame {
                 infoRows[0] = dbResult.getString(1);
                 infoRows[1] = dbResult.getString(2);
                 infoRows[2] = dbResult.getString(3);
-                gradeRow[0] = dbResult.getString(4);
+                gradeRow[0] = dbResult.getInt(4);
 
                 infoTableModel.addRow(infoRows);
                 gradeTableModel.addRow(gradeRow);
@@ -99,8 +120,9 @@ public class gradesPanel extends JFrame {
             dbStatement.close();
             dbConnection.close();
 
-        } catch (SQLException e) {
-            System.out.printf("SQL Exception:%nError: %s%n", e.getMessage());
+        } catch (SQLException err) {
+            System.out.println("SQL Exception:");
+            err.printStackTrace();
 
             Object[] infoRows = new Object[3];
             Object[] gradeRow = new Object[1];

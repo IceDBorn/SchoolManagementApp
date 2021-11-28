@@ -9,7 +9,7 @@ import views.*;
 import java.sql.*;
 
 public class Main {
-    private static int userId = 6;
+    private static int userId = 1;
     private static int userType;
     private static String userName;
 
@@ -28,8 +28,9 @@ public class Main {
 
             userName = dbResult.getString(1);
             userType = dbResult.getInt(2);
-        } catch (SQLException e) {
-            System.out.printf("SQL Exception:%nError: %s\n", e.getMessage());
+        } catch (SQLException err) {
+            System.out.println("SQL Exception:");
+            err.printStackTrace();
         }
 
         SwingUtilities.invokeLater(() -> {
