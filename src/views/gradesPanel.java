@@ -31,9 +31,9 @@ public class gradesPanel extends JFrame {
         this.userId = userId;
 
         try {
-            Connection dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
-            Statement dbStatement = dbConnection.createStatement();
-            ResultSet dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Teachers\" WHERE id = %d", userId));
+            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            dbStatement = dbConnection.createStatement();
+            dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Teachers\" WHERE id = %d", userId));
 
             isTeacher = dbResult.next();
 
@@ -69,6 +69,8 @@ public class gradesPanel extends JFrame {
                         dbPreparedStatement.setInt(1, studentGrade);
                         dbPreparedStatement.setInt(2, studentId);
                         dbPreparedStatement.executeUpdate();
+
+                        System.out.printf("userId: %d modified studentId: %d grade to %d%n", userId, studentId, studentGrade);
                     } else System.out.println("Skipped a student, doesn't meet grade criteria.");
 
                     // Checks if the next row has a null id to end the loop

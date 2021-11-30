@@ -31,13 +31,23 @@ public class Main {
         }
 
         SwingUtilities.invokeLater(() -> {
-            username = "Test";
-//            schedulePanel schedule = new schedulePanel(userId, username);
-//            schedule.setVisible(true);
-//            gradesPanel grades = new gradesPanel(userId, username);
-//            grades.setVisible(true);
-            classroomsPanel classrooms = new classroomsPanel();
-            classrooms.setVisible(true);
+            int userPanel = 3;
+
+            switch (userPanel) {
+                case 1 -> {
+                    schedulePanel schedule = new schedulePanel(userId, username);
+                    schedule.setVisible(true);
+                }
+                case 2 -> {
+                    gradesPanel grades = new gradesPanel(userId, username);
+                    grades.setVisible(true);
+                }
+                case 3 -> {
+                    classroomsPanel classrooms = new classroomsPanel(userId);
+                    classrooms.setVisible(true);
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + userPanel);
+            }
         });
     }
 }
