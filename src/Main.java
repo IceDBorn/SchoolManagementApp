@@ -31,7 +31,7 @@ public class Main {
         }
 
         SwingUtilities.invokeLater(() -> {
-            int userPanel = 3;
+            int userPanel = 4;
 
             switch (userPanel) {
                 case 1 -> {
@@ -45,6 +45,10 @@ public class Main {
                 case 3 -> {
                     classroomsPanel classrooms = new classroomsPanel(userId);
                     classrooms.setVisible(true);
+                }
+                case 4 -> {
+                    lessonsPanel lessons = new lessonsPanel(userId);
+                    lessons.setVisible(true);
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + userPanel);
             }
