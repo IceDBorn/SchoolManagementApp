@@ -10,7 +10,7 @@ import java.sql.*;
 
 public class Main {
     private static final int userId = 6;
-    private static String userName;
+    private static String username;
 
     public static void main(String[] args) throws UnsupportedLookAndFeelException {
         UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialOceanicTheme()));
@@ -24,17 +24,17 @@ public class Main {
             Statement dbStatement = dbConnection.createStatement();
             ResultSet dbResult = dbStatement.executeQuery(String.format("SELECT name FROM \"Users\" WHERE id = %d", userId));
 
-            if (dbResult.next()) userName = dbResult.getString(1);
+            if (dbResult.next()) username = dbResult.getString(1);
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
         }
 
         SwingUtilities.invokeLater(() -> {
+            username = "Test";
             //schedulePanel schedule = new schedulePanel(userId, userName);
             //schedule.setVisible(true);
-
-            gradesPanel grades = new gradesPanel(userId, userName);
+            gradesPanel grades = new gradesPanel(userId, username);
             grades.setVisible(true);
         });
     }

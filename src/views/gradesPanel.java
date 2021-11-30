@@ -52,6 +52,9 @@ public class gradesPanel extends JFrame {
         infoScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         gradeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
+        // Sync tables scrolling
+        infoScrollPane.getVerticalScrollBar().setModel(gradeScrollPane.getVerticalScrollBar().getModel());
+
         saveButton.addActionListener(action -> {
             if (!isTeacher) return;
             try {
@@ -81,7 +84,32 @@ public class gradesPanel extends JFrame {
 
     private void createUIComponents() {
         // Add columns
-        String[] infoTableColumns = {"ID", "Student", "Subject"};
+        String[] infoTableColumns;
+        String dbQuery;
+
+        if (isTeacher) {
+            infoTableColumns = new String[] {"ID", "Student", "Subject"};
+            dbQuery = String.format("""
+                    SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
+                    FROM "StudentLessons"
+                    INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
+                    INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
+                    INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
+                    WHERE "Courses"."teacherId" = %d""", userId);
+        }
+        else {
+            infoTableColumns = new String[] {"Subject"};
+            dbQuery = String.format("""
+                    SELECT "StudentLessons".id, "Users".name, "Lessons".name, grade
+                    FROM "StudentLessons"
+                    JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
+                    JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
+                    WHERE "studentId" = %d""", userId);
+            // Hide save button if a student account is viewing the grades
+            saveButton = new JButton();
+            saveButton.setVisible(false);
+        }
+
         String[] gradeTableColumns = {"Grade"};
         DefaultTableModel infoTableModel = new DefaultTableModel(infoTableColumns, 0);
         DefaultTableModel gradeTableModel = new DefaultTableModel(gradeTableColumns, 0);
@@ -91,24 +119,6 @@ public class gradesPanel extends JFrame {
         infoTable.getTableHeader().setReorderingAllowed(false);
         gradeTable.getTableHeader().setReorderingAllowed(false);
         infoTable.setEnabled(false);
-
-        String dbQuery;
-        if (isTeacher) {
-            dbQuery = String.format("""
-                    SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
-                    FROM "StudentLessons"
-                    INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
-                    INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
-                    INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
-                    WHERE "Courses"."teacherId" = %d""", userId);
-        } else {
-            dbQuery = String.format("""
-                    SELECT "StudentLessons".id, "Users".name, "Lessons".name, grade
-                    FROM "StudentLessons"
-                    JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
-                    JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
-                    WHERE "studentId" = %d""", userId);
-        }
 
         try {
             dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
@@ -132,8 +142,8 @@ public class gradesPanel extends JFrame {
             // Fill rows missing fixing white space
             int rowCount = infoTableModel.getRowCount();
 
-            if (rowCount < 16) {
-                for (int i = 0; i < 16 - rowCount; i++) {
+            if (rowCount < 17) {
+                for (int i = 0; i < 17 - rowCount; i++) {
                     infoRows[0] = "";
                     infoRows[1] = "";
                     infoRows[2] = "";
@@ -153,7 +163,7 @@ public class gradesPanel extends JFrame {
 
             Object[] infoRows = new Object[3];
             Object[] gradeRow = new Object[1];
-            for (int i = 0; i < 16; i++) {
+            for (int i = 0; i < 17; i++) {
                 infoRows[0] = "";
                 infoRows[1] = "";
                 infoRows[2] = "";
