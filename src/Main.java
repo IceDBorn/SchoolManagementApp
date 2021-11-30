@@ -32,10 +32,12 @@ public class Main {
 
         SwingUtilities.invokeLater(() -> {
             username = "Test";
-            //schedulePanel schedule = new schedulePanel(userId, userName);
-            //schedule.setVisible(true);
-            gradesPanel grades = new gradesPanel(userId, username);
-            grades.setVisible(true);
+//            schedulePanel schedule = new schedulePanel(userId, username);
+//            schedule.setVisible(true);
+//            gradesPanel grades = new gradesPanel(userId, username);
+//            grades.setVisible(true);
+            classroomsPanel classrooms = new classroomsPanel();
+            classrooms.setVisible(true);
         });
     }
 }
