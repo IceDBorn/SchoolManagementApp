@@ -34,9 +34,7 @@ public class gradesPanel extends JFrame {
             dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
             dbStatement = dbConnection.createStatement();
             dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Teachers\" WHERE id = %d", userId));
-
             isTeacher = dbResult.next();
-
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
@@ -90,23 +88,22 @@ public class gradesPanel extends JFrame {
         String dbQuery;
 
         if (isTeacher) {
-            infoTableColumns = new String[] {"ID", "Student", "Subject"};
+            infoTableColumns = new String[]{"ID", "Student", "Subject"};
             dbQuery = String.format("""
-                    SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
-                    FROM "StudentLessons"
-                    INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
-                    INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
-                    INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
-                    WHERE "Courses"."teacherId" = %d""", userId);
-        }
-        else {
-            infoTableColumns = new String[] {"Subject"};
+                SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
+                FROM "StudentLessons"
+                INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
+                INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
+                INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
+                WHERE "Courses"."teacherId" = %d""", userId);
+        } else {
+            infoTableColumns = new String[]{"Subject"};
             dbQuery = String.format("""
-                    SELECT "StudentLessons".id, "Users".name, "Lessons".name, grade
-                    FROM "StudentLessons"
-                    JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
-                    JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
-                    WHERE "studentId" = %d""", userId);
+                SELECT "Lessons".name, "StudentLessons".grade
+                FROM "StudentLessons"
+                JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
+                JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
+                WHERE "studentId" = %d""", userId);
             // Hide save button if a student account is viewing the grades
             saveButton = new JButton();
             saveButton.setVisible(false);
@@ -132,10 +129,15 @@ public class gradesPanel extends JFrame {
             Object[] gradeRow = new Object[1];
 
             while (dbResult.next()) {
-                infoRows[0] = dbResult.getString(1);
-                infoRows[1] = dbResult.getString(2);
-                infoRows[2] = dbResult.getString(3);
-                gradeRow[0] = dbResult.getInt(4);
+                if (isTeacher) {
+                    infoRows[0] = dbResult.getString(1);
+                    infoRows[1] = dbResult.getString(2);
+                    infoRows[2] = dbResult.getString(3);
+                    gradeRow[0] = dbResult.getInt(4);
+                } else {
+                    infoRows[2] = dbResult.getString(1);
+                    gradeRow[0] = dbResult.getInt(2);
+                }
 
                 infoTableModel.addRow(infoRows);
                 gradeTableModel.addRow(gradeRow);
