@@ -1,3 +1,5 @@
+// TODO: Add a label or an alert box to each panel for errors, instead of showing them in the console.
+
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -9,7 +11,7 @@ import views.*;
 import java.sql.*;
 
 public class Main {
-    private static final int userId = 6;
+    private static final int userId = 2;
     private static String username;
 
     public static void main(String[] args) throws UnsupportedLookAndFeelException {

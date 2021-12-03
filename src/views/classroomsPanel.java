@@ -36,17 +36,18 @@ public class classroomsPanel extends JFrame {
             String classroomName = classNameTextField.getText();
             int classroomLimit = (int) classCapacitySpinner.getValue();
 
+            // Check if the text field is blank to avoid unnecessary sql errors
             if (!classroomName.equals("")) {
                 try {
                     dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
-
                     dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Classrooms\"(name, \"limit\") VALUES (?, ?)");
                     dbPreparedStatement.setString(1, classroomName);
                     dbPreparedStatement.setInt(2, classroomLimit);
                     dbPreparedStatement.executeUpdate();
+                    dbPreparedStatement.close();
+                    dbConnection.close();
 
                     System.out.printf("userId %d created classroom: %s with limit: %d%n", userId, classroomName, classroomLimit);
-                    dbConnection.close();
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();

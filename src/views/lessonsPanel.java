@@ -30,18 +30,17 @@ public class lessonsPanel extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
+        // Get all distinct subjects from teachers
         try {
             dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
             dbStatement = dbConnection.createStatement();
             dbResult = dbStatement.executeQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
 
-            while (dbResult.next()) {
+            while (dbResult.next())
                 professionComboBox.addItem(dbResult.getString(1));
-            }
 
             dbStatement.close();
             dbConnection.close();
-
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
@@ -57,6 +56,7 @@ public class lessonsPanel extends JFrame {
         addButton.addActionListener(action -> {
             String lessonName = classNameTextField.getText();
 
+            // Check if the text field is blank to avoid unnecessary sql errors
             if (!lessonName.equals("")) {
                 String lessonSubject = professionComboBox.getItemAt(professionComboBox.getSelectedIndex());
                 int lessonYear = schoolYearComboBox.getSelectedIndex() + 1;
@@ -64,12 +64,14 @@ public class lessonsPanel extends JFrame {
                 try {
                     dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
                     dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Lessons\"(name, subject, year) VALUES (?, ?, ?)");
+
                     dbPreparedStatement.setString(1, lessonName);
                     dbPreparedStatement.setString(2, lessonSubject);
                     dbPreparedStatement.setInt(3, lessonYear);
                     dbPreparedStatement.executeUpdate();
-
+                    dbPreparedStatement.close();
                     dbConnection.close();
+
                     System.out.printf("userId %d created lesson: %s with subject: %s%n", userId, lessonName, lessonSubject);
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
