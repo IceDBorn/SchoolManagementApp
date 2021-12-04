@@ -20,21 +20,21 @@ public class gradesPanel extends JFrame {
     private static final String dbPass = "kekw123";
 
     private static int userId;
-    private static boolean isTeacher;
+    private boolean isTeacher;
 
     private Connection dbConnection;
     private Statement dbStatement;
     private PreparedStatement dbPreparedStatement;
     private ResultSet dbResult;
 
-    public gradesPanel(int userId, String teacherName) {
+    public gradesPanel(int userId, String userName) {
         this.userId = userId;
 
         try {
             dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
             dbStatement = dbConnection.createStatement();
             dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Teachers\" WHERE id = %d", userId));
-            isTeacher = dbResult.next();
+            this.isTeacher = dbResult.next();
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
@@ -45,7 +45,7 @@ public class gradesPanel extends JFrame {
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        usernameLabel.setText(teacherName);
+        usernameLabel.setText(userName);
 
         infoScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         gradeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
@@ -58,6 +58,7 @@ public class gradesPanel extends JFrame {
             try {
                 dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
 
+                // Loop through all the table rows in order to update them one by one.
                 for (int i = 0; i < infoTable.getRowCount(); i++) {
                     int studentId = Integer.parseInt(infoTable.getValueAt(i, 0).toString());
                     int studentGrade = Integer.parseInt(gradeTable.getValueAt(i, 0).toString());
@@ -67,12 +68,14 @@ public class gradesPanel extends JFrame {
                         dbPreparedStatement.setInt(1, studentGrade);
                         dbPreparedStatement.setInt(2, studentId);
                         dbPreparedStatement.executeUpdate();
+                        dbPreparedStatement.close();
 
                         System.out.printf("userId: %d modified studentId: %d grade to %d%n", userId, studentId, studentGrade);
                     } else System.out.println("Skipped a student, doesn't meet grade criteria.");
 
                     // Checks if the next row has a null id to end the loop
-                    if (infoTable.getValueAt(i + 1, 0) == "") break;
+                    if (infoTable.getValueAt(i + 1, 0) == "")
+                        break;
                 }
                 dbConnection.close();
             } catch (SQLException err) {
@@ -87,23 +90,24 @@ public class gradesPanel extends JFrame {
         String[] infoTableColumns;
         String dbQuery;
 
+        // Check whether the user is a teacher and show the corresponding panel
         if (isTeacher) {
             infoTableColumns = new String[]{"ID", "Student", "Subject"};
             dbQuery = String.format("""
-                SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
-                FROM "StudentLessons"
-                INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
-                INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
-                INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
-                WHERE "Courses"."teacherId" = %d""", userId);
+                    SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
+                    FROM "StudentLessons"
+                    INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
+                    INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
+                    INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
+                    WHERE "Courses"."teacherId" = %d""", userId);
         } else {
             infoTableColumns = new String[]{"Subject"};
             dbQuery = String.format("""
-                SELECT "Lessons".name, "StudentLessons".grade
-                FROM "StudentLessons"
-                JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
-                JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
-                WHERE "studentId" = %d""", userId);
+                    SELECT "Lessons".name, "StudentLessons".grade
+                    FROM "StudentLessons"
+                    JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
+                    JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
+                    WHERE "studentId" = %d""", userId);
             // Hide save button if a student account is viewing the grades
             saveButton = new JButton();
             saveButton.setVisible(false);
@@ -143,6 +147,9 @@ public class gradesPanel extends JFrame {
                 gradeTableModel.addRow(gradeRow);
             }
 
+            dbStatement.close();
+            dbConnection.close();
+
             // Fill rows missing fixing white space
             int rowCount = infoTableModel.getRowCount();
 
@@ -157,10 +164,6 @@ public class gradesPanel extends JFrame {
                     gradeTableModel.addRow(gradeRow);
                 }
             }
-
-            dbStatement.close();
-            dbConnection.close();
-
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
