@@ -22,6 +22,7 @@ public class coursesPanel extends JFrame {
     private JTable scheduleTable;
     private JButton removeButton;
     private JScrollPane scheduleScrollPane;
+    private JComboBox classroomComboBox;
 
     private static int userId;
 
@@ -51,6 +52,10 @@ public class coursesPanel extends JFrame {
         dayComboBox.addItem("Παρασκευή");
         dayComboBox.addItem("Σάββατο");
         dayComboBox.addItem("Κυριακή");
+
+        classroomComboBox.addItem("G1");
+        classroomComboBox.addItem("A1");
+        classroomComboBox.addItem("B1");
 
         add(classroomsPanel);
         setSize(800, 600);
