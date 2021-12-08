@@ -42,25 +42,7 @@ public class personPanel extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-        // Fill the subjectList with all the available distinct subjects
-        try {
-            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
-
-            while (dbResult.next())
-                subjectList.add(dbResult.getString(1));
-
-            dbStatement.close();
-            dbConnection.close();
-
-        } catch (SQLException err) {
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
-        }
-
-        for (String subject : subjectList)
-            userDetailsComboBox.addItem(subject);
+        addSubjects();
 
         userTypeComboBox.addItem("Teacher");
         userTypeComboBox.addItem("Student");
@@ -74,10 +56,7 @@ public class personPanel extends JFrame {
 
             if (Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher")) {
                 userDetailsLabel.setText("Profession");
-
-                for (String subject : subjectList)
-                    userDetailsComboBox.addItem(subject);
-
+                addSubjects();
                 adminCheckBox.setEnabled(true);
             } else {
                 userDetailsLabel.setText("School Year");
@@ -121,26 +100,62 @@ public class personPanel extends JFrame {
 
                 dbResult = dbPreparedStatement.getGeneratedKeys();
                 dbResult.next();
+                int personId = dbResult.getInt(1);
 
+                // Check whether the user is a student or a teacher and import into the corresponding table
                 if (isTeacher) {
                     dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Teachers\"(id, subject) VALUES (?, ?)");
-                    dbPreparedStatement.setInt(1, dbResult.getInt(1));
+                    dbPreparedStatement.setInt(1, personId);
                     dbPreparedStatement.setString(2, userSubject);
                 } else {
                     dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Students\"(id, year) VALUES (?, ?)");
-                    dbPreparedStatement.setInt(1, dbResult.getInt(1));
+                    dbPreparedStatement.setInt(1, personId);
                     dbPreparedStatement.setInt(2, userYear);
                 }
 
                 dbPreparedStatement.executeUpdate();
                 dbPreparedStatement.close();
                 dbConnection.close();
+
                 System.out.printf("userId %d created %s: %s (gender: %s, birthday: %s, phone: %d, email: %s, admin: %s%n",
                         userId, isTeacher ? "teacher" : "student", userName, userGender, userBirthday, userPhoneNumber, userEmail, isAdmin ? "Yes" : "No");
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
             }
+            addSubjects();
         });
+    }
+
+    /**
+     * Get all subjects, add any new ones into subjectList and update userDetailsComboBox
+     */
+    private void addSubjects() {
+        try {
+            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            dbStatement = dbConnection.createStatement();
+            dbResult = dbStatement.executeQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
+
+            while (dbResult.next()) {
+                String subjectName = dbResult.getString(1);
+
+                if (subjectList.contains(subjectName))
+                    continue;
+
+                subjectList.add(subjectName);
+            }
+
+            dbStatement.close();
+            dbConnection.close();
+        } catch (SQLException err) {
+            System.out.println("SQL Exception:");
+            err.printStackTrace();
+        }
+
+        userDetailsComboBox.removeAllItems();
+        userDetailsComboBox.addItem("Add New Subject");
+
+        for (String subject : subjectList)
+            userDetailsComboBox.addItem(subject);
     }
 }
