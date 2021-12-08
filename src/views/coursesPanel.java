@@ -5,7 +5,6 @@ import com.github.lgooddatepicker.components.TimePicker;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-import java.awt.event.ActionEvent;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Objects;
@@ -16,8 +15,8 @@ public class coursesPanel extends JFrame {
     private JButton removeButton;
     private JComboBox<String> lessonsComboBox;
     private JComboBox<String> teachersComboBox;
-    private JComboBox<String> dayComboBox;
     private JComboBox<String> classroomComboBox;
+    private JComboBox<String> dayComboBox;
     private TimePicker timePickerStart;
     private TimePicker timePickerEnd;
     private JTable scheduleTable;
@@ -90,7 +89,9 @@ public class coursesPanel extends JFrame {
 
         addButton.addActionListener(action -> {
             if (timePickerStart.getText().equals("") || timePickerEnd.getText().equals(""))
-                System.out.println("You can not have a blank start and/or end date.");
+                System.out.println("You can not have a blank start or end time.");
+            else if (timePickerStart.getText().equals(timePickerEnd.getText()))
+                System.out.println("You can not have the same start and end time.");
             else {
                 try {
                     dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
@@ -122,23 +123,32 @@ public class coursesPanel extends JFrame {
                     String courseDay = Objects.requireNonNull(dayComboBox.getSelectedItem()).toString();
                     String courseTime = timePickerStart.getText() + "-" + timePickerEnd.getText();
 
-                    dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Courses\"(\"lessonId\", \"teacherId\", \"classroomId\", day, time) VALUES (?, ?, ?, ?, ?)",
-                            PreparedStatement.RETURN_GENERATED_KEYS);
-                    dbPreparedStatement.setInt(1, lessonId);
-                    dbPreparedStatement.setInt(2, teacherId);
-                    dbPreparedStatement.setInt(3, classroomId);
-                    dbPreparedStatement.setString(4, courseDay);
-                    dbPreparedStatement.setString(5, courseTime);
-                    dbPreparedStatement.executeUpdate();
+                    // Get the classroomId using the selected classroom from the panel
+                    dbStatement = dbConnection.createStatement();
+                    dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Courses\" WHERE \"classroomId\" = '%d' AND day = '%s' AND time = '%s'", classroomId, courseDay, courseTime));
+                    boolean courseExists = dbResult.isBeforeFirst();
+                    dbStatement.close();
 
-                    dbResult = dbPreparedStatement.getGeneratedKeys();
-                    dbResult.next();
-                    int courseId = dbResult.getInt(1);
-                    dbPreparedStatement.close();
+                    if (courseExists)
+                        System.out.println("A course already exists with the same classroom, day and time");
+                    else {
+                        dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Courses\"(\"lessonId\", \"teacherId\", \"classroomId\", day, time) VALUES (?, ?, ?, ?, ?)",
+                                PreparedStatement.RETURN_GENERATED_KEYS);
+                        dbPreparedStatement.setInt(1, lessonId);
+                        dbPreparedStatement.setInt(2, teacherId);
+                        dbPreparedStatement.setInt(3, classroomId);
+                        dbPreparedStatement.setString(4, courseDay);
+                        dbPreparedStatement.setString(5, courseTime);
+                        dbPreparedStatement.executeUpdate();
 
-                    System.out.printf("userId %d created course: %d (lessonId: %d, teacherId %d, classroomId: %d, day %s, time: %s%n",
-                            userId, courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
+                        dbResult = dbPreparedStatement.getGeneratedKeys();
+                        dbResult.next();
+                        int courseId = dbResult.getInt(1);
+                        dbPreparedStatement.close();
 
+                        System.out.printf("userId %d created course: %d (lessonId: %d, teacherId %d, classroomId: %d, day %s, time: %s%n",
+                                userId, courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
+                    }
                     dbConnection.close();
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
