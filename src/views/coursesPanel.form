@@ -41,7 +41,7 @@
           <text value="Add"/>
         </properties>
       </component>
-      <component id="a8f79" class="javax.swing.JComboBox" binding="coursesComboBox">
+      <component id="a8f79" class="javax.swing.JComboBox" binding="lessonsComboBox">
         <constraints>
           <grid row="1" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="2" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
@@ -118,7 +118,7 @@
           <text value="Start"/>
         </properties>
       </component>
-      <component id="e319d" class="com.github.lgooddatepicker.components.TimePicker" binding="timePicker">
+      <component id="e319d" class="com.github.lgooddatepicker.components.TimePicker" binding="timePickerStart">
         <constraints>
           <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
@@ -130,7 +130,7 @@
         </constraints>
         <properties/>
       </component>
-      <component id="3e6c2" class="com.github.lgooddatepicker.components.TimePicker">
+      <component id="3e6c2" class="com.github.lgooddatepicker.components.TimePicker" binding="timePickerEnd">
         <constraints>
           <grid row="10" column="1" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>

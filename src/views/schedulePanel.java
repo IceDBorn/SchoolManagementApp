@@ -31,21 +31,6 @@ public class schedulePanel extends JFrame {
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
     }
 
-    private String getDay(int day) {
-        return switch (day) {
-            case 0 -> "Monday";
-            case 1 -> "Tuesday";
-            case 2 -> "Wednesday";
-            case 3 -> "Thursday";
-            case 4 -> "Friday";
-            default -> "N/A";
-        };
-    }
-
-    private String getTime(int time) {
-        return String.format("%d:00", time);
-    }
-
     private void createUIComponents() {
         // Add columns
         String[] scheduleTableColumns = {"Classroom", "Subject", "Day", "Time"};
@@ -68,12 +53,11 @@ public class schedulePanel extends JFrame {
 
             // Add rows
             Object[] row = new Object[4];
-
             while (dbResult.next()) {
                 row[0] = dbResult.getString(1);
                 row[1] = dbResult.getString(2);
-                row[2] = this.getDay(dbResult.getInt(3));
-                row[3] = this.getTime(dbResult.getInt(4));
+                row[2] = dbResult.getString(3);
+                row[3] = dbResult.getString(4);
 
                 scheduleTableModel.addRow(row);
             }
@@ -94,7 +78,6 @@ public class schedulePanel extends JFrame {
 
             dbStatement.close();
             dbConnection.close();
-
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
