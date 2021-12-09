@@ -70,7 +70,7 @@ public class gradesPanel extends JFrame {
                         dbPreparedStatement.executeUpdate();
                         dbPreparedStatement.close();
 
-                        System.out.printf("userId: %d modified studentId: %d grade to %d%n", userId, studentId, studentGrade);
+                        System.out.printf("userId %d modified studentId: %d grade to %d%n", userId, studentId, studentGrade);
                     } else System.out.println("Skipped a student, doesn't meet grade criteria.");
 
                     // Checks if the next row has a null id to end the loop
