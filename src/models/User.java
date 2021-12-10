@@ -1,76 +1,58 @@
 package models;
 
 public class User {
-    private int userId;
-    private String username;
-    private String userEmail;
-    private String userSubject;
-    private boolean isTeacher;
-    private boolean isAdmin;
+    private static int userId;
+    private static String username;
+    private static String userEmail;
+    private static String userSpecificField;
+    private static boolean isTeacher;
+    private static boolean isAdmin;
 
-    public User(int userId, String username, String userEmail, boolean isTeacher, boolean isAdmin) {
-        this.setId(userId);
-        this.setUsername(username);
-        this.setEmail(userEmail);
-        this.setTeacher(isTeacher);
-        this.setAdmin(isAdmin);
-        this.setSubject("");
-    }
-
-    public User(int userId, String username, String userEmail, boolean isTeacher, boolean isAdmin, String userSubject) {
-        this.setId(userId);
-        this.setUsername(username);
-        this.setEmail(userEmail);
-        this.setTeacher(isTeacher);
-        this.setAdmin(isAdmin);
-        this.setSubject(userSubject);
-    }
-
-    public void setId(int userId) {
-        this.userId = userId;
-    }
-
-    public int getId() {
+    public static int getUserId() {
         return userId;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public static void setUserId(int userId) {
+        User.userId = userId;
     }
 
-    public String getUsername() {
+    public static String getUsername() {
         return username;
     }
 
-    public void setEmail(String userEmail) {
-        this.userEmail = userEmail;
+    public static void setUsername(String username) {
+        User.username = username;
     }
 
-    public String getEmail() {
+    public static String getUserEmail() {
         return userEmail;
     }
 
-    public void setSubject(String userSubject) {
-        this.userSubject = userSubject;
+    public static void setUserEmail(String userEmail) {
+        User.userEmail = userEmail;
     }
 
-    public String getSubject() {
-        return userSubject;
+    public static String getUserSpecificField() {
+        return userSpecificField;
     }
 
-    public void setTeacher(boolean isTeacher) {
-        this.isTeacher = isTeacher;
+    public static void setUserSpecificField(String userSpecificField) {
+        User.userSpecificField = userSpecificField;
     }
 
-    public boolean isTeacher() {
+    public static boolean isIsTeacher() {
         return isTeacher;
     }
 
-    public void setAdmin(boolean isAdmin) {
-        this.isAdmin = isAdmin;
+    public static void setIsTeacher(boolean isTeacher) {
+        User.isTeacher = isTeacher;
     }
 
-    public boolean isAdmin() {
+    public static boolean isIsAdmin() {
         return isAdmin;
+    }
+
+    public static void setIsAdmin(boolean isAdmin) {
+        User.isAdmin = isAdmin;
     }
 }

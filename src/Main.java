@@ -45,7 +45,7 @@ public class Main {
                     grades.setVisible(true);
                 }
                 case 3 -> {
-                    classroomsPanel classrooms = new classroomsPanel(userId);
+                    classroomsPanel classrooms = new classroomsPanel();
                     classrooms.setVisible(true);
                 }
                 case 4 -> {

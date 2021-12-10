@@ -2,6 +2,7 @@ package views;
 
 import javax.swing.*;
 import java.sql.*;
+import models.*;
 
 public class classroomsPanel extends JFrame {
     private JPanel classroomsPanel;
@@ -9,24 +10,17 @@ public class classroomsPanel extends JFrame {
     private JSpinner classCapacitySpinner;
     private JButton addButton;
 
-    private static int userId;
-
-    private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
-    private static final String dbUser = "postgres";
-    private static final String dbPass = "kekw123";
-
     private Connection dbConnection;
     private PreparedStatement dbPreparedStatement;
     private ResultSet dbResult;
 
-    public classroomsPanel(int userId) {
-        this.userId = userId;
-
+    public classroomsPanel() {
         add(classroomsPanel);
         setSize(400, 200);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
         SpinnerNumberModel model = new SpinnerNumberModel();
         model.setValue(1);
         model.setMinimum(1);
@@ -40,7 +34,7 @@ public class classroomsPanel extends JFrame {
             // Check if the text field is blank to avoid unnecessary sql errors
             if (!classroomName.equals("")) {
                 try {
-                    dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+                    dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
                     dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Classrooms\"(name, \"limit\") VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
                     dbPreparedStatement.setString(1, classroomName);
                     dbPreparedStatement.setInt(2, classroomLimit);
@@ -55,7 +49,7 @@ public class classroomsPanel extends JFrame {
                     dbConnection.close();
 
                     System.out.printf("userId %d created classroom: %d (name: %s, limit :%d)%n",
-                            userId, classroomId, classroomName, classroomLimit);
+                            User.getUserId(), classroomId, classroomName, classroomLimit);
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
