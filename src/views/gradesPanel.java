@@ -23,14 +23,14 @@ public class gradesPanel extends JFrame {
     private PreparedStatement dbPreparedStatement;
     private ResultSet dbResult;
 
-    public gradesPanel(int userId, String userName) {
+    public gradesPanel() {
 
         add(gradesPanel);
         setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        usernameLabel.setText(userName);
+        usernameLabel.setText(User.getUsername());
 
         infoScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         gradeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
@@ -55,7 +55,7 @@ public class gradesPanel extends JFrame {
                         dbPreparedStatement.executeUpdate();
                         dbPreparedStatement.close();
 
-                        System.out.printf("userId %d modified studentId: %d grade to %d%n", userId, studentId, studentGrade);
+                        System.out.printf("userId %d modified studentId: %d grade to %d%n", User.getUserId(), studentId, studentGrade);
                     } else System.out.println("Skipped a student, doesn't meet grade criteria.");
 
                     // Checks if the next row has a null id to end the loop

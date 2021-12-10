@@ -1,5 +1,8 @@
 package views;
 
+import models.Database;
+import models.User;
+
 import javax.swing.*;
 import java.sql.*;
 
@@ -10,19 +13,12 @@ public class lessonsPanel extends JFrame {
     private JComboBox<String> professionComboBox;
     private JComboBox<String> schoolYearComboBox;
 
-    private static int userId;
-
-    private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
-    private static final String dbUser = "postgres";
-    private static final String dbPass = "kekw123";
-
     private Connection dbConnection;
     private Statement dbStatement;
     private PreparedStatement dbPreparedStatement;
     private ResultSet dbResult;
 
-    public lessonsPanel(int userId) {
-        this.userId = userId;
+    public lessonsPanel() {
 
         add(lessonsPanel);
         setSize(400, 300);
@@ -32,7 +28,7 @@ public class lessonsPanel extends JFrame {
 
         // Get all distinct subjects from teachers
         try {
-            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
             dbStatement = dbConnection.createStatement();
             dbResult = dbStatement.executeQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
 
@@ -62,7 +58,7 @@ public class lessonsPanel extends JFrame {
                 int lessonYear = schoolYearComboBox.getSelectedIndex() + 1;
 
                 try {
-                    dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+                    dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
                     dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Lessons\"(name, subject, year) VALUES (?, ?, ?)");
 
                     dbPreparedStatement.setString(1, lessonName);
@@ -72,7 +68,7 @@ public class lessonsPanel extends JFrame {
                     dbPreparedStatement.close();
                     dbConnection.close();
 
-                    System.out.printf("userId %d created lesson: %s with subject: %s%n", userId, lessonName, lessonSubject);
+                    System.out.printf("userId %d created lesson: %s with subject: %s%n", User.getUserId(), lessonName, lessonSubject);
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();

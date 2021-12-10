@@ -41,7 +41,7 @@ public class Main {
                     schedule.setVisible(true);
                 }
                 case 2 -> {
-                    gradesPanel grades = new gradesPanel(userId, username);
+                    gradesPanel grades = new gradesPanel();
                     grades.setVisible(true);
                 }
                 case 3 -> {
@@ -49,7 +49,7 @@ public class Main {
                     classrooms.setVisible(true);
                 }
                 case 4 -> {
-                    lessonsPanel lessons = new lessonsPanel(userId);
+                    lessonsPanel lessons = new lessonsPanel();
                     lessons.setVisible(true);
                 }
                 case 5 -> {
