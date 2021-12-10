@@ -1,16 +1,16 @@
 package views;
 
+import models.Database;
+
 import javax.swing.*;
 import java.sql.*;
 
 public class loginPanel extends JFrame {
-    private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
-    private static final String dbUser = "postgres";
-    private static final String dbPass = "kekw123";
     private JPanel loginPanel;
     private JTextField usernameTextField;
     private JPasswordField passwordField;
     private JButton loginButton;
+
     private Connection dbConnection;
     private Statement dbStatement;
     private ResultSet dbResult;
@@ -22,10 +22,6 @@ public class loginPanel extends JFrame {
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        SpinnerNumberModel model = new SpinnerNumberModel();
-        model.setValue(1);
-        model.setMinimum(1);
-        model.setMaximum(99);
 
         loginButton.addActionListener(action -> {
             String userEmail = usernameTextField.getText();
@@ -36,7 +32,7 @@ public class loginPanel extends JFrame {
                 System.out.println("You can not have a blank email or password.");
             else {
                 try {
-                    dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+                    dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
                     dbStatement = dbConnection.createStatement();
                     dbResult = dbStatement.executeQuery(String.format("SELECT id, name FROM \"Users\" WHERE email = '%s' AND password = '%s'", userEmail, userPassword));
 
