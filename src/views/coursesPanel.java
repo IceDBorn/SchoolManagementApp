@@ -1,6 +1,8 @@
 package views;
 
 import com.github.lgooddatepicker.components.TimePicker;
+import models.Database;
+import models.User;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -25,25 +27,18 @@ public class coursesPanel extends JFrame {
     private final String[] scheduleTableColumns = {"Lesson", "Teacher", "Day", "Time"};
     private DefaultTableModel scheduleTableModel;
 
-    private static int userId;
-
-    private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
-    private static final String dbUser = "postgres";
-    private static final String dbPass = "kekw123";
-
     private Connection dbConnection;
     private Statement dbStatement;
     private PreparedStatement dbPreparedStatement;
     private ResultSet dbResult;
 
-    public coursesPanel(int userId) {
-        this.userId = userId;
+    public coursesPanel() {
 
         scheduleScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         // Fill the all available combo boxes
         try {
-            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
 
             // Select all lesson names and display them in coursesComboBox
             dbStatement = dbConnection.createStatement();
@@ -95,7 +90,7 @@ public class coursesPanel extends JFrame {
                 System.out.println("You can not have the same start and end time.");
             else {
                 try {
-                    dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+                    dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
 
                     // Get the lessonId using the selected lesson from the panel
                     String lessonName = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
@@ -148,7 +143,7 @@ public class coursesPanel extends JFrame {
                         dbPreparedStatement.close();
 
                         System.out.printf("userId %d created course: %d (lessonId: %d, teacherId %d, classroomId: %d, day %s, time: %s%n",
-                                userId, courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
+                                User.getUserId(), courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
                     }
                     dbConnection.close();
                 } catch (SQLException err) {
@@ -173,7 +168,7 @@ public class coursesPanel extends JFrame {
                 String courseTime = String.valueOf(scheduleTable.getValueAt(selectedRow, 3));
 
                 try {
-                    dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+                    dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
 
                     // Get the lessonId using the name of the lesson from the selected row
                     dbStatement = dbConnection.createStatement();
@@ -214,7 +209,7 @@ public class coursesPanel extends JFrame {
                     dbConnection.close();
 
                     System.out.printf("userId %d deleted course: %d (lessonId: %d, teacherId %d, classroomId: %d, day %s, time: %s%n",
-                            userId, courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
+                            User.getUserId(), courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
@@ -234,7 +229,7 @@ public class coursesPanel extends JFrame {
 
         // Fill the schedule table with all courses from the database
         try {
-            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
             dbStatement = dbConnection.createStatement();
             dbResult = dbStatement.executeQuery("""
                     SELECT DISTINCT("Courses".id), "Lessons".name, "Users".name, "Courses".day, "Courses".time
@@ -271,7 +266,7 @@ public class coursesPanel extends JFrame {
         String classroomName = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
 
         try {
-            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
             dbStatement = dbConnection.createStatement();
             dbResult = dbStatement.executeQuery(String.format("""
                     SELECT DISTINCT("Courses".id), "Lessons".name, "Users".name, "Courses".day, "Courses".time

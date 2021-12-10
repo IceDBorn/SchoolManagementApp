@@ -57,7 +57,7 @@ public class Main {
                     person.setVisible(true);
                 }
                 case 6 -> {
-                    coursesPanel courses = new coursesPanel(userId);
+                    coursesPanel courses = new coursesPanel();
                     courses.setVisible(true);
                 }
                 case 7 -> {
