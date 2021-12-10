@@ -55,10 +55,14 @@ public class lessonsPanel extends JFrame {
                     preparedStatement.setString(2, subject);
                     preparedStatement.setInt(3, year);
                     preparedStatement.executeUpdate();
+
+                    // Get the lessonId of the newly inserted classroom
+                    int lessonId = Database.getInsertedRowId(preparedStatement.getGeneratedKeys());
+
                     preparedStatement.close();
                     connection.close();
 
-                    System.out.printf("userId %d created lesson: %s (subject: %s, year: %d)%n", User.getId(), lesson, subject, year);
+                    System.out.printf("userId %d created lesson: %d (name: %s, subject: %s, year: %d)%n", User.getId(), lessonId, lesson, subject, year);
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();

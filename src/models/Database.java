@@ -37,4 +37,15 @@ public class Database {
 
         return cachedRowSet;
     }
+
+    /**
+     * Returns the id of the first inserted row
+     */
+    public static int getInsertedRowId(ResultSet resultSet) throws SQLException {
+        resultSet.next();
+        int insertedId = resultSet.getInt(1);
+        resultSet.close();
+
+        return insertedId;
+    }
 }

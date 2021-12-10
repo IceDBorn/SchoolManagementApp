@@ -112,9 +112,7 @@ public class coursesPanel extends JFrame {
                         preparedStatement.executeUpdate();
 
                         // Get the courseId of the newly inserted course
-                        ResultSet resultSet = preparedStatement.getGeneratedKeys();
-                        resultSet.next();
-                        int courseId = resultSet.getInt(1);
+                        int courseId = Database.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
                         preparedStatement.close();
                         connection.close();

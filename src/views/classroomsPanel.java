@@ -37,9 +37,7 @@ public class classroomsPanel extends JFrame {
                     preparedStatement.executeUpdate();
 
                     // Get the classroomId of the newly inserted classroom
-                    ResultSet resultSet = preparedStatement.getGeneratedKeys();
-                    resultSet.next();
-                    int classroomId = resultSet.getInt(1);
+                    int classroomId = Database.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
                     preparedStatement.close();
                     connection.close();

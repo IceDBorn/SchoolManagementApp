@@ -86,9 +86,7 @@ public class personPanel extends JFrame {
                 preparedStatement.executeUpdate();
 
                 // Get the userId of the newly inserted user
-                ResultSet resultSet = preparedStatement.getGeneratedKeys();
-                resultSet.next();
-                int personId = resultSet.getInt(1);
+                int personId = Database.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
                 // Check whether the user is a student or a teacher and import into the corresponding table
                 if (isTeacher) {
