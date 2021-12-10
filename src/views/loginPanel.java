@@ -1,19 +1,13 @@
 package views;
 
-import models.Database;
-
 import javax.swing.*;
-import java.sql.*;
+import controllers.userController;
 
 public class loginPanel extends JFrame {
     private JPanel loginPanel;
     private JTextField usernameTextField;
     private JPasswordField passwordField;
     private JButton loginButton;
-
-    private Connection dbConnection;
-    private Statement dbStatement;
-    private ResultSet dbResult;
 
     // TODO: After a successful log in, pass the userId to the controller
     public loginPanel() {
@@ -31,25 +25,7 @@ public class loginPanel extends JFrame {
             if (userEmail.equals("") || userPassword.equals(""))
                 System.out.println("You can not have a blank email or password.");
             else {
-                try {
-                    dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-                    dbStatement = dbConnection.createStatement();
-                    dbResult = dbStatement.executeQuery(String.format("SELECT id, name FROM \"Users\" WHERE email = '%s' AND password = '%s'", userEmail, userPassword));
-
-                    // If a user exists with the same email and password, let the user successfully log in
-                    if (dbResult.next()) {
-                        int userId = dbResult.getInt(1);
-                        String userName = dbResult.getString(2);
-
-                        System.out.printf("userId %d successfully logged in as %s%n", userId, userName);
-                    } else System.out.println("You've specified an invalid email or password.");
-
-                    dbStatement.close();
-                    dbConnection.close();
-                } catch (SQLException err) {
-                    System.out.println("SQL Exception:");
-                    err.printStackTrace();
-                }
+                userController.Login(userEmail, userPassword);
             }
         });
     }
