@@ -1,31 +1,30 @@
 package controllers;
 
 import models.Database;
+import models.User;
 
-import java.sql.*;
+import javax.sql.rowset.CachedRowSet;
+import java.sql.SQLException;
 
 public class userController {
-    public static void Login(String userEmail, String userPassword) {
+    public static void Login(String email, String password) {
         try {
-            Connection dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-            Statement dbStatement = dbConnection.createStatement();
-            ResultSet dbResult = dbStatement.executeQuery(String.format("SELECT id, name FROM \"Users\" WHERE email = '%s' AND password = '%s'", userEmail, userPassword));
+            String query = String.format("SELECT id, name, email, \"isAdmin\" FROM \"Users\" WHERE email = '%s' AND password = '%s'", email, password);
+            CachedRowSet results = Database.selectQuery(query);
 
             // If a user exists with the same email and password, let the user successfully log in
-            if (dbResult.next()) {
-                // TODO: Fill user fields via setters
-                int userId = dbResult.getInt(1);
-                String userName = dbResult.getString(2);
+            if (results.next()) {
+                User.setId(results.getInt(1));
+                User.setName(results.getString(2));
+                User.setEmail(results.getString(3));
+                User.setAdmin(results.getBoolean(4));
 
-                System.out.printf("userId %d successfully logged in as %s%n", userId, userName);
+                System.out.printf("userId %d successfully logged in as %s%s%n",
+                        User.getId(), User.getName(), User.isAdmin() ? " with admin rights" : "");
             } else System.out.println("You've specified an invalid email or password.");
-
-            dbStatement.close();
-            dbConnection.close();
-        } catch (
-        SQLException err) {
-            System.out.println("SQL Exception:");
+        } catch (SQLException err) {
             err.printStackTrace();
+
         }
     }
 }

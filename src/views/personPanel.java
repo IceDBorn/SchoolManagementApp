@@ -4,30 +4,26 @@ import models.Database;
 import models.User;
 import org.jdesktop.swingx.JXDatePicker;
 
+import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class personPanel extends JFrame {
+    private final ArrayList<String> subjectList;
     private JPanel personPanel;
     private JTextField usernameTextField;
+    private JTextField emailTextField;
+    private JPasswordField passwordField;
     private JButton addButton;
     private JComboBox<String> userDetailsComboBox;
     private JComboBox<String> userTypeComboBox;
-    private JTextField emailTextField;
-    private JPasswordField passwordField;
-    private JLabel userDetailsLabel;
     private JComboBox<String> genderComboBox;
+    private JLabel userDetailsLabel;
     private JCheckBox adminCheckBox;
     private JXDatePicker userBirthDayPicker;
-
-    private final ArrayList<String> subjectList;
-
-    private Connection dbConnection;
-    private Statement dbStatement;
-    private PreparedStatement dbPreparedStatement;
-    private ResultSet dbResult;
 
     public personPanel() {
         this.subjectList = new ArrayList<>();
@@ -37,12 +33,12 @@ public class personPanel extends JFrame {
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        updateSubjects();
 
-        addSubjects();
+        userDetailsLabel.setText("Profession");
 
         userTypeComboBox.addItem("Teacher");
         userTypeComboBox.addItem("Student");
-        userDetailsLabel.setText("Profession");
 
         genderComboBox.addItem("Male");
         genderComboBox.addItem("Female");
@@ -52,18 +48,15 @@ public class personPanel extends JFrame {
 
             if (Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher")) {
                 userDetailsLabel.setText("Profession");
-                addSubjects();
                 adminCheckBox.setEnabled(true);
+                updateSubjects();
             } else {
                 userDetailsLabel.setText("School Year");
-                userDetailsComboBox.addItem("1η Γυμνασίου");
-                userDetailsComboBox.addItem("2α Γυμνασίου");
-                userDetailsComboBox.addItem("3η Γυμνασίου");
-                userDetailsComboBox.addItem("1η Λυκείου");
-                userDetailsComboBox.addItem("2α Λυκείου");
-                userDetailsComboBox.addItem("3η Λυκείου");
                 adminCheckBox.setEnabled(false);
                 adminCheckBox.setSelected(false);
+
+                for (String schoolYear : Arrays.asList("1η Γυμνασίου", "2α Γυμνασίου", "3η Γυμνασίου", "1η Λυκείου", "2α Λυκείου", "3η Λυκείου"))
+                    userDetailsComboBox.addItem(schoolYear);
             }
         });
 
@@ -71,87 +64,79 @@ public class personPanel extends JFrame {
             String userName = usernameTextField.getText();
             String userEmail = emailTextField.getText();
             String userPassword = String.valueOf(passwordField.getPassword());
+            String userSubject = Objects.requireNonNull(userDetailsComboBox.getSelectedItem()).toString();
             Date userBirthday = new Date(userBirthDayPicker.getDate().getTime());
             int userGender = genderComboBox.getSelectedIndex();
             int userPhoneNumber = 1234567890;
+            int userYear = userDetailsComboBox.getSelectedIndex() + 1;
             boolean isTeacher = Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher");
             boolean isAdmin = adminCheckBox.isSelected();
 
-            String userSubject = Objects.requireNonNull(userDetailsComboBox.getSelectedItem()).toString();
-            int userYear = userDetailsComboBox.getSelectedIndex() + 1;
-
             try {
-                dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-                dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Users\"(name, gender, birthday, phone, email, password, \"isAdmin\") VALUES (?, ?, ?, ?, ?, ?, ?)",
+                Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"Users\"(name, gender, birthday, phone, email, password, \"isAdmin\") VALUES (?, ?, ?, ?, ?, ?, ?)",
                         PreparedStatement.RETURN_GENERATED_KEYS);
+                preparedStatement.setString(1, userName);
+                preparedStatement.setInt(2, userGender);
+                preparedStatement.setDate(3, userBirthday);
+                preparedStatement.setInt(4, userPhoneNumber);
+                preparedStatement.setString(5, userEmail);
+                preparedStatement.setString(6, userPassword);
+                preparedStatement.setBoolean(7, isAdmin);
+                preparedStatement.executeUpdate();
 
-                dbPreparedStatement.setString(1, userName);
-                dbPreparedStatement.setInt(2, userGender);
-                dbPreparedStatement.setDate(3, userBirthday);
-                dbPreparedStatement.setInt(4, userPhoneNumber);
-                dbPreparedStatement.setString(5, userEmail);
-                dbPreparedStatement.setString(6, userPassword);
-                dbPreparedStatement.setBoolean(7, isAdmin);
-                dbPreparedStatement.executeUpdate();
-
-                dbResult = dbPreparedStatement.getGeneratedKeys();
-                dbResult.next();
-                int personId = dbResult.getInt(1);
+                // Get the userId of the newly inserted user
+                ResultSet resultSet = preparedStatement.getGeneratedKeys();
+                resultSet.next();
+                int personId = resultSet.getInt(1);
 
                 // Check whether the user is a student or a teacher and import into the corresponding table
                 if (isTeacher) {
-                    dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Teachers\"(id, subject) VALUES (?, ?)");
-                    dbPreparedStatement.setInt(1, personId);
-                    dbPreparedStatement.setString(2, userSubject);
+                    preparedStatement = connection.prepareStatement("INSERT INTO \"Teachers\"(id, subject) VALUES (?, ?)");
+                    preparedStatement.setInt(1, personId);
+                    preparedStatement.setString(2, userSubject);
                 } else {
-                    dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Students\"(id, year) VALUES (?, ?)");
-                    dbPreparedStatement.setInt(1, personId);
-                    dbPreparedStatement.setInt(2, userYear);
+                    preparedStatement = connection.prepareStatement("INSERT INTO \"Students\"(id, year) VALUES (?, ?)");
+                    preparedStatement.setInt(1, personId);
+                    preparedStatement.setInt(2, userYear);
                 }
 
-                dbPreparedStatement.executeUpdate();
-                dbPreparedStatement.close();
-                dbConnection.close();
+                preparedStatement.executeUpdate();
+                preparedStatement.close();
+                connection.close();
 
+                updateSubjects();
                 System.out.printf("userId %d created %s: %s (gender: %s, birthday: %s, phone: %d, email: %s, admin: %s%n",
-                        User.getUserId(), isTeacher ? "teacher" : "student", userName, userGender, userBirthday, userPhoneNumber, userEmail, isAdmin ? "Yes" : "No");
+                        User.getId(), isTeacher ? "teacher" : "student", userName, userGender, userBirthday, userPhoneNumber, userEmail, isAdmin ? "Yes" : "No");
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
             }
-            addSubjects();
         });
     }
 
     /**
      * Get all subjects, add any new ones into subjectList and update userDetailsComboBox
      */
-    private void addSubjects() {
+    private void updateSubjects() {
         try {
-            dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
+            CachedRowSet subjects = Database.selectQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
 
-            while (dbResult.next()) {
-                String subjectName = dbResult.getString(1);
+            while (subjects.next()) {
+                String subjectName = subjects.getString(1);
 
-                if (subjectList.contains(subjectName))
-                    continue;
-
-                subjectList.add(subjectName);
+                if (!subjectList.contains(subjectName))
+                    subjectList.add(subjectName);
             }
-
-            dbStatement.close();
-            dbConnection.close();
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
+        } finally {
+            userDetailsComboBox.removeAllItems();
+            userDetailsComboBox.addItem("Add New Subject");
+
+            for (String subject : subjectList)
+                userDetailsComboBox.addItem(subject);
         }
-
-        userDetailsComboBox.removeAllItems();
-        userDetailsComboBox.addItem("Add New Subject");
-
-        for (String subject : subjectList)
-            userDetailsComboBox.addItem(subject);
     }
 }

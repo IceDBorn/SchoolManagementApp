@@ -4,6 +4,7 @@ import com.github.lgooddatepicker.components.TimePicker;
 import models.Database;
 import models.User;
 
+import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class coursesPanel extends JFrame {
+    private final String[] scheduleTableColumns = {"Lesson", "Teacher", "Day", "Time"};
     private JPanel coursesPanel;
     private JButton addButton;
     private JButton removeButton;
@@ -23,47 +25,27 @@ public class coursesPanel extends JFrame {
     private TimePicker timePickerEnd;
     private JTable scheduleTable;
     private JScrollPane scheduleScrollPane;
-
-    private final String[] scheduleTableColumns = {"Lesson", "Teacher", "Day", "Time"};
     private DefaultTableModel scheduleTableModel;
 
-    private Connection dbConnection;
-    private Statement dbStatement;
-    private PreparedStatement dbPreparedStatement;
-    private ResultSet dbResult;
-
     public coursesPanel() {
-
         scheduleScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         // Fill the all available combo boxes
         try {
-            dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-
             // Select all lesson names and display them in coursesComboBox
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery("SELECT name FROM \"Lessons\"");
-            while (dbResult.next())
-                lessonsComboBox.addItem(dbResult.getString(1));
-
-            dbStatement.close();
+            CachedRowSet lessons = Database.selectQuery("SELECT name FROM \"Lessons\"");
+            while (lessons.next())
+                lessonsComboBox.addItem(lessons.getString(1));
 
             // Select all teacher names and display them in teachersComboBox
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery("SELECT \"Users\".name FROM \"Users\" INNER JOIN \"Teachers\" ON \"Users\".id = \"Teachers\".id");
-            while (dbResult.next())
-                teachersComboBox.addItem(dbResult.getString(1));
-
-            dbStatement.close();
+            CachedRowSet teachers = Database.selectQuery("SELECT \"Users\".name FROM \"Users\" INNER JOIN \"Teachers\" ON \"Users\".id = \"Teachers\".id");
+            while (teachers.next())
+                teachersComboBox.addItem(teachers.getString(1));
 
             // Select all classroom names and display them in classroomComboBox
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery("SELECT name FROM \"Classrooms\"");
-            while (dbResult.next())
-                classroomComboBox.addItem(dbResult.getString(1));
-
-            dbStatement.close();
-            dbConnection.close();
+            CachedRowSet classrooms = Database.selectQuery("SELECT name FROM \"Classrooms\"");
+            while (classrooms.next())
+                classroomComboBox.addItem(classrooms.getString(1));
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
@@ -90,68 +72,63 @@ public class coursesPanel extends JFrame {
                 System.out.println("You can not have the same start and end time.");
             else {
                 try {
-                    dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-
-                    // Get the lessonId using the selected lesson from the panel
                     String lessonName = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
-                    dbStatement = dbConnection.createStatement();
-                    dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
-                    dbResult.next();
-                    int lessonId = dbResult.getInt(1);
-                    dbStatement.close();
-
-                    // Get the teacherId using the selected teacher from the panel
                     String teacherName = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
-                    dbStatement = dbConnection.createStatement();
-                    dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
-                    dbResult.next();
-                    int teacherId = dbResult.getInt(1);
-                    dbStatement.close();
-
-                    // Get the classroomId using the selected classroom from the panel
                     String classroomName = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
-                    dbStatement = dbConnection.createStatement();
-                    dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
-                    dbResult.next();
-                    int classroomId = dbResult.getInt(1);
-                    dbStatement.close();
-
                     String courseDay = Objects.requireNonNull(dayComboBox.getSelectedItem()).toString();
                     String courseTime = timePickerStart.getText() + "-" + timePickerEnd.getText();
 
+                    // Get the lessonId using the selected lesson from the panel
+                    CachedRowSet lessons = Database.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
+                    lessons.next();
+                    int lessonId = lessons.getInt(1);
+
+                    // Get the teacherId using the selected teacher from the panel
+                    CachedRowSet teachers = Database.selectQuery(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
+                    teachers.next();
+                    int teacherId = teachers.getInt(1);
+
                     // Get the classroomId using the selected classroom from the panel
-                    dbStatement = dbConnection.createStatement();
-                    dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Courses\" WHERE \"classroomId\" = '%d' AND day = '%s' AND time = '%s'", classroomId, courseDay, courseTime));
-                    boolean courseExists = dbResult.isBeforeFirst();
-                    dbStatement.close();
+                    CachedRowSet classrooms = Database.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
+                    classrooms.next();
+                    int classroomId = classrooms.getInt(1);
+
+                    // Check if a course exists with the same classroom, day and time
+                    CachedRowSet courses = Database.selectQuery(String.format("SELECT id FROM \"Courses\" WHERE \"classroomId\" = '%d' AND day = '%s' AND time = '%s'", classroomId, courseDay, courseTime));
+                    courses.next();
+                    boolean courseExists = courses.isBeforeFirst();
 
                     if (courseExists)
                         System.out.println("A course already exists with the same classroom, day and time");
                     else {
-                        dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Courses\"(\"lessonId\", \"teacherId\", \"classroomId\", day, time) VALUES (?, ?, ?, ?, ?)",
+                        Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                        PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"Courses\"(\"lessonId\", \"teacherId\", \"classroomId\", day, time) VALUES (?, ?, ?, ?, ?)",
                                 PreparedStatement.RETURN_GENERATED_KEYS);
-                        dbPreparedStatement.setInt(1, lessonId);
-                        dbPreparedStatement.setInt(2, teacherId);
-                        dbPreparedStatement.setInt(3, classroomId);
-                        dbPreparedStatement.setString(4, courseDay);
-                        dbPreparedStatement.setString(5, courseTime);
-                        dbPreparedStatement.executeUpdate();
+                        preparedStatement.setInt(1, lessonId);
+                        preparedStatement.setInt(2, teacherId);
+                        preparedStatement.setInt(3, classroomId);
+                        preparedStatement.setString(4, courseDay);
+                        preparedStatement.setString(5, courseTime);
+                        preparedStatement.executeUpdate();
 
-                        dbResult = dbPreparedStatement.getGeneratedKeys();
-                        dbResult.next();
-                        int courseId = dbResult.getInt(1);
-                        dbPreparedStatement.close();
+                        // Get the courseId of the newly inserted course
+                        ResultSet resultSet = preparedStatement.getGeneratedKeys();
+                        resultSet.next();
+                        int courseId = resultSet.getInt(1);
+
+                        preparedStatement.close();
+                        connection.close();
 
                         System.out.printf("userId %d created course: %d (lessonId: %d, teacherId %d, classroomId: %d, day %s, time: %s%n",
-                                User.getUserId(), courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
+                                User.getId(), courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
                     }
-                    dbConnection.close();
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
+                } finally {
+                    updateTableRows();
                 }
             }
-            updateTableRows();
         });
 
         // TODO: When deleting the bottom row, the above row has a white column
@@ -168,53 +145,44 @@ public class coursesPanel extends JFrame {
                 String courseTime = String.valueOf(scheduleTable.getValueAt(selectedRow, 3));
 
                 try {
-                    dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-
                     // Get the lessonId using the name of the lesson from the selected row
-                    dbStatement = dbConnection.createStatement();
-                    dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
-                    dbResult.next();
-                    int lessonId = dbResult.getInt(1);
-                    dbStatement.close();
+                    CachedRowSet lessons = Database.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
+                    lessons.next();
+                    int lessonId = lessons.getInt(1);
 
                     // Get the teacherId using the name of the lesson from the selected row
-                    dbStatement = dbConnection.createStatement();
-                    dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
-                    dbResult.next();
-                    int teacherId = dbResult.getInt(1);
-                    dbStatement.close();
+                    CachedRowSet teachers = Database.selectQuery(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
+                    teachers.next();
+                    int teacherId = teachers.getInt(1);
 
                     // Get the classroomId using the name of the selected classroom
-                    dbStatement = dbConnection.createStatement();
-                    dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
-                    dbResult.next();
-                    int classroomId = dbResult.getInt(1);
-                    dbStatement.close();
+                    CachedRowSet classrooms = Database.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
+                    classrooms.next();
+                    int classroomId = classrooms.getInt(1);
 
                     // Get the courseId using the data from the selected row
-                    dbStatement = dbConnection.createStatement();
-                    dbResult = dbStatement.executeQuery(String.format("""
+                    CachedRowSet courses = Database.selectQuery(String.format("""
                             SELECT id FROM "Courses"
                             WHERE "lessonId" = '%d' AND "teacherId" = '%d' AND "classroomId" = '%d' AND day = '%s' AND time = '%s'""", lessonId, teacherId, classroomId, courseDay, courseTime
                     ));
-                    dbResult.next();
-                    int courseId = dbResult.getInt(1);
-                    dbStatement.close();
+                    courses.next();
+                    int courseId = courses.getInt(1);
 
                     // Delete the selected course from the database
-                    dbPreparedStatement = dbConnection.prepareStatement("DELETE FROM \"Courses\" WHERE id = ?");
-                    dbPreparedStatement.setInt(1, courseId);
-                    dbPreparedStatement.executeUpdate();
-                    dbPreparedStatement.close();
-                    dbConnection.close();
+                    Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                    PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE id = ?");
+                    preparedStatement.setInt(1, courseId);
+                    preparedStatement.executeUpdate();
+                    preparedStatement.close();
+                    connection.close();
 
+                    scheduleTableModel.removeRow(selectedRow);
                     System.out.printf("userId %d deleted course: %d (lessonId: %d, teacherId %d, classroomId: %d, day %s, time: %s%n",
-                            User.getUserId(), courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
+                            User.getId(), courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
                 }
-                scheduleTableModel.removeRow(selectedRow);
             }
         });
 
@@ -229,9 +197,7 @@ public class coursesPanel extends JFrame {
 
         // Fill the schedule table with all courses from the database
         try {
-            dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery("""
+            CachedRowSet courses = Database.selectQuery("""
                     SELECT DISTINCT("Courses".id), "Lessons".name, "Users".name, "Courses".day, "Courses".time
                     FROM "Courses"
                     INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id
@@ -240,16 +206,13 @@ public class coursesPanel extends JFrame {
 
             // Add rows
             Object[] scheduleRows = new Object[4];
-            while (dbResult.next()) {
-                scheduleRows[0] = dbResult.getString(2);
-                scheduleRows[1] = dbResult.getString(3);
-                scheduleRows[2] = dbResult.getString(4);
-                scheduleRows[3] = dbResult.getString(5);
+            while (courses.next()) {
+                scheduleRows[0] = courses.getString(2);
+                scheduleRows[1] = courses.getString(3);
+                scheduleRows[2] = courses.getString(4);
+                scheduleRows[3] = courses.getString(5);
                 scheduleTableModel.addRow(scheduleRows);
             }
-
-            dbStatement.close();
-            dbConnection.close();
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
@@ -266,9 +229,7 @@ public class coursesPanel extends JFrame {
         String classroomName = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
 
         try {
-            dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery(String.format("""
+            CachedRowSet courses = Database.selectQuery(String.format("""
                     SELECT DISTINCT("Courses".id), "Lessons".name, "Users".name, "Courses".day, "Courses".time
                     FROM "Courses"
                     INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id
@@ -278,20 +239,16 @@ public class coursesPanel extends JFrame {
 
             // Add rows
             Object[] scheduleRows = new Object[4];
-            while (dbResult.next()) {
-                scheduleRows[0] = dbResult.getString(2);
-                scheduleRows[1] = dbResult.getString(3);
-                scheduleRows[2] = dbResult.getString(4);
-                scheduleRows[3] = dbResult.getString(5);
+            while (courses.next()) {
+                scheduleRows[0] = courses.getString(2);
+                scheduleRows[1] = courses.getString(3);
+                scheduleRows[2] = courses.getString(4);
+                scheduleRows[3] = courses.getString(5);
                 scheduleTableModel.addRow(scheduleRows);
             }
-
-            dbStatement.close();
-            dbConnection.close();
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
         }
-        this.repaint();
     }
 }
