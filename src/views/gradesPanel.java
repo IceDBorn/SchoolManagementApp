@@ -1,5 +1,8 @@
 package views;
 
+import models.Database;
+import models.User;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -15,30 +18,12 @@ public class gradesPanel extends JFrame {
     private JButton homeButton;
     private JButton saveButton;
 
-    private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
-    private static final String dbUser = "postgres";
-    private static final String dbPass = "kekw123";
-
-    private static int userId;
-    private boolean isTeacher;
-
     private Connection dbConnection;
     private Statement dbStatement;
     private PreparedStatement dbPreparedStatement;
     private ResultSet dbResult;
 
     public gradesPanel(int userId, String userName) {
-        this.userId = userId;
-
-        try {
-            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Teachers\" WHERE id = %d", userId));
-            this.isTeacher = dbResult.next();
-        } catch (SQLException err) {
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
-        }
 
         add(gradesPanel);
         setSize(1280, 720);
@@ -54,9 +39,9 @@ public class gradesPanel extends JFrame {
         infoScrollPane.getVerticalScrollBar().setModel(gradeScrollPane.getVerticalScrollBar().getModel());
 
         saveButton.addActionListener(action -> {
-            if (!isTeacher) return;
+            if (!User.isTeacher()) return;
             try {
-                dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+                dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
 
                 // Loop through all the table rows in order to update them one by one.
                 for (int i = 0; i < infoTable.getRowCount(); i++) {
@@ -91,7 +76,7 @@ public class gradesPanel extends JFrame {
         String dbQuery;
 
         // Check whether the user is a teacher and show the corresponding panel
-        if (isTeacher) {
+        if (User.isTeacher()) {
             infoTableColumns = new String[]{"ID", "Student", "Subject"};
             dbQuery = String.format("""
                     SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
@@ -99,7 +84,7 @@ public class gradesPanel extends JFrame {
                     INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
                     INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
                     INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
-                    WHERE "Courses"."teacherId" = %d""", userId);
+                    WHERE "Courses"."teacherId" = %d""", User.getUserId());
         } else {
             infoTableColumns = new String[]{"Subject"};
             dbQuery = String.format("""
@@ -107,7 +92,7 @@ public class gradesPanel extends JFrame {
                     FROM "StudentLessons"
                     JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
                     JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
-                    WHERE "studentId" = %d""", userId);
+                    WHERE "studentId" = %d""", User.getUserId());
             // Hide save button if a student account is viewing the grades
             saveButton = new JButton();
             saveButton.setVisible(false);
@@ -124,7 +109,7 @@ public class gradesPanel extends JFrame {
         infoTable.setEnabled(false);
 
         try {
-            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
             dbStatement = dbConnection.createStatement();
             dbResult = dbStatement.executeQuery(dbQuery);
 
@@ -133,7 +118,7 @@ public class gradesPanel extends JFrame {
             Object[] gradeRow = new Object[1];
 
             while (dbResult.next()) {
-                if (isTeacher) {
+                if (User.isTeacher()) {
                     infoRows[0] = dbResult.getString(1);
                     infoRows[1] = dbResult.getString(2);
                     infoRows[2] = dbResult.getString(3);

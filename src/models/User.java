@@ -40,7 +40,7 @@ public class User {
         User.userSpecificField = userSpecificField;
     }
 
-    public static boolean isIsTeacher() {
+    public static boolean isTeacher() {
         return isTeacher;
     }
 
@@ -48,7 +48,7 @@ public class User {
         User.isTeacher = isTeacher;
     }
 
-    public static boolean isIsAdmin() {
+    public static boolean isAdmin() {
         return isAdmin;
     }
 
