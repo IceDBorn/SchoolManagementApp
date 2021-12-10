@@ -53,7 +53,7 @@ public class Main {
                     lessons.setVisible(true);
                 }
                 case 5 -> {
-                    personPanel person = new personPanel(userId);
+                    personPanel person = new personPanel();
                     person.setVisible(true);
                 }
                 case 6 -> {

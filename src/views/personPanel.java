@@ -1,5 +1,7 @@
 package views;
 
+import models.Database;
+import models.User;
 import org.jdesktop.swingx.JXDatePicker;
 
 import javax.swing.*;
@@ -20,20 +22,14 @@ public class personPanel extends JFrame {
     private JCheckBox adminCheckBox;
     private JXDatePicker userBirthDayPicker;
 
-    private final int userId;
     private final ArrayList<String> subjectList;
-
-    private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
-    private static final String dbUser = "postgres";
-    private static final String dbPass = "kekw123";
 
     private Connection dbConnection;
     private Statement dbStatement;
     private PreparedStatement dbPreparedStatement;
     private ResultSet dbResult;
 
-    public personPanel(int userId) {
-        this.userId = userId;
+    public personPanel() {
         this.subjectList = new ArrayList<>();
 
         add(personPanel);
@@ -85,7 +81,7 @@ public class personPanel extends JFrame {
             int userYear = userDetailsComboBox.getSelectedIndex() + 1;
 
             try {
-                dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+                dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
                 dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Users\"(name, gender, birthday, phone, email, password, \"isAdmin\") VALUES (?, ?, ?, ?, ?, ?, ?)",
                         PreparedStatement.RETURN_GENERATED_KEYS);
 
@@ -118,7 +114,7 @@ public class personPanel extends JFrame {
                 dbConnection.close();
 
                 System.out.printf("userId %d created %s: %s (gender: %s, birthday: %s, phone: %d, email: %s, admin: %s%n",
-                        userId, isTeacher ? "teacher" : "student", userName, userGender, userBirthday, userPhoneNumber, userEmail, isAdmin ? "Yes" : "No");
+                        User.getUserId(), isTeacher ? "teacher" : "student", userName, userGender, userBirthday, userPhoneNumber, userEmail, isAdmin ? "Yes" : "No");
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
@@ -132,7 +128,7 @@ public class personPanel extends JFrame {
      */
     private void addSubjects() {
         try {
-            dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
             dbStatement = dbConnection.createStatement();
             dbResult = dbStatement.executeQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
 
