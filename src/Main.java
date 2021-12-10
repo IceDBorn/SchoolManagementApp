@@ -37,7 +37,7 @@ public class Main {
 
             switch (userPanel) {
                 case 1 -> {
-                    schedulePanel schedule = new schedulePanel(userId, username);
+                    schedulePanel schedule = new schedulePanel();
                     schedule.setVisible(true);
                 }
                 case 2 -> {

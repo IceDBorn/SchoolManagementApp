@@ -1,5 +1,8 @@
 package views;
 
+import models.Database;
+import models.User;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -13,21 +16,14 @@ public class schedulePanel extends JFrame {
     private JScrollPane scrollPane;
     private JButton homeButton;
 
-    private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
-    private static final String dbUser = "postgres";
-    private static final String dbPass = "kekw123";
-
-    private static int studentId;
-
-    public schedulePanel(int studentId, String studentName) {
-        this.studentId = studentId;
+    public schedulePanel() {
 
         add(schedulePanel);
         setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        usernameLabel.setText(studentName);
+        usernameLabel.setText(User.getUsername());
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
     }
 
@@ -41,7 +37,7 @@ public class schedulePanel extends JFrame {
         scheduleTable.setEnabled(false);
 
         try {
-            Connection dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
+            Connection dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
             Statement dbStatement = dbConnection.createStatement();
             ResultSet dbResult = dbStatement.executeQuery(String.format("""
                     SELECT "Lessons".name, "Classrooms".name, "Courses".day, "Courses".time
@@ -49,7 +45,7 @@ public class schedulePanel extends JFrame {
                     INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
                     INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
                     INNER JOIN "Classrooms" ON "Classrooms".id = "Courses"."classroomId"
-                    WHERE "StudentLessons"."studentId" = %d""", studentId));
+                    WHERE "StudentLessons"."studentId" = %d""", User.getUserId()));
 
             // Add rows
             Object[] row = new Object[4];
