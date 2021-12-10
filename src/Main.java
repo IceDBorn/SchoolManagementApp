@@ -37,27 +37,27 @@ public class Main {
 
             switch (userPanel) {
                 case 1 -> {
-                    schedulePanel schedule = new schedulePanel(userId, username);
+                    schedulePanel schedule = new schedulePanel();
                     schedule.setVisible(true);
                 }
                 case 2 -> {
-                    gradesPanel grades = new gradesPanel(userId, username);
+                    gradesPanel grades = new gradesPanel();
                     grades.setVisible(true);
                 }
                 case 3 -> {
-                    classroomsPanel classrooms = new classroomsPanel(userId);
+                    classroomsPanel classrooms = new classroomsPanel();
                     classrooms.setVisible(true);
                 }
                 case 4 -> {
-                    lessonsPanel lessons = new lessonsPanel(userId);
+                    lessonsPanel lessons = new lessonsPanel();
                     lessons.setVisible(true);
                 }
                 case 5 -> {
-                    personPanel person = new personPanel(userId);
+                    personPanel person = new personPanel();
                     person.setVisible(true);
                 }
                 case 6 -> {
-                    coursesPanel courses = new coursesPanel(userId);
+                    coursesPanel courses = new coursesPanel();
                     courses.setVisible(true);
                 }
                 case 7 -> {
