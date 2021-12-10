@@ -1,31 +1,23 @@
 package views;
 
 import javax.swing.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class loginPanel extends JFrame {
-    private JPanel classroomsPanel;
-    private JTextField usernameTextField;
-    private JSpinner classCapacitySpinner;
-    private JButton loginButton;
-    private JPasswordField passwordField1;
-
-    private static int userId;
-
     private static final String dbURL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String dbUser = "postgres";
     private static final String dbPass = "kekw123";
-
+    private JPanel loginPanel;
+    private JTextField usernameTextField;
+    private JPasswordField passwordField;
+    private JButton loginButton;
     private Connection dbConnection;
-    private PreparedStatement dbPreparedStatement;
+    private Statement dbStatement;
+    private ResultSet dbResult;
 
-    public loginPanel(int userId) {
-        this.userId = userId;
-
-        add(classroomsPanel);
+    // TODO: After a successful log in, pass the userId to the controller
+    public loginPanel() {
+        add(loginPanel);
         setSize(400, 200);
         setResizable(false);
         setLocationRelativeTo(null);
@@ -36,26 +28,33 @@ public class loginPanel extends JFrame {
         model.setMaximum(99);
 
         loginButton.addActionListener(action -> {
-            String classroomName = usernameTextField.getText();
-            int classroomLimit = (int) classCapacitySpinner.getValue();
+            String userEmail = usernameTextField.getText();
+            String userPassword = String.valueOf(passwordField.getPassword());
 
-            // Check if the text field is blank to avoid unnecessary sql errors
-            if (!classroomName.equals("")) {
+            // Check if the email or the password are blank
+            if (userEmail.equals("") || userPassword.equals(""))
+                System.out.println("You can not have a blank email or password.");
+            else {
                 try {
                     dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
-                    dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Classrooms\"(name, \"limit\") VALUES (?, ?)");
-                    dbPreparedStatement.setString(1, classroomName);
-                    dbPreparedStatement.setInt(2, classroomLimit);
-                    dbPreparedStatement.executeUpdate();
-                    dbPreparedStatement.close();
-                    dbConnection.close();
+                    dbStatement = dbConnection.createStatement();
+                    dbResult = dbStatement.executeQuery(String.format("SELECT id, name FROM \"Users\" WHERE email = '%s' AND password = '%s'", userEmail, userPassword));
 
-                    System.out.printf("userId %d created classroom: %s with limit: %d%n", userId, classroomName, classroomLimit);
+                    // If a user exists with the same email and password, let the user successfully log in
+                    if (dbResult.next()) {
+                        int userId = dbResult.getInt(1);
+                        String userName = dbResult.getString(2);
+
+                        System.out.printf("userId %d successfully logged in as %s%n", userId, userName);
+                    } else System.out.println("You've specified an invalid email or password.");
+
+                    dbStatement.close();
+                    dbConnection.close();
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
                 }
-            } else System.out.println("You can not insert a blank name");
+            }
         });
     }
 }

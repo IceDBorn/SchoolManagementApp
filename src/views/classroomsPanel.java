@@ -17,6 +17,7 @@ public class classroomsPanel extends JFrame {
 
     private Connection dbConnection;
     private PreparedStatement dbPreparedStatement;
+    private ResultSet dbResult;
 
     public classroomsPanel(int userId) {
         this.userId = userId;
@@ -40,14 +41,21 @@ public class classroomsPanel extends JFrame {
             if (!classroomName.equals("")) {
                 try {
                     dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
-                    dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Classrooms\"(name, \"limit\") VALUES (?, ?)");
+                    dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Classrooms\"(name, \"limit\") VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
                     dbPreparedStatement.setString(1, classroomName);
                     dbPreparedStatement.setInt(2, classroomLimit);
                     dbPreparedStatement.executeUpdate();
+
+                    // Get the classroomId of the newly inserted classroom
+                    dbResult = dbPreparedStatement.getGeneratedKeys();
+                    dbResult.next();
+                    int classroomId = dbResult.getInt(1);
+
                     dbPreparedStatement.close();
                     dbConnection.close();
 
-                    System.out.printf("userId %d created classroom: %s with limit: %d%n", userId, classroomName, classroomLimit);
+                    System.out.printf("userId %d created classroom: %d (name: %s, limit :%d)%n",
+                            userId, classroomId, classroomName, classroomLimit);
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();

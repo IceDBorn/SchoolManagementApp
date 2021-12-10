@@ -61,7 +61,7 @@ public class Main {
                     courses.setVisible(true);
                 }
                 case 7 -> {
-                    loginPanel login = new loginPanel(userId);
+                    loginPanel login = new loginPanel();
                     login.setVisible(true);
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + userPanel);

@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class coursesPanel extends JFrame {
-    private JPanel classroomsPanel;
+    private JPanel coursesPanel;
     private JButton addButton;
     private JButton removeButton;
     private JComboBox<String> lessonsComboBox;
@@ -74,7 +74,7 @@ public class coursesPanel extends JFrame {
             err.printStackTrace();
         }
 
-        add(classroomsPanel);
+        add(coursesPanel);
         setSize(800, 600);
         setResizable(false);
         setLocationRelativeTo(null);
@@ -87,6 +87,7 @@ public class coursesPanel extends JFrame {
         for (String day : Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))
             dayComboBox.addItem(day);
 
+        // Add course based on the selected data
         addButton.addActionListener(action -> {
             if (timePickerStart.getText().equals("") || timePickerEnd.getText().equals(""))
                 System.out.println("You can not have a blank start or end time.");
@@ -158,7 +159,8 @@ public class coursesPanel extends JFrame {
             updateTableRows();
         });
 
-        // Removes the selected course from the database
+        // TODO: When deleting the bottom row, the above row has a white column
+        // Remove the selected course from the database
         removeButton.addActionListener(action -> {
             int selectedRow = scheduleTable.getSelectedRow();
             if (!scheduleTable.isRowSelected(selectedRow))
@@ -170,11 +172,6 @@ public class coursesPanel extends JFrame {
                 String courseDay = String.valueOf(scheduleTable.getValueAt(selectedRow, 2));
                 String courseTime = String.valueOf(scheduleTable.getValueAt(selectedRow, 3));
 
-                int courseId;
-                int lessonId;
-                int teacherId;
-                int classroomId;
-
                 try {
                     dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
 
@@ -182,21 +179,21 @@ public class coursesPanel extends JFrame {
                     dbStatement = dbConnection.createStatement();
                     dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
                     dbResult.next();
-                    lessonId = dbResult.getInt(1);
+                    int lessonId = dbResult.getInt(1);
                     dbStatement.close();
 
                     // Get the teacherId using the name of the lesson from the selected row
                     dbStatement = dbConnection.createStatement();
                     dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
                     dbResult.next();
-                    teacherId = dbResult.getInt(1);
+                    int teacherId = dbResult.getInt(1);
                     dbStatement.close();
 
                     // Get the classroomId using the name of the selected classroom
                     dbStatement = dbConnection.createStatement();
                     dbResult = dbStatement.executeQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
                     dbResult.next();
-                    classroomId = dbResult.getInt(1);
+                    int classroomId = dbResult.getInt(1);
                     dbStatement.close();
 
                     // Get the courseId using the data from the selected row
@@ -206,16 +203,18 @@ public class coursesPanel extends JFrame {
                             WHERE "lessonId" = '%d' AND "teacherId" = '%d' AND "classroomId" = '%d' AND day = '%s' AND time = '%s'""", lessonId, teacherId, classroomId, courseDay, courseTime
                     ));
                     dbResult.next();
-                    courseId = dbResult.getInt(1);
+                    int courseId = dbResult.getInt(1);
                     dbStatement.close();
 
+                    // Delete the selected course from the database
                     dbPreparedStatement = dbConnection.prepareStatement("DELETE FROM \"Courses\" WHERE id = ?");
                     dbPreparedStatement.setInt(1, courseId);
                     dbPreparedStatement.executeUpdate();
                     dbPreparedStatement.close();
-
                     dbConnection.close();
 
+                    System.out.printf("userId %d deleted course: %d (lessonId: %d, teacherId %d, classroomId: %d, day %s, time: %s%n",
+                            userId, courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
@@ -233,6 +232,7 @@ public class coursesPanel extends JFrame {
         scheduleTableModel = new DefaultTableModel(scheduleTableColumns, 0);
         scheduleTable = new JTable(scheduleTableModel);
 
+        // Fill the schedule table with all courses from the database
         try {
             dbConnection = DriverManager.getConnection(dbURL, dbUser, dbPass);
             dbStatement = dbConnection.createStatement();
