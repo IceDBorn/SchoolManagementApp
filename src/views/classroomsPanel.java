@@ -1,8 +1,13 @@
 package views;
 
+import models.Database;
+import models.User;
+
 import javax.swing.*;
-import java.sql.*;
-import models.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class classroomsPanel extends JFrame {
     private JPanel classroomsPanel;
