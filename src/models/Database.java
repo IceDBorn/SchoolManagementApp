@@ -24,7 +24,7 @@ public class Database {
 
     public static CachedRowSet selectQuery(String sql) throws SQLException {
         Connection connection = DriverManager.getConnection(getURL(), getUser(), getPass());
-        Statement statement = connection.createStatement();
+        Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         ResultSet resultSet = statement.executeQuery(sql);
 
         // Transfer the ResultSet data to a CachedRowSet
@@ -43,7 +43,7 @@ public class Database {
      */
     public static int getInsertedRowId(ResultSet resultSet) throws SQLException {
         resultSet.next();
-        int insertedId = resultSet.getInt(1);
+        int insertedId = resultSet.getInt("id");
         resultSet.close();
 
         return insertedId;

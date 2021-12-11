@@ -8,6 +8,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.stream.IntStream;
 
 public class schedulePanel extends JFrame {
     private JTable scheduleTable;
@@ -48,10 +49,10 @@ public class schedulePanel extends JFrame {
 
             // Add rows
             while (lessons.next()) {
-                row[0] = lessons.getString(1);
-                row[1] = lessons.getString(2);
-                row[2] = lessons.getString(3);
-                row[3] = lessons.getString(4);
+                row[0] = lessons.getString("\"Lessons\".name");
+                row[1] = lessons.getString("\"Classrooms\".name");
+                row[2] = lessons.getString("\"Courses\".day");
+                row[3] = lessons.getString("\"Courses\".time");
 
                 scheduleTableModel.addRow(row);
             }
@@ -62,14 +63,13 @@ public class schedulePanel extends JFrame {
             // Fill missing rows to fix white space
             int rowCount = scheduleTableModel.getRowCount();
 
-            if (rowCount < 17) for (int i = 0; i < 17 - rowCount; i++) {
+            if (rowCount < 17) IntStream.range(0, 17 - rowCount).forEach(i -> {
                 row[0] = "";
                 row[1] = "";
                 row[2] = "";
                 row[3] = "";
-
                 scheduleTableModel.addRow(row);
-            }
+            });
         }
     }
 }

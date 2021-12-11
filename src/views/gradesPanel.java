@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.stream.IntStream;
 
 public class gradesPanel extends JFrame {
     private JPanel gradesPanel;
@@ -23,7 +24,6 @@ public class gradesPanel extends JFrame {
     private JButton saveButton;
 
     public gradesPanel() {
-
         add(gradesPanel);
         setSize(1280, 720);
         setResizable(false);
@@ -118,14 +118,11 @@ public class gradesPanel extends JFrame {
 
             while (lessons.next()) {
                 if (User.isTeacher()) {
-                    infoRows[0] = lessons.getString(1);
-                    infoRows[1] = lessons.getString(2);
-                    infoRows[2] = lessons.getString(3);
-                    gradeRow[0] = lessons.getInt(4);
-                } else {
-                    infoRows[2] = lessons.getString(1);
-                    gradeRow[0] = lessons.getInt(2);
+                    infoRows[0] = lessons.getString("\"StudentLessons\".\"id\"");
+                    infoRows[1] = lessons.getString("\"Users\".name");
                 }
+                infoRows[2] = lessons.getString("\"Lessons\".name");
+                gradeRow[0] = lessons.getInt("\"StudentLessons\".grade");
 
                 infoTableModel.addRow(infoRows);
                 gradeTableModel.addRow(gradeRow);
@@ -137,15 +134,14 @@ public class gradesPanel extends JFrame {
             // Fill missing rows to fix white space
             int rowCount = infoTableModel.getRowCount();
 
-            if (rowCount < 17) for (int i = 0; i < 17 - rowCount; i++) {
+            if (rowCount < 17) IntStream.range(0, 17 - rowCount).forEach(i -> {
                 infoRows[0] = "";
                 infoRows[1] = "";
                 infoRows[2] = "";
                 gradeRow[0] = "";
-
                 infoTableModel.addRow(infoRows);
                 gradeTableModel.addRow(gradeRow);
-            }
+            });
         }
     }
 }

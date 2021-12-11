@@ -16,7 +16,6 @@ public class lessonsPanel extends JFrame {
     private JComboBox<String> schoolYearComboBox;
 
     public lessonsPanel() {
-
         add(lessonsPanel);
         setSize(400, 300);
         setResizable(false);
@@ -27,7 +26,7 @@ public class lessonsPanel extends JFrame {
         try {
             CachedRowSet subjects = Database.selectQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
             while (subjects.next())
-                professionComboBox.addItem(subjects.getString(1));
+                professionComboBox.addItem(subjects.getString("subject"));
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();

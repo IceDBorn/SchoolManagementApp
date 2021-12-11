@@ -11,6 +11,7 @@ import javax.swing.table.DefaultTableModel;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 public class coursesPanel extends JFrame {
     private final String[] scheduleTableColumns = {"Lesson", "Teacher", "Day", "Time"};
@@ -35,17 +36,17 @@ public class coursesPanel extends JFrame {
             // Select all lesson names and display them in coursesComboBox
             CachedRowSet lessons = Database.selectQuery("SELECT name FROM \"Lessons\"");
             while (lessons.next())
-                lessonsComboBox.addItem(lessons.getString(1));
+                lessonsComboBox.addItem(lessons.getString("name"));
 
             // Select all teacher names and display them in teachersComboBox
-            CachedRowSet teachers = Database.selectQuery("SELECT \"Users\".name FROM \"Users\" INNER JOIN \"Teachers\" ON \"Users\".id = \"Teachers\".id");
+            CachedRowSet teachers = Database.selectQuery("SELECT name FROM \"Users\" INNER JOIN \"Teachers\" ON \"Users\".id = \"Teachers\".id");
             while (teachers.next())
-                teachersComboBox.addItem(teachers.getString(1));
+                teachersComboBox.addItem(teachers.getString("name"));
 
             // Select all classroom names and display them in classroomComboBox
             CachedRowSet classrooms = Database.selectQuery("SELECT name FROM \"Classrooms\"");
             while (classrooms.next())
-                classroomComboBox.addItem(classrooms.getString(1));
+                classroomComboBox.addItem(classrooms.getString("name"));
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
@@ -81,17 +82,17 @@ public class coursesPanel extends JFrame {
                     // Get the lessonId using the selected lesson from the panel
                     CachedRowSet lessons = Database.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
                     lessons.next();
-                    int lessonId = lessons.getInt(1);
+                    int lessonId = lessons.getInt("id");
 
                     // Get the teacherId using the selected teacher from the panel
                     CachedRowSet teachers = Database.selectQuery(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
                     teachers.next();
-                    int teacherId = teachers.getInt(1);
+                    int teacherId = teachers.getInt("id");
 
                     // Get the classroomId using the selected classroom from the panel
                     CachedRowSet classrooms = Database.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
                     classrooms.next();
-                    int classroomId = classrooms.getInt(1);
+                    int classroomId = classrooms.getInt("id");
 
                     // Check if a course exists with the same classroom, day and time
                     CachedRowSet courses = Database.selectQuery(String.format("SELECT id FROM \"Courses\" WHERE \"classroomId\" = '%d' AND day = '%s' AND time = '%s'", classroomId, courseDay, courseTime));
@@ -146,17 +147,17 @@ public class coursesPanel extends JFrame {
                     // Get the lessonId using the name of the lesson from the selected row
                     CachedRowSet lessons = Database.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
                     lessons.next();
-                    int lessonId = lessons.getInt(1);
+                    int lessonId = lessons.getInt("id");
 
                     // Get the teacherId using the name of the lesson from the selected row
                     CachedRowSet teachers = Database.selectQuery(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
                     teachers.next();
-                    int teacherId = teachers.getInt(1);
+                    int teacherId = teachers.getInt("id");
 
                     // Get the classroomId using the name of the selected classroom
                     CachedRowSet classrooms = Database.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
                     classrooms.next();
-                    int classroomId = classrooms.getInt(1);
+                    int classroomId = classrooms.getInt("id");
 
                     // Get the courseId using the data from the selected row
                     CachedRowSet courses = Database.selectQuery(String.format("""
@@ -164,7 +165,7 @@ public class coursesPanel extends JFrame {
                             WHERE "lessonId" = '%d' AND "teacherId" = '%d' AND "classroomId" = '%d' AND day = '%s' AND time = '%s'""", lessonId, teacherId, classroomId, courseDay, courseTime
                     ));
                     courses.next();
-                    int courseId = courses.getInt(1);
+                    int courseId = courses.getInt("id");
 
                     // Delete the selected course from the database
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
@@ -219,8 +220,7 @@ public class coursesPanel extends JFrame {
 
     private void updateTableRows() {
         // Remove all rows
-        for (int i = scheduleTableModel.getRowCount() - 1; i > -1; i--)
-            scheduleTableModel.removeRow(i);
+        IntStream.iterate(scheduleTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> scheduleTableModel.removeRow(i));
 
         String teacherName = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
         String lessonName = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
@@ -238,10 +238,10 @@ public class coursesPanel extends JFrame {
             // Add rows
             Object[] scheduleRows = new Object[4];
             while (courses.next()) {
-                scheduleRows[0] = courses.getString(2);
-                scheduleRows[1] = courses.getString(3);
-                scheduleRows[2] = courses.getString(4);
-                scheduleRows[3] = courses.getString(5);
+                scheduleRows[0] = courses.getString("\"Lessons\".name");
+                scheduleRows[1] = courses.getString("\"Users\".name");
+                scheduleRows[2] = courses.getString("\"Courses\".day");
+                scheduleRows[3] = courses.getString("\"Courses\".time");
                 scheduleTableModel.addRow(scheduleRows);
             }
         } catch (SQLException err) {

@@ -87,17 +87,16 @@ public class personPanel extends JFrame {
 
                 // Get the userId of the newly inserted user
                 int personId = Database.getInsertedRowId(preparedStatement.getGeneratedKeys());
+                preparedStatement.close();
 
                 // Check whether the user is a student or a teacher and import into the corresponding table
-                if (isTeacher) {
-                    preparedStatement = connection.prepareStatement("INSERT INTO \"Teachers\"(id, subject) VALUES (?, ?)");
-                    preparedStatement.setInt(1, personId);
+                preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, subject) VALUES (?, ?)" : "INSERT INTO \"Students\"(id, year) VALUES (?, ?)");
+                preparedStatement.setInt(1, personId);
+
+                if (isTeacher)
                     preparedStatement.setString(2, userSubject);
-                } else {
-                    preparedStatement = connection.prepareStatement("INSERT INTO \"Students\"(id, year) VALUES (?, ?)");
-                    preparedStatement.setInt(1, personId);
+                else
                     preparedStatement.setInt(2, userYear);
-                }
 
                 preparedStatement.executeUpdate();
                 preparedStatement.close();
@@ -121,7 +120,7 @@ public class personPanel extends JFrame {
             CachedRowSet subjects = Database.selectQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
 
             while (subjects.next()) {
-                String subjectName = subjects.getString(1);
+                String subjectName = subjects.getString("subject");
 
                 if (!subjectList.contains(subjectName))
                     subjectList.add(subjectName);
