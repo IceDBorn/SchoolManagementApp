@@ -76,7 +76,7 @@
           </grid>
         </constraints>
         <properties>
-          <enabled value="true"/>
+          <enabled value="false"/>
           <text value="Edit"/>
         </properties>
       </component>

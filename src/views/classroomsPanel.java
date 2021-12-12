@@ -32,6 +32,7 @@ public class classroomsPanel extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+        classroomsTable.setDefaultEditor(Object.class, null);
 
         SpinnerNumberModel model = new SpinnerNumberModel();
         model.setValue(1);
@@ -39,12 +40,13 @@ public class classroomsPanel extends JFrame {
         model.setMaximum(99);
         classCapacitySpinner.setModel(model);
 
+        // Listeners
         backButton.addActionListener(action -> {
             // TODO: (IceDBorn) Close this panel and open the main panel
         });
 
         addButton.addActionListener(action -> {
-            // TODO: (Prionysis) Edit listener to update selected row changes to the database
+            // TODO: (Prionysis) Edit listener to update selected row changes to the database and update classroom table
             String classroomName = classNameTextField.getText();
             int classroomLimit = (int) classCapacitySpinner.getValue();
 
@@ -71,8 +73,11 @@ public class classroomsPanel extends JFrame {
                 }
             } else System.out.println("You can not insert a blank name");
 
-            // Revert add button text to initial value
+            // Revert UI components to initial state
+            classNameTextField.setText("");
+            classCapacitySpinner.setValue(1);
             addButton.setText("Add");
+            classroomsTable.setEnabled(true);
         });
 
         editButton.addActionListener(action -> {
@@ -81,10 +86,19 @@ public class classroomsPanel extends JFrame {
             classCapacitySpinner.setValue(Integer.parseInt(String.valueOf(classroomsTable.getValueAt(classroomsTable.getSelectedRow(), 1))));
             // Change add button text to save
             addButton.setText("Save");
+            // Disable UI components and clear table selection until the save button is pressed
+            classroomsTable.setEnabled(false);
+            editButton.setEnabled(false);
+            removeButton.setEnabled(false);
+            classroomsTable.getSelectionModel().clearSelection();
         });
 
         removeButton.addActionListener(action -> {
             // TODO: (Prionysis) Remove selected row from database
+            // Disable UI components and clear table selection
+            editButton.setEnabled(false);
+            removeButton.setEnabled(false);
+            classroomsTable.getSelectionModel().clearSelection();
         });
 
         // Listen for changes in the class name text
@@ -104,6 +118,13 @@ public class classroomsPanel extends JFrame {
             public void action() {
                 // Enable or disable add button based on class name text
                 addButton.setEnabled(!classNameTextField.getText().equals(""));
+            }
+        });
+
+        classroomsTable.getSelectionModel().addListSelectionListener(selection -> {
+            if (classroomsTable.getSelectedRow() != -1) {
+                editButton.setEnabled(true);
+                removeButton.setEnabled(true);
             }
         });
     }
