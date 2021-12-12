@@ -24,6 +24,7 @@ public class classroomsPanel extends JFrame {
     private JButton editButton;
     private JButton removeButton;
     private JButton backButton;
+    private JButton cancelButton;
 
     public classroomsPanel() {
         add(classroomsPanel);
@@ -78,6 +79,16 @@ public class classroomsPanel extends JFrame {
             classCapacitySpinner.setValue(1);
             addButton.setText("Add");
             classroomsTable.setEnabled(true);
+            cancelButton.setEnabled(false);
+        });
+
+        cancelButton.addActionListener(action -> {
+            // Revert UI components to initial state
+            classNameTextField.setText("");
+            classCapacitySpinner.setValue(1);
+            addButton.setText("Add");
+            classroomsTable.setEnabled(true);
+            cancelButton.setEnabled(false);
         });
 
         editButton.addActionListener(action -> {
@@ -86,6 +97,7 @@ public class classroomsPanel extends JFrame {
             classCapacitySpinner.setValue(Integer.parseInt(String.valueOf(classroomsTable.getValueAt(classroomsTable.getSelectedRow(), 1))));
             // Change add button text to save
             addButton.setText("Save");
+            cancelButton.setEnabled(true);
             // Disable UI components and clear table selection until the save button is pressed
             classroomsTable.setEnabled(false);
             editButton.setEnabled(false);
@@ -118,6 +130,7 @@ public class classroomsPanel extends JFrame {
             public void action() {
                 // Enable or disable add button based on class name text
                 addButton.setEnabled(!classNameTextField.getText().equals(""));
+                cancelButton.setEnabled(!classNameTextField.getText().equals(""));
             }
         });
 
