@@ -13,7 +13,7 @@ public class Main {
         UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialOceanicTheme()));
 
         SwingUtilities.invokeLater(() -> {
-            int userPanel = 6;
+            int userPanel = 3;
 
             switch (userPanel) {
                 case 1 -> {
