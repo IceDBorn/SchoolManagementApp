@@ -5,6 +5,8 @@ import models.Database;
 import models.User;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -15,13 +17,19 @@ public class classroomsPanel extends JFrame {
     private JTextField classNameTextField;
     private JSpinner classCapacitySpinner;
     private JButton addButton;
+    private JTable classroomsTable;
+    private JScrollPane scrollPane;
+    private JButton editButton;
+    private JButton removeButton;
+    private JButton backButton;
 
     public classroomsPanel() {
         add(classroomsPanel);
-        setSize(400, 200);
+        setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         SpinnerNumberModel model = new SpinnerNumberModel();
         model.setValue(1);
@@ -56,5 +64,15 @@ public class classroomsPanel extends JFrame {
                 }
             } else System.out.println("You can not insert a blank name");
         });
+    }
+
+    private void createUIComponents() {
+        // Add columns
+        String[] classroomsTableColumns = {"Name", "Capacity"};
+        DefaultTableModel classroomsTableModel = new DefaultTableModel(classroomsTableColumns, 0);
+        classroomsTable = new JTable(classroomsTableModel);
+        // Stop users from interacting with the table
+        classroomsTable.getTableHeader().setReorderingAllowed(false);
+        classroomsTable.setEnabled(false);
     }
 }
