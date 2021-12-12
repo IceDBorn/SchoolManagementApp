@@ -1,5 +1,6 @@
 package views;
 
+import controllers.databaseController;
 import models.Database;
 import models.User;
 import org.jdesktop.swingx.JXDatePicker;
@@ -86,7 +87,7 @@ public class personPanel extends JFrame {
                 preparedStatement.executeUpdate();
 
                 // Get the userId of the newly inserted user
-                int personId = Database.getInsertedRowId(preparedStatement.getGeneratedKeys());
+                int personId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
                 preparedStatement.close();
 
                 // Check whether the user is a student or a teacher and import into the corresponding table
@@ -117,7 +118,7 @@ public class personPanel extends JFrame {
      */
     private void updateSubjects() {
         try {
-            CachedRowSet subjects = Database.selectQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
+            CachedRowSet subjects = databaseController.selectQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
 
             while (subjects.next()) {
                 String subjectName = subjects.getString("subject");

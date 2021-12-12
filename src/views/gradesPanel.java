@@ -1,5 +1,6 @@
 package views;
 
+import controllers.databaseController;
 import models.Database;
 import models.User;
 
@@ -114,7 +115,7 @@ public class gradesPanel extends JFrame {
         Object[] gradeRow = new Object[1];
 
         try {
-            CachedRowSet lessons = Database.selectQuery(query);
+            CachedRowSet lessons = databaseController.selectQuery(query);
 
             while (lessons.next()) {
                 if (User.isTeacher()) {
