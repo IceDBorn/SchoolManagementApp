@@ -1,5 +1,6 @@
 package views;
 
+import controllers.databaseController;
 import models.Database;
 import models.User;
 
@@ -42,7 +43,7 @@ public class classroomsPanel extends JFrame {
                     preparedStatement.executeUpdate();
 
                     // Get the classroomId of the newly inserted classroom
-                    int classroomId = Database.getInsertedRowId(preparedStatement.getGeneratedKeys());
+                    int classroomId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
                     preparedStatement.close();
                     connection.close();

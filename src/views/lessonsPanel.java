@@ -1,5 +1,6 @@
 package views;
 
+import controllers.databaseController;
 import models.Database;
 import models.User;
 
@@ -27,7 +28,7 @@ public class lessonsPanel extends JFrame {
 
         // Get all distinct subjects from teachers
         try {
-            CachedRowSet subjects = Database.selectQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
+            CachedRowSet subjects = databaseController.selectQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
             while (subjects.next())
                 professionComboBox.addItem(subjects.getString("subject"));
         } catch (SQLException err) {
@@ -59,7 +60,7 @@ public class lessonsPanel extends JFrame {
                     preparedStatement.executeUpdate();
 
                     // Get the lessonId of the newly inserted classroom
-                    int lessonId = Database.getInsertedRowId(preparedStatement.getGeneratedKeys());
+                    int lessonId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
                     preparedStatement.close();
                     connection.close();

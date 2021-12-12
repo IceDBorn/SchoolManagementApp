@@ -1,5 +1,6 @@
 package views;
 
+import controllers.databaseController;
 import models.Database;
 import models.User;
 
@@ -39,7 +40,7 @@ public class schedulePanel extends JFrame {
         Object[] row = new Object[4];
 
         try {
-            ResultSet lessons = Database.selectQuery(String.format("""
+            ResultSet lessons = databaseController.selectQuery(String.format("""
                     SELECT "Lessons".name, "Classrooms".name, "Courses".day, "Courses".time
                     FROM "StudentLessons"
                     INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"

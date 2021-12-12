@@ -1,9 +1,5 @@
 package models;
 
-import javax.sql.rowset.CachedRowSet;
-import javax.sql.rowset.RowSetProvider;
-import java.sql.*;
-
 public class Database {
 
     private static final String url = "jdbc:postgresql://localhost:5432/postgres";
@@ -20,32 +16,5 @@ public class Database {
 
     public static String getPass() {
         return pass;
-    }
-
-    public static CachedRowSet selectQuery(String sql) throws SQLException {
-        Connection connection = DriverManager.getConnection(getURL(), getUser(), getPass());
-        Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        ResultSet resultSet = statement.executeQuery(sql);
-
-        // Transfer the ResultSet data to a CachedRowSet
-        CachedRowSet cachedRowSet = RowSetProvider.newFactory().createCachedRowSet();
-        cachedRowSet.populate(resultSet);
-
-        resultSet.close();
-        statement.close();
-        connection.close();
-
-        return cachedRowSet;
-    }
-
-    /**
-     * Returns the id of the first inserted row
-     */
-    public static int getInsertedRowId(ResultSet resultSet) throws SQLException {
-        resultSet.next();
-        int insertedId = resultSet.getInt("id");
-        resultSet.close();
-
-        return insertedId;
     }
 }
