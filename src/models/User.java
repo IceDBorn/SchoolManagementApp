@@ -8,35 +8,35 @@ public class User {
     private static boolean isTeacher;
     private static boolean isAdmin;
 
-    public static int getUserId() {
+    public static int getId() {
         return userId;
     }
 
-    public static void setUserId(int userId) {
+    public static void setId(int userId) {
         User.userId = userId;
     }
 
-    public static String getUsername() {
+    public static String getName() {
         return username;
     }
 
-    public static void setUsername(String username) {
+    public static void setName(String username) {
         User.username = username;
     }
 
-    public static String getUserEmail() {
+    public static String getEmail() {
         return userEmail;
     }
 
-    public static void setUserEmail(String userEmail) {
+    public static void setEmail(String userEmail) {
         User.userEmail = userEmail;
     }
 
-    public static String getUserSpecificField() {
+    public static String getSpecificField() {
         return userSpecificField;
     }
 
-    public static void setUserSpecificField(String userSpecificField) {
+    public static void setSpecificField(String userSpecificField) {
         User.userSpecificField = userSpecificField;
     }
 
@@ -44,7 +44,7 @@ public class User {
         return isTeacher;
     }
 
-    public static void setIsTeacher(boolean isTeacher) {
+    public static void setTeacher(boolean isTeacher) {
         User.isTeacher = isTeacher;
     }
 
@@ -52,7 +52,7 @@ public class User {
         return isAdmin;
     }
 
-    public static void setIsAdmin(boolean isAdmin) {
+    public static void setAdmin(boolean isAdmin) {
         User.isAdmin = isAdmin;
     }
 }

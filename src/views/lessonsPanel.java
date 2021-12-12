@@ -3,8 +3,13 @@ package views;
 import models.Database;
 import models.User;
 
+import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Arrays;
 
 public class lessonsPanel extends JFrame {
     private JPanel lessonsPanel;
@@ -13,13 +18,7 @@ public class lessonsPanel extends JFrame {
     private JComboBox<String> professionComboBox;
     private JComboBox<String> schoolYearComboBox;
 
-    private Connection dbConnection;
-    private Statement dbStatement;
-    private PreparedStatement dbPreparedStatement;
-    private ResultSet dbResult;
-
     public lessonsPanel() {
-
         add(lessonsPanel);
         setSize(400, 300);
         setResizable(false);
@@ -28,52 +27,49 @@ public class lessonsPanel extends JFrame {
 
         // Get all distinct subjects from teachers
         try {
-            dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-            dbStatement = dbConnection.createStatement();
-            dbResult = dbStatement.executeQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
-
-            while (dbResult.next())
-                professionComboBox.addItem(dbResult.getString(1));
-
-            dbStatement.close();
-            dbConnection.close();
+            CachedRowSet subjects = Database.selectQuery("SELECT DISTINCT(subject) FROM \"Teachers\"");
+            while (subjects.next())
+                professionComboBox.addItem(subjects.getString("subject"));
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
         }
 
-        schoolYearComboBox.addItem("1η Γυμνασίου");
-        schoolYearComboBox.addItem("2α Γυμνασίου");
-        schoolYearComboBox.addItem("3η Γυμνασίου");
-        schoolYearComboBox.addItem("1η Λυκείου");
-        schoolYearComboBox.addItem("2α Λυκείου");
-        schoolYearComboBox.addItem("3η Λυκείου");
+        for (String schoolYear : Arrays.asList("1η Γυμνασίου", "2α Γυμνασίου", "3η Γυμνασίου", "1η Λυκείου", "2α Λυκείου", "3η Λυκείου")) {
+            schoolYearComboBox.addItem(schoolYear);
+        }
 
         addButton.addActionListener(action -> {
-            String lessonName = classNameTextField.getText();
+            String lesson = classNameTextField.getText();
 
             // Check if the text field is blank to avoid unnecessary sql errors
-            if (!lessonName.equals("")) {
-                String lessonSubject = professionComboBox.getItemAt(professionComboBox.getSelectedIndex());
-                int lessonYear = schoolYearComboBox.getSelectedIndex() + 1;
+            if (lesson.equals("")) {
+                System.out.println("You can not insert a blank name");
+            } else {
+                String subject = professionComboBox.getItemAt(professionComboBox.getSelectedIndex());
+                int year = schoolYearComboBox.getSelectedIndex() + 1;
 
                 try {
-                    dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-                    dbPreparedStatement = dbConnection.prepareStatement("INSERT INTO \"Lessons\"(name, subject, year) VALUES (?, ?, ?)");
+                    Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                    PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"Lessons\"(name, subject, year) VALUES (?, ?, ?)");
 
-                    dbPreparedStatement.setString(1, lessonName);
-                    dbPreparedStatement.setString(2, lessonSubject);
-                    dbPreparedStatement.setInt(3, lessonYear);
-                    dbPreparedStatement.executeUpdate();
-                    dbPreparedStatement.close();
-                    dbConnection.close();
+                    preparedStatement.setString(1, lesson);
+                    preparedStatement.setString(2, subject);
+                    preparedStatement.setInt(3, year);
+                    preparedStatement.executeUpdate();
 
-                    System.out.printf("userId %d created lesson: %s with subject: %s%n", User.getUserId(), lessonName, lessonSubject);
+                    // Get the lessonId of the newly inserted classroom
+                    int lessonId = Database.getInsertedRowId(preparedStatement.getGeneratedKeys());
+
+                    preparedStatement.close();
+                    connection.close();
+
+                    System.out.printf("userId %d created lesson: %d (name: %s, subject: %s, year: %d)%n", User.getId(), lessonId, lesson, subject, year);
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
                 }
-            } else System.out.println("You can not insert a blank name");
+            }
         });
     }
 }

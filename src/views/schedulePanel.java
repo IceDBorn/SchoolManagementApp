@@ -6,8 +6,9 @@ import models.User;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-
-import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.stream.IntStream;
 
 public class schedulePanel extends JFrame {
     private JTable scheduleTable;
@@ -17,13 +18,12 @@ public class schedulePanel extends JFrame {
     private JButton homeButton;
 
     public schedulePanel() {
-
         add(schedulePanel);
         setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        usernameLabel.setText(User.getUsername());
+        usernameLabel.setText(User.getName());
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
     }
 
@@ -36,57 +36,40 @@ public class schedulePanel extends JFrame {
         scheduleTable.getTableHeader().setReorderingAllowed(false);
         scheduleTable.setEnabled(false);
 
+        Object[] row = new Object[4];
+
         try {
-            Connection dbConnection = DriverManager.getConnection(Database.getDbURL(), Database.getDbUser(), Database.getDbPass());
-            Statement dbStatement = dbConnection.createStatement();
-            ResultSet dbResult = dbStatement.executeQuery(String.format("""
+            ResultSet lessons = Database.selectQuery(String.format("""
                     SELECT "Lessons".name, "Classrooms".name, "Courses".day, "Courses".time
                     FROM "StudentLessons"
                     INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
                     INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
                     INNER JOIN "Classrooms" ON "Classrooms".id = "Courses"."classroomId"
-                    WHERE "StudentLessons"."studentId" = %d""", User.getUserId()));
+                    WHERE "StudentLessons"."studentId" = %d""", User.getId()));
 
             // Add rows
-            Object[] row = new Object[4];
-            while (dbResult.next()) {
-                row[0] = dbResult.getString(1);
-                row[1] = dbResult.getString(2);
-                row[2] = dbResult.getString(3);
-                row[3] = dbResult.getString(4);
+            while (lessons.next()) {
+                row[0] = lessons.getString("\"Lessons\".name");
+                row[1] = lessons.getString("\"Classrooms\".name");
+                row[2] = lessons.getString("\"Courses\".day");
+                row[3] = lessons.getString("\"Courses\".time");
 
                 scheduleTableModel.addRow(row);
             }
-
-            // Fill rows missing fixing white space
-            int rowCount = scheduleTableModel.getRowCount();
-
-            if (rowCount < 17) {
-                for (int i = 0; i < 17 - rowCount; i++) {
-                    row[0] = "";
-                    row[1] = "";
-                    row[2] = "";
-                    row[3] = "";
-
-                    scheduleTableModel.addRow(row);
-                }
-            }
-
-            dbStatement.close();
-            dbConnection.close();
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
+        } finally {
+            // Fill missing rows to fix white space
+            int rowCount = scheduleTableModel.getRowCount();
 
-            Object[] row = new Object[4];
-            for (int i = 0; i < 17; i++) {
+            if (rowCount < 17) IntStream.range(0, 17 - rowCount).forEach(i -> {
                 row[0] = "";
                 row[1] = "";
                 row[2] = "";
                 row[3] = "";
-
                 scheduleTableModel.addRow(row);
-            }
+            });
         }
     }
 }
