@@ -6,6 +6,8 @@ import models.User;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -37,7 +39,12 @@ public class classroomsPanel extends JFrame {
         model.setMaximum(99);
         classCapacitySpinner.setModel(model);
 
+        backButton.addActionListener(action -> {
+            // TODO: (IceDBorn) Close this panel and open the main panel
+        });
+
         addButton.addActionListener(action -> {
+            // TODO: (Prionysis) Edit listener to update selected row changes to the database
             String classroomName = classNameTextField.getText();
             int classroomLimit = (int) classCapacitySpinner.getValue();
 
@@ -63,16 +70,59 @@ public class classroomsPanel extends JFrame {
                     err.printStackTrace();
                 }
             } else System.out.println("You can not insert a blank name");
+
+            // Revert add button text to initial value
+            addButton.setText("Add");
+        });
+
+        editButton.addActionListener(action -> {
+            // Get selected row's class name and capacity
+            classNameTextField.setText(String.valueOf(classroomsTable.getValueAt(classroomsTable.getSelectedRow(), 0)));
+            classCapacitySpinner.setValue(Integer.parseInt(String.valueOf(classroomsTable.getValueAt(classroomsTable.getSelectedRow(), 1))));
+            // Change add button text to save
+            addButton.setText("Save");
+        });
+
+        removeButton.addActionListener(action -> {
+            // TODO: (Prionysis) Remove selected row from database
+        });
+
+        // Listen for changes in the class name text
+        classNameTextField.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                action();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                action();
+            }
+
+            public void insertUpdate(DocumentEvent e) {
+                action();
+            }
+
+            public void action() {
+                // Enable or disable add button based on class name text
+                addButton.setEnabled(!classNameTextField.getText().equals(""));
+            }
         });
     }
 
     private void createUIComponents() {
+        // TODO: (Prionysis) Update table values from database
         // Add columns
         String[] classroomsTableColumns = {"Name", "Capacity"};
         DefaultTableModel classroomsTableModel = new DefaultTableModel(classroomsTableColumns, 0);
         classroomsTable = new JTable(classroomsTableModel);
         // Stop users from interacting with the table
         classroomsTable.getTableHeader().setReorderingAllowed(false);
-        classroomsTable.setEnabled(false);
+
+        Object[] row = new Object[2];
+        row[0] = "A1";
+        row[1] = 10;
+
+        classroomsTableModel.addRow(row);
+
+        classroomsTable.setModel(classroomsTableModel);
     }
 }
