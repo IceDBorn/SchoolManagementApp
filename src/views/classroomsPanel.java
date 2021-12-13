@@ -4,6 +4,7 @@ import controllers.databaseController;
 import models.Database;
 import models.User;
 
+import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
@@ -13,8 +14,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.stream.IntStream;
 
 public class classroomsPanel extends JFrame {
+    DefaultTableModel classroomsTableModel;
     private JPanel classroomsPanel;
     private JTextField classNameTextField;
     private JSpinner classCapacitySpinner;
@@ -71,38 +74,39 @@ public class classroomsPanel extends JFrame {
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
+                } finally {
+                    updateClassrooms();
+                    revertUIComponents();
                 }
             } else System.out.println("You can not insert a blank name");
-
-            // Revert UI components to initial state
-            classNameTextField.setText("");
-            classCapacitySpinner.setValue(1);
-            addButton.setText("Add");
-            classroomsTable.setEnabled(true);
-            cancelButton.setEnabled(false);
         });
 
-        cancelButton.addActionListener(action -> {
-            // Revert UI components to initial state
-            classNameTextField.setText("");
-            classCapacitySpinner.setValue(1);
-            addButton.setText("Add");
-            classroomsTable.setEnabled(true);
-            cancelButton.setEnabled(false);
-        });
+        cancelButton.addActionListener(action -> revertUIComponents());
 
         editButton.addActionListener(action -> {
-            // Get selected row's class name and capacity
-            classNameTextField.setText(String.valueOf(classroomsTable.getValueAt(classroomsTable.getSelectedRow(), 0)));
-            classCapacitySpinner.setValue(Integer.parseInt(String.valueOf(classroomsTable.getValueAt(classroomsTable.getSelectedRow(), 1))));
-            // Change add button text to save
-            addButton.setText("Save");
-            cancelButton.setEnabled(true);
-            // Disable UI components and clear table selection until the save button is pressed
-            classroomsTable.setEnabled(false);
-            editButton.setEnabled(false);
-            removeButton.setEnabled(false);
-            classroomsTable.getSelectionModel().clearSelection();
+            // Get selected row's classroom name and capacity
+            int selectedRow = classroomsTable.getSelectedRow();
+            String classroomName = classroomsTable.getValueAt(selectedRow, 0).toString();
+            int classroomLimit = Integer.parseInt(classroomsTable.getValueAt(selectedRow, 1).toString());
+
+            // Check whether the selected row is empty or not
+            if (classroomsTable.getValueAt(selectedRow, 0).toString().equals(""))
+                System.out.println("You can not edit an empty row.");
+            else {
+                // Change name and capacity to match the ones of the selected row
+                classNameTextField.setText(classroomName);
+                classCapacitySpinner.setValue(classroomLimit);
+
+                // Change add button text to save
+                addButton.setText("Save");
+                cancelButton.setEnabled(true);
+
+                // Disable UI components and clear table selection until the save button is pressed
+                classroomsTable.setEnabled(false);
+                editButton.setEnabled(false);
+                removeButton.setEnabled(false);
+                classroomsTable.getSelectionModel().clearSelection();
+            }
         });
 
         removeButton.addActionListener(action -> {
@@ -142,21 +146,53 @@ public class classroomsPanel extends JFrame {
         });
     }
 
+    public void updateClassrooms() {
+        IntStream.iterate(classroomsTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> classroomsTableModel.removeRow(i));
+
+        Object[] row = new Object[2];
+        try {
+            CachedRowSet classrooms = databaseController.selectQuery("SELECT name, \"limit\" FROM \"Classrooms\"");
+
+            // Add rows
+            while (classrooms.next()) {
+                row[0] = classrooms.getString("name");
+                row[1] = classrooms.getInt("limit");
+                classroomsTableModel.addRow(row);
+            }
+        } catch (SQLException err) {
+            System.out.println("SQL Exception:");
+            err.printStackTrace();
+        } finally {
+            // Fill missing rows to fix white space
+            int rowCount = classroomsTableModel.getRowCount();
+
+            if (rowCount < 17) IntStream.range(0, 17 - rowCount).forEach(i -> {
+                row[0] = "";
+                row[1] = "";
+                classroomsTableModel.addRow(row);
+            });
+            classroomsTable.setModel(classroomsTableModel);
+        }
+    }
+
+    /**
+     * Revert UI components to initial state
+     */
+    private void revertUIComponents() {
+        classNameTextField.setText("");
+        classCapacitySpinner.setValue(1);
+        addButton.setText("Add");
+        classroomsTable.setEnabled(true);
+        cancelButton.setEnabled(false);
+    }
+
     private void createUIComponents() {
-        // TODO: (Prionysis) Update table values from database
         // Add columns
         String[] classroomsTableColumns = {"Name", "Capacity"};
-        DefaultTableModel classroomsTableModel = new DefaultTableModel(classroomsTableColumns, 0);
+        classroomsTableModel = new DefaultTableModel(classroomsTableColumns, 0);
         classroomsTable = new JTable(classroomsTableModel);
         // Stop users from interacting with the table
         classroomsTable.getTableHeader().setReorderingAllowed(false);
-
-        Object[] row = new Object[2];
-        row[0] = "A1";
-        row[1] = 10;
-
-        classroomsTableModel.addRow(row);
-
-        classroomsTable.setModel(classroomsTableModel);
+        updateClassrooms();
     }
 }
