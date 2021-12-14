@@ -128,7 +128,7 @@ public class coursesPanel extends JFrame {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
                 } finally {
-                    updateTableRows();
+                    updateCourses();
                 }
             }
         });
@@ -136,10 +136,14 @@ public class coursesPanel extends JFrame {
         // TODO: When deleting the bottom row, the above row has a white column
         // Remove the selected course from the database
         removeButton.addActionListener(action -> {
+            // Get the selected row index
             int selectedRow = scheduleTable.getSelectedRow();
+
+            // Check if a row is selected
             if (!scheduleTable.isRowSelected(selectedRow))
-                System.out.println("You haven't selected any rows.");
+                System.out.println("You don't have a selected row.");
             else {
+                // Get the selected row's data
                 String lessonName = String.valueOf(scheduleTable.getValueAt(selectedRow, 0));
                 String teacherName = String.valueOf(scheduleTable.getValueAt(selectedRow, 1));
                 String classroomName = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
@@ -178,19 +182,20 @@ public class coursesPanel extends JFrame {
                     preparedStatement.close();
                     connection.close();
 
-                    scheduleTableModel.removeRow(selectedRow);
                     System.out.printf("userId %d deleted course: %d (lessonId: %d, teacherId %d, classroomId: %d, day %s, time: %s%n",
                             User.getId(), courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
+                } finally {
+                    updateCourses();
                 }
             }
         });
 
-        lessonsComboBox.addActionListener(action -> updateTableRows());
-        teachersComboBox.addActionListener(action -> updateTableRows());
-        classroomComboBox.addActionListener(action -> updateTableRows());
+        lessonsComboBox.addActionListener(action -> updateCourses());
+        teachersComboBox.addActionListener(action -> updateCourses());
+        classroomComboBox.addActionListener(action -> updateCourses());
     }
 
     private void createUIComponents() {
@@ -221,13 +226,14 @@ public class coursesPanel extends JFrame {
         }
     }
 
-    private void updateTableRows() {
+    private void updateCourses() {
         // Remove all rows
         IntStream.iterate(scheduleTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> scheduleTableModel.removeRow(i));
 
         String teacherName = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
         String lessonName = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
         String classroomName = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
+        Object[] scheduleRow = new Object[4];
 
         try {
             CachedRowSet courses = databaseController.selectQuery(String.format("""
@@ -239,17 +245,28 @@ public class coursesPanel extends JFrame {
                     WHERE "Users".name = '%s' AND "Lessons"."name" = '%s' AND "Classrooms".name = '%s'""", teacherName, lessonName, classroomName));
 
             // Add rows
-            Object[] scheduleRows = new Object[4];
             while (courses.next()) {
-                scheduleRows[0] = courses.getString("\"Lessons\".name");
-                scheduleRows[1] = courses.getString("\"Users\".name");
-                scheduleRows[2] = courses.getString("\"Courses\".day");
-                scheduleRows[3] = courses.getString("\"Courses\".time");
-                scheduleTableModel.addRow(scheduleRows);
+                scheduleRow[0] = courses.getString("\"Lessons\".name");
+                scheduleRow[1] = courses.getString("\"Users\".name");
+                scheduleRow[2] = courses.getString("\"Courses\".day");
+                scheduleRow[3] = courses.getString("\"Courses\".time");
+                scheduleTableModel.addRow(scheduleRow);
             }
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
+        } finally {
+            // Fill missing rows to fix white space
+            int rowCount = scheduleTableModel.getRowCount();
+
+            if (rowCount < 16) IntStream.range(0, 16 - rowCount).forEach(i -> {
+                scheduleRow[0] = "";
+                scheduleRow[1] = "";
+                scheduleRow[2] = "";
+                scheduleRow[3] = "";
+                scheduleTableModel.addRow(scheduleRow);
+            });
+            scheduleTable.setModel(scheduleTableModel);
         }
     }
 }
