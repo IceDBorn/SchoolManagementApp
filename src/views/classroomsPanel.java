@@ -38,6 +38,7 @@ public class classroomsPanel extends JFrame {
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         classroomsTable.setDefaultEditor(Object.class, null);
+        classroomsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         SpinnerNumberModel model = new SpinnerNumberModel();
         model.setValue(1);
@@ -179,9 +180,14 @@ public class classroomsPanel extends JFrame {
         });
 
         classroomsTable.getSelectionModel().addListSelectionListener(selection -> {
-            if (classroomsTable.getSelectedRow() != -1) {
+            if (classroomsTable.getSelectedRow() != -1
+                    && !classroomsTable.getValueAt(classroomsTable.getSelectedRow(), 0).toString().equals("")
+                    && !classroomsTable.getValueAt(classroomsTable.getSelectedRow(), 1).toString().equals("")) {
                 editButton.setEnabled(true);
                 removeButton.setEnabled(true);
+            } else {
+                editButton.setEnabled(false);
+                removeButton.setEnabled(false);
             }
         });
     }
@@ -206,7 +212,7 @@ public class classroomsPanel extends JFrame {
             // Fill missing rows to fix white space
             int rowCount = classroomsTableModel.getRowCount();
 
-            if (rowCount < 17) IntStream.range(0, 17 - rowCount).forEach(i -> {
+            if (rowCount < 16) IntStream.range(0, 16 - rowCount).forEach(i -> {
                 row[0] = "";
                 row[1] = "";
                 classroomsTableModel.addRow(row);
