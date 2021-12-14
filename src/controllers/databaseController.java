@@ -1,11 +1,15 @@
 package controllers;
 
+import models.Database;
+
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
 import java.sql.*;
-import models.Database;
 
 public class databaseController {
+    /**
+     * Returns a CachedRowSet of the specified sql query.
+     */
     public static CachedRowSet selectQuery(String sql) throws SQLException {
         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
         Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
