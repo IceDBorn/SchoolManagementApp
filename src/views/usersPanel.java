@@ -19,9 +19,9 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class usersPanel extends JFrame {
-    private final ArrayList<String> subjectList;
+    private final ArrayList<String> professionList;
     DefaultTableModel usersTableModel;
-    private JPanel personPanel;
+    private JPanel usersPanel;
     private JTextField usernameTextField;
     private JTextField emailTextField;
     private JPasswordField passwordField;
@@ -42,8 +42,8 @@ public class usersPanel extends JFrame {
     private TitledBorder title;
 
     public usersPanel() {
-        this.subjectList = new ArrayList<>();
-        add(personPanel);
+        this.professionList = new ArrayList<>();
+        add(usersPanel);
         setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
@@ -272,8 +272,8 @@ public class usersPanel extends JFrame {
             while (subjects.next()) {
                 String subjectName = subjects.getString("subject");
 
-                if (!subjectList.contains(subjectName))
-                    subjectList.add(subjectName);
+                if (!professionList.contains(subjectName))
+                    professionList.add(subjectName);
             }
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
@@ -282,7 +282,7 @@ public class usersPanel extends JFrame {
             userDetailsComboBox.removeAllItems();
             userDetailsComboBox.addItem("Add new");
 
-            for (String subject : subjectList)
+            for (String subject : professionList)
                 userDetailsComboBox.addItem(subject);
 
             if (userDetailsComboBox.getItemCount() > 1) {
