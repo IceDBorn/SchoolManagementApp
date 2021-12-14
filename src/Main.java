@@ -13,7 +13,7 @@ public class Main {
         UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialOceanicTheme()));
 
         SwingUtilities.invokeLater(() -> {
-            int userPanel = 3;
+            int userPanel = 5;
 
             switch (userPanel) {
                 case 1 -> {
@@ -33,8 +33,8 @@ public class Main {
                     lessons.setVisible(true);
                 }
                 case 5 -> {
-                    personPanel person = new personPanel();
-                    person.setVisible(true);
+                    usersPanel users = new usersPanel();
+                    users.setVisible(true);
                 }
                 case 6 -> {
                     coursesPanel courses = new coursesPanel();

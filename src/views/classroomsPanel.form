@@ -11,8 +11,8 @@
       <scrollpane id="fc58b" binding="scrollPane">
         <constraints>
           <grid row="2" column="9" row-span="10" col-span="3" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-            <preferred-size width="-1" height="570"/>
-            <maximum-size width="-1" height="570"/>
+            <preferred-size width="900" height="570"/>
+            <maximum-size width="900" height="570"/>
           </grid>
         </constraints>
         <properties/>

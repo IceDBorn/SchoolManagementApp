@@ -7,12 +7,14 @@ import org.jdesktop.swingx.JXDatePicker;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class personPanel extends JFrame {
+public class usersPanel extends JFrame {
     private final ArrayList<String> subjectList;
     private JPanel personPanel;
     private JTextField usernameTextField;
@@ -22,21 +24,28 @@ public class personPanel extends JFrame {
     private JComboBox<String> userDetailsComboBox;
     private JComboBox<String> userTypeComboBox;
     private JComboBox<String> genderComboBox;
-    private JLabel userDetailsLabel;
     private JCheckBox adminCheckBox;
     private JXDatePicker userBirthDayPicker;
+    private JTable usersTable;
+    private JScrollPane scrollPane;
+    private JButton backButton;
+    private JPanel professionPanel;
 
-    public personPanel() {
+    private TitledBorder title;
+
+    public usersPanel() {
         this.subjectList = new ArrayList<>();
-
         add(personPanel);
-        setSize(400, 320);
+        setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         updateSubjects();
 
-        userDetailsLabel.setText("Profession");
+        // Set profession panel titled border
+        title = BorderFactory.createTitledBorder(new EmptyBorder(0,0,0,0), "Profession");
+        title.setTitleJustification(TitledBorder.CENTER);
+        professionPanel.setBorder(title);
 
         userTypeComboBox.addItem("Teacher");
         userTypeComboBox.addItem("Student");
@@ -48,11 +57,15 @@ public class personPanel extends JFrame {
             userDetailsComboBox.removeAllItems();
 
             if (Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher")) {
-                userDetailsLabel.setText("Profession");
+                title = BorderFactory.createTitledBorder(new EmptyBorder(0,0,0,0), "Profession");
+                title.setTitleJustification(TitledBorder.CENTER);
+                professionPanel.setBorder(title);
                 adminCheckBox.setEnabled(true);
                 updateSubjects();
             } else {
-                userDetailsLabel.setText("School Year");
+                title = BorderFactory.createTitledBorder(new EmptyBorder(0,0,0,0), "School Year");
+                title.setTitleJustification(TitledBorder.CENTER);
+                professionPanel.setBorder(title);
                 adminCheckBox.setEnabled(false);
                 adminCheckBox.setSelected(false);
 
@@ -136,5 +149,9 @@ public class personPanel extends JFrame {
             for (String subject : subjectList)
                 userDetailsComboBox.addItem(subject);
         }
+    }
+
+    private void createUIComponents() {
+        // TODO: place custom component creation code here
     }
 }
