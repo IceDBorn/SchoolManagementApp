@@ -1,6 +1,7 @@
 package views;
 
 import controllers.databaseController;
+import controllers.panelController;
 import models.Database;
 import models.User;
 
@@ -238,22 +239,17 @@ public class classroomsPanel extends JFrame {
 
             // Add rows
             while (classrooms.next()) {
+
                 classroomRow[0] = classrooms.getString("name");
                 classroomRow[1] = classrooms.getInt("limit");
+
                 classroomsTableModel.addRow(classroomRow);
             }
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
         } finally {
-            // Fill missing rows to fix white space
-            int rowCount = classroomsTableModel.getRowCount();
-
-            if (rowCount < 16) IntStream.range(0, 16 - rowCount).forEach(i -> {
-                classroomRow[0] = "";
-                classroomRow[1] = "";
-                classroomsTableModel.addRow(classroomRow);
-            });
+            panelController.fillEmptyRows(classroomRow, classroomsTableModel);
             classroomsTable.setModel(classroomsTableModel);
         }
     }

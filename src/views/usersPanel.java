@@ -1,6 +1,7 @@
 package views;
 
 import controllers.databaseController;
+import controllers.panelController;
 import models.Database;
 import models.User;
 import org.jdesktop.swingx.JXDatePicker;
@@ -13,10 +14,12 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.sql.*;
-import java.text.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 public class usersPanel extends JFrame {
     private final ArrayList<String> professionList;
@@ -53,9 +56,9 @@ public class usersPanel extends JFrame {
         usersTable.setDefaultEditor(Object.class, null);
         usersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         // Center combobox text
-        ((JLabel)userDetailsComboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
-        ((JLabel)userTypeComboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
-        ((JLabel)genderComboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
+        ((JLabel) userDetailsComboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
+        ((JLabel) userTypeComboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
+        ((JLabel) genderComboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
         // Set current date and custom format to birthday picker
         Date date = new Date(System.currentTimeMillis());
         SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
@@ -65,7 +68,7 @@ public class usersPanel extends JFrame {
         updateSubjects();
 
         // Set profession panel titled border
-        title = BorderFactory.createTitledBorder(new EmptyBorder(0,0,0,0), "Profession");
+        title = BorderFactory.createTitledBorder(new EmptyBorder(0, 0, 0, 0), "Profession");
         title.setTitleJustification(TitledBorder.CENTER);
         professionPanel.setBorder(title);
 
@@ -79,13 +82,13 @@ public class usersPanel extends JFrame {
             userDetailsComboBox.removeAllItems();
 
             if (Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher")) {
-                title = BorderFactory.createTitledBorder(new EmptyBorder(0,0,0,0), "Profession");
+                title = BorderFactory.createTitledBorder(new EmptyBorder(0, 0, 0, 0), "Profession");
                 title.setTitleJustification(TitledBorder.CENTER);
                 professionPanel.setBorder(title);
                 adminCheckBox.setEnabled(true);
                 updateSubjects();
             } else {
-                title = BorderFactory.createTitledBorder(new EmptyBorder(0,0,0,0), "School Year");
+                title = BorderFactory.createTitledBorder(new EmptyBorder(0, 0, 0, 0), "School Year");
                 title.setTitleJustification(TitledBorder.CENTER);
                 professionPanel.setBorder(title);
                 adminCheckBox.setEnabled(false);
@@ -103,7 +106,6 @@ public class usersPanel extends JFrame {
                 System.out.println(userDetailsComboBox.getSelectedIndex());
                 System.out.println("Add new profession");
             } else {
-                // TODO: (Prionysis) Add new user to database and update existing users
                 String userName = usernameTextField.getText();
                 String userEmail = emailTextField.getText();
                 String userPassword = String.valueOf(passwordField.getPassword());
@@ -116,23 +118,23 @@ public class usersPanel extends JFrame {
 
                 try {
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                    PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"Users\"(name, gender, birthday, phone, email, password, \"isAdmin\") VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"Users\"(name, gender, birthday, email, password, \"isAdmin\") VALUES (?, ?, ?, ?, ?, ?)",
                             PreparedStatement.RETURN_GENERATED_KEYS);
                     preparedStatement.setString(1, userName);
                     preparedStatement.setInt(2, userGender);
                     preparedStatement.setDate(3, userBirthday);
-                    preparedStatement.setString(5, userEmail);
-                    preparedStatement.setString(6, userPassword);
-                    preparedStatement.setBoolean(7, isAdmin);
+                    preparedStatement.setString(4, userEmail);
+                    preparedStatement.setString(5, userPassword);
+                    preparedStatement.setBoolean(6, isAdmin);
                     preparedStatement.executeUpdate();
 
                     // Get the userId of the newly inserted user
-                    int personId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
+                    int userId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
                     preparedStatement.close();
 
                     // Check whether the user is a student or a teacher and import into the corresponding table
                     preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, subject) VALUES (?, ?)" : "INSERT INTO \"Students\"(id, year) VALUES (?, ?)");
-                    preparedStatement.setInt(1, personId);
+                    preparedStatement.setInt(1, userId);
 
                     if (isTeacher)
                         preparedStatement.setString(2, userSubject);
@@ -144,20 +146,19 @@ public class usersPanel extends JFrame {
                     connection.close();
 
                     updateSubjects();
-                    System.out.printf("userId %d created %s: %s (gender: %s, birthday: %s, phone: %d, email: %s, admin: %s%n",
-                            User.getId(), isTeacher ? "teacher" : "student", userName, userGender, userBirthday, userEmail, isAdmin ? "Yes" : "No");
+                    System.out.printf("userId %d created %s: %d (name: %s, gender: %s, birthday: %s, email: %s, admin: %s)%n",
+                            User.getId(), isTeacher ? "teacher" : "student", userId, userName, userGender, new SimpleDateFormat("dd/MM/yyyy").format(userBirthday), userEmail, isAdmin ? "Yes" : "No");
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
+                } finally {
+                    updateUsers();
+                    revertUIComponents();
                 }
-
-                revertUIComponents();
             }
         });
 
-        cancelButton.addActionListener(action -> {
-            revertUIComponents();
-        });
+        cancelButton.addActionListener(action -> revertUIComponents());
 
         editButton.addActionListener(action -> {
             editButton.setEnabled(false);
@@ -169,19 +170,17 @@ public class usersPanel extends JFrame {
             passwordField.setText("");
             passwordField.setEnabled(false);
 
-            if (usersTable.getValueAt(usersTable.getSelectedRow(), 2).toString().equals("Teacher")) {
+            if (usersTable.getValueAt(usersTable.getSelectedRow(), 2).toString().equals("Teacher"))
                 userTypeComboBox.setSelectedIndex(0);
-            } else {
+            else
                 userTypeComboBox.setSelectedIndex(1);
-            }
 
             userDetailsComboBox.setSelectedItem(usersTable.getValueAt(usersTable.getSelectedRow(), 3));
 
-            if (usersTable.getValueAt(usersTable.getSelectedRow(), 4).toString().equals("Male")) {
+            if (usersTable.getValueAt(usersTable.getSelectedRow(), 4).toString().equals("Male"))
                 userTypeComboBox.setSelectedIndex(0);
-            } else {
+            else
                 userTypeComboBox.setSelectedIndex(1);
-            }
 
             try {
                 userBirthDayPicker.setDate(new SimpleDateFormat("dd/MM/yyyy").parse(usersTable.getValueAt(usersTable.getSelectedRow(), 5).toString()));
@@ -252,8 +251,8 @@ public class usersPanel extends JFrame {
 
         usersTable.getSelectionModel().addListSelectionListener(selection -> {
             if (usersTable.getSelectedRow() != -1
-                    && !usersTable.getValueAt(usersTable.getSelectedRow(), 0).toString().equals("")
-                    && !usersTable.getValueAt(usersTable.getSelectedRow(), 1).toString().equals("")) {
+                && !usersTable.getValueAt(usersTable.getSelectedRow(), 0).toString().equals("")
+                && !usersTable.getValueAt(usersTable.getSelectedRow(), 1).toString().equals("")) {
                 editButton.setEnabled(true);
                 removeButton.setEnabled(true);
             } else {
@@ -303,32 +302,43 @@ public class usersPanel extends JFrame {
     }
 
     private void updateUsers() {
-        // TODO: (Prionysis) Update table with users from database
-        Object[] row = new Object[7];
-        row[0] = "IceDBorn";
-        row[1] = "ok@ok.com";
-        row[2] = "Teacher";
-        row[3] = "ne";
-        row[4] = "Male";
-        row[5] = "01/12/2021";
-        row[6] = "Yes";
-        usersTableModel.addRow(row);
-        row[0] = "Prionysis";
-        row[1] = "ne@ne.com";
-        row[2] = "Student";
-        row[3] = "3η Γυμνασίου";
-        row[4] = "Female";
-        row[5] = "17/12/2021";
-        row[6] = "No";
-        usersTableModel.addRow(row);
-        usersTable.setModel(usersTableModel);
+        IntStream.iterate(usersTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> usersTableModel.removeRow(i));
+        Object[] userRow = new Object[8];
+
+        try {
+            CachedRowSet users = databaseController.selectQuery("""
+                    SELECT name, email, gender, birthday, "isAdmin", year, subject FROM "Users"
+                    LEFT JOIN "Students" on "Users".id = "Students".id
+                    LEFT JOIN "Teachers" on "Users".id = "Teachers".id
+                    ORDER BY name""");
+
+            // Add rows
+            while (users.next()) {
+                String userSubject = users.getString("subject");
+
+                userRow[0] = users.getString("name");
+                userRow[1] = users.getString("email");
+                userRow[2] = userSubject != null ? "Teacher" : "Student";
+                userRow[3] = userSubject != null ? userSubject : panelController.getYear(users.getInt("year"));
+                userRow[4] = users.getString("gender");
+                userRow[5] = users.getDate("birthday");
+                userRow[6] = users.getBoolean("isAdmin") ? "Yes" : "No";
+                usersTableModel.addRow(userRow);
+            }
+        } catch (SQLException err) {
+            System.out.println("SQL Exception:");
+            err.printStackTrace();
+        } finally {
+            panelController.fillEmptyRows(userRow, usersTableModel);
+            usersTable.setModel(usersTableModel);
+        }
     }
 
     private void enableButtons() {
         // Enable or disable add button based on class name text
         if (!usernameTextField.getText().equals("") && !emailTextField.getText().equals("")
-                && !(passwordField.getPassword().length == 0 && !passwordField.isEnabled())
-                && !userBirthDayPicker.getDate().toString().equals("")) {
+            && !(passwordField.getPassword().length == 0 && !passwordField.isEnabled())
+            && !userBirthDayPicker.getDate().toString().equals("")) {
             addButton.setEnabled(true);
             cancelButton.setEnabled(true);
         } else {
@@ -346,9 +356,8 @@ public class usersPanel extends JFrame {
         usersTable.setEnabled(true);
         userTypeComboBox.setSelectedIndex(0);
 
-        if (userDetailsComboBox.getItemCount() > 1) {
+        if (userDetailsComboBox.getItemCount() > 1)
             userDetailsComboBox.setSelectedIndex(1);
-        }
 
         genderComboBox.setSelectedIndex(0);
 
