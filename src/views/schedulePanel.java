@@ -1,6 +1,7 @@
 package views;
 
 import controllers.databaseController;
+import controllers.panelController;
 import models.Database;
 import models.User;
 
@@ -37,7 +38,7 @@ public class schedulePanel extends JFrame {
         scheduleTable.getTableHeader().setReorderingAllowed(false);
         scheduleTable.setEnabled(false);
 
-        Object[] row = new Object[4];
+        Object[] lessonRow = new Object[4];
 
         try {
             ResultSet lessons = databaseController.selectQuery(String.format("""
@@ -50,27 +51,20 @@ public class schedulePanel extends JFrame {
 
             // Add rows
             while (lessons.next()) {
-                row[0] = lessons.getString("\"Lessons\".name");
-                row[1] = lessons.getString("\"Classrooms\".name");
-                row[2] = lessons.getString("\"Courses\".day");
-                row[3] = lessons.getString("\"Courses\".time");
+                lessonRow[0] = lessons.getString("\"Lessons\".name");
+                lessonRow[1] = lessons.getString("\"Classrooms\".name");
+                lessonRow[2] = lessons.getString("\"Courses\".day");
+                lessonRow[3] = lessons.getString("\"Courses\".time");
 
-                scheduleTableModel.addRow(row);
+                scheduleTableModel.addRow(lessonRow);
             }
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
         } finally {
             // Fill missing rows to fix white space
-            int rowCount = scheduleTableModel.getRowCount();
-
-            if (rowCount < 17) IntStream.range(0, 17 - rowCount).forEach(i -> {
-                row[0] = "";
-                row[1] = "";
-                row[2] = "";
-                row[3] = "";
-                scheduleTableModel.addRow(row);
-            });
+            panelController.fillEmptyRows(lessonRow, scheduleTableModel);
+            scheduleTable.setModel(scheduleTableModel);
         }
     }
 }
