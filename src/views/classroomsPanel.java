@@ -131,6 +131,7 @@ public class classroomsPanel extends JFrame {
                 if (classroomsTable.getValueAt(selectedRow, 0).toString().equals(""))
                     System.out.println("You can not edit an empty row.");
                 else {
+                    // Get the selected classroomId and store it to a global variable
                     try {
                         CachedRowSet classrooms = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
                         classrooms.next();

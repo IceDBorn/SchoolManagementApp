@@ -41,6 +41,9 @@ public class usersPanel extends JFrame {
     private JButton cancelButton;
     private JButton editButton;
     private JButton removeButton;
+    private int selectedUserId;
+    private String selectedUserName;
+    private boolean selectedUserIsTeacher;
 
     private TitledBorder title;
 
@@ -99,58 +102,119 @@ public class usersPanel extends JFrame {
         });
 
         addButton.addActionListener(action -> {
-            if (userDetailsComboBox.getSelectedIndex() == 0) {
+            String userName = usernameTextField.getText();
+            String userEmail = emailTextField.getText();
+            String userPassword = String.valueOf(passwordField.getPassword());
+            String userSubject = Objects.requireNonNull(userDetailsComboBox.getSelectedItem()).toString();
+            Date userBirthday = new Date(userBirthDayPicker.getDate().getTime());
+            int userGender = genderComboBox.getSelectedIndex();
+            int userYear = userDetailsComboBox.getSelectedIndex() + 1;
+            boolean isTeacher = Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher");
+            boolean isAdmin = adminCheckBox.isSelected();
+
+            if (userName.equals("") || userEmail.equals("") || (userPassword.equals("") && passwordField.isEnabled()))
+                System.out.println("You can not have a blank name, email or password.");
+            else if (userDetailsComboBox.getSelectedIndex() == 0) {
                 // TODO: (IceDBorn) Add profession addition panel
                 // TODO: (Prionysis) Add new profession to the database
                 System.out.println(userDetailsComboBox.getSelectedIndex());
                 System.out.println("Add new profession");
-            } else {
-                String userName = usernameTextField.getText();
-                String userEmail = emailTextField.getText();
-                String userPassword = String.valueOf(passwordField.getPassword());
-                String userSubject = Objects.requireNonNull(userDetailsComboBox.getSelectedItem()).toString();
-                Date userBirthday = new Date(userBirthDayPicker.getDate().getTime());
-                int userGender = genderComboBox.getSelectedIndex();
-                int userYear = userDetailsComboBox.getSelectedIndex() + 1;
-                boolean isTeacher = Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher");
-                boolean isAdmin = adminCheckBox.isSelected();
+            } else if (addButton.getText().equals("Save")) {
 
                 try {
-                    Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                    PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"Users\"(name, gender, birthday, email, password, \"isAdmin\") VALUES (?, ?, ?, ?, ?, ?)",
-                            PreparedStatement.RETURN_GENERATED_KEYS);
-                    preparedStatement.setString(1, userName);
-                    preparedStatement.setInt(2, userGender);
-                    preparedStatement.setDate(3, userBirthday);
-                    preparedStatement.setString(4, userEmail);
-                    preparedStatement.setString(5, userPassword);
-                    preparedStatement.setBoolean(6, isAdmin);
-                    preparedStatement.executeUpdate();
+                    boolean userExists = databaseController.selectQuery(String.format("SELECT id FROM \"Users\" WHERE email = '%s'", userEmail)).isBeforeFirst();
 
-                    // Get the userId of the newly inserted user
-                    int userId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
-                    preparedStatement.close();
+                    if (userExists && !selectedUserName.equals(userName))
+                        System.out.println("A user already exists with that email.");
+                    else {
+                        Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                        PreparedStatement preparedStatement = connection.prepareStatement("UPDATE \"Users\" SET name = ?, gender = ?, birthday = ?, email = ?, \"isAdmin\" = ? WHERE id = ?",
+                                PreparedStatement.RETURN_GENERATED_KEYS);
+                        preparedStatement.setString(1, userName);
+                        preparedStatement.setInt(2, userGender);
+                        preparedStatement.setDate(3, userBirthday);
+                        preparedStatement.setString(4, userEmail);
+                        preparedStatement.setBoolean(5, isTeacher && isAdmin);
+                        preparedStatement.setInt(6, selectedUserId);
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
 
-                    // Check whether the user is a student or a teacher and import into the corresponding table
-                    preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, subject) VALUES (?, ?)" : "INSERT INTO \"Students\"(id, year) VALUES (?, ?)");
-                    preparedStatement.setInt(1, userId);
+                        // Check whether the selected user is a teacher or a student delete them from the corresponding table
+                        preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
+                        preparedStatement.setInt(1, selectedUserId);
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
 
-                    if (isTeacher)
-                        preparedStatement.setString(2, userSubject);
-                    else
-                        preparedStatement.setInt(2, userYear);
+                        // Check whether the new user type is a student or a teacher and import them into the corresponding table
+                        preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, subject) VALUES (?, ?)" : "INSERT INTO \"Students\"(id, year) VALUES (?, ?)");
+                        preparedStatement.setInt(1, selectedUserId);
 
-                    preparedStatement.executeUpdate();
-                    preparedStatement.close();
-                    connection.close();
+                        if (isTeacher)
+                            preparedStatement.setString(2, userSubject);
+                        else
+                            preparedStatement.setInt(2, userYear);
 
-                    updateSubjects();
-                    System.out.printf("userId %d created %s: %d (name: %s, gender: %s, birthday: %s, email: %s, admin: %s)%n",
-                            User.getId(), isTeacher ? "teacher" : "student", userId, userName, userGender, new SimpleDateFormat("dd/MM/yyyy").format(userBirthday), userEmail, isAdmin ? "Yes" : "No");
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
+
+                        // Close the connection
+                        connection.close();
+
+                        System.out.printf("userId %d updated user: %d (type: %s, name: %s, gender: %s, birthday: %s, email: %s, admin: %s)%n",
+                                User.getId(), selectedUserId, isTeacher ? "teacher" : "student", userName, userGender, new SimpleDateFormat("dd/MM/yyyy").format(userBirthday), userEmail, isAdmin ? "Yes" : "No");
+                    }
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
                 } finally {
+                    updateSubjects();
+                    updateUsers();
+                    revertUIComponents();
+                }
+
+            } else if (addButton.getText().equals("Add")) {
+                try {
+                    boolean userExists = databaseController.selectQuery(String.format("SELECT id FROM \"Users\" WHERE email = '%s'", userEmail)).isBeforeFirst();
+
+                    if (userExists)
+                        System.out.println("A user already exists with that email.");
+                    else {
+                        Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                        PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"Users\"(name, gender, birthday, email, password, \"isAdmin\") VALUES (?, ?, ?, ?, ?, ?)",
+                                PreparedStatement.RETURN_GENERATED_KEYS);
+                        preparedStatement.setString(1, userName);
+                        preparedStatement.setInt(2, userGender);
+                        preparedStatement.setDate(3, userBirthday);
+                        preparedStatement.setString(4, userEmail);
+                        preparedStatement.setString(5, userPassword);
+                        preparedStatement.setBoolean(6, isAdmin);
+                        preparedStatement.executeUpdate();
+
+                        // Get the userId of the newly inserted user
+                        int userId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
+                        preparedStatement.close();
+
+                        // Check whether the user is a student or a teacher and import into the corresponding table
+                        preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, subject) VALUES (?, ?)" : "INSERT INTO \"Students\"(id, year) VALUES (?, ?)");
+                        preparedStatement.setInt(1, userId);
+
+                        if (isTeacher)
+                            preparedStatement.setString(2, userSubject);
+                        else
+                            preparedStatement.setInt(2, userYear);
+
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
+                        connection.close();
+
+                        System.out.printf("userId %d created user: %d (type: %s, name: %s, gender: %s, birthday: %s, email: %s, admin: %s)%n",
+                                User.getId(), userId, isTeacher ? "teacher" : "student", userName, userGender, new SimpleDateFormat("dd/MM/yyyy").format(userBirthday), userEmail, isAdmin ? "Yes" : "No");
+                    }
+                } catch (SQLException err) {
+                    System.out.println("SQL Exception:");
+                    err.printStackTrace();
+                } finally {
+                    updateSubjects();
                     updateUsers();
                     revertUIComponents();
                 }
@@ -160,40 +224,93 @@ public class usersPanel extends JFrame {
         cancelButton.addActionListener(action -> revertUIComponents());
 
         editButton.addActionListener(action -> {
-            editButton.setEnabled(false);
-            removeButton.setEnabled(false);
-            addButton.setText("Save");
-            usersTable.setEnabled(false);
-            usernameTextField.setText(usersTable.getValueAt(usersTable.getSelectedRow(), 0).toString());
-            emailTextField.setText(usersTable.getValueAt(usersTable.getSelectedRow(), 1).toString());
-            passwordField.setText("");
-            passwordField.setEnabled(false);
+            // Check if a row is selected
+            if (!usersTable.isRowSelected(usersTable.getSelectedRow()))
+                System.out.println("You don't have a selected row.");
+            else {
+                // Get the selected userId and store it to a global variable
+                try {
+                    CachedRowSet users = databaseController.selectQuery(String.format("SELECT id, name FROM \"Users\" WHERE email = '%s'", usersTable.getValueAt(usersTable.getSelectedRow(), 1).toString()));
+                    users.next();
+                    selectedUserId = users.getInt("id");
+                    selectedUserName = users.getString("name");
+                    selectedUserIsTeacher = databaseController.selectQuery(String.format("SELECT id FROM \"Teachers\" WHERE id = '%d'", selectedUserId)).isBeforeFirst();
+                } catch (SQLException err) {
+                    System.out.println("SQL Exception: ");
+                    err.printStackTrace();
+                }
 
-            if (usersTable.getValueAt(usersTable.getSelectedRow(), 2).toString().equals("Teacher"))
-                userTypeComboBox.setSelectedIndex(0);
-            else
-                userTypeComboBox.setSelectedIndex(1);
+                editButton.setEnabled(false);
+                removeButton.setEnabled(false);
+                addButton.setText("Save");
+                usersTable.setEnabled(false);
+                usernameTextField.setText(usersTable.getValueAt(usersTable.getSelectedRow(), 0).toString());
+                emailTextField.setText(usersTable.getValueAt(usersTable.getSelectedRow(), 1).toString());
+                passwordField.setText("");
+                passwordField.setEnabled(false);
 
-            userDetailsComboBox.setSelectedItem(usersTable.getValueAt(usersTable.getSelectedRow(), 3));
+                if (usersTable.getValueAt(usersTable.getSelectedRow(), 2).toString().equals("Teacher"))
+                    userTypeComboBox.setSelectedIndex(0);
+                else
+                    userTypeComboBox.setSelectedIndex(1);
 
-            if (usersTable.getValueAt(usersTable.getSelectedRow(), 4).toString().equals("Male"))
-                userTypeComboBox.setSelectedIndex(0);
-            else
-                userTypeComboBox.setSelectedIndex(1);
+                userDetailsComboBox.setSelectedItem(usersTable.getValueAt(usersTable.getSelectedRow(), 3));
 
-            try {
-                userBirthDayPicker.setDate(new SimpleDateFormat("dd/MM/yyyy").parse(usersTable.getValueAt(usersTable.getSelectedRow(), 5).toString()));
-            } catch (ParseException e) {
-                e.printStackTrace();
+                if (usersTable.getValueAt(usersTable.getSelectedRow(), 4).toString().equals("Male"))
+                    userTypeComboBox.setSelectedIndex(0);
+                else
+                    userTypeComboBox.setSelectedIndex(1);
+
+                try {
+                    userBirthDayPicker.setDate(new SimpleDateFormat("dd/MM/yyyy").parse(usersTable.getValueAt(usersTable.getSelectedRow(), 5).toString()));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                adminCheckBox.setSelected(usersTable.getValueAt(usersTable.getSelectedRow(), 6).toString().equals("Yes"));
+
+                usersTable.clearSelection();
             }
-
-            adminCheckBox.setSelected(usersTable.getValueAt(usersTable.getSelectedRow(), 6).toString().equals("Yes"));
-
-            usersTable.clearSelection();
         });
 
         removeButton.addActionListener(action -> {
-            // TODO: (Prionysis) Remove entry from database
+            // Get the selected row index
+            int selectedRow = usersTable.getSelectedRow();
+
+            try {
+                // Get the userId of the selected user
+                CachedRowSet users = databaseController.selectQuery(String.format("SELECT id FROM \"Users\" WHERE email = '%s'", usersTable.getValueAt(selectedRow, 1).toString()));
+                users.next();
+                int userId = users.getInt("id");
+
+                // Check whether the user is a teacher or not
+                boolean isTeacher = usersTable.getValueAt(usersTable.getSelectedRow(), 2).toString().equals("Teacher");
+
+                // Check whether the selected user is a teacher or a student and delete them from the corresponding table
+                Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                PreparedStatement preparedStatement = connection.prepareStatement(isTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
+                preparedStatement.setInt(1, userId);
+                preparedStatement.executeUpdate();
+                preparedStatement.close();
+
+                // Delete the user from the database
+                preparedStatement = connection.prepareStatement("DELETE FROM \"Users\" WHERE id = ?");
+                preparedStatement.setInt(1, userId);
+                preparedStatement.executeUpdate();
+                preparedStatement.close();
+                connection.close();
+
+                System.out.printf("userId %d deleted user: %d (type: %s)%n",
+                        User.getId(), userId, isTeacher ? "teacher" : "student");
+            } catch (SQLException err) {
+                System.out.println("SQL Exception: ");
+                err.printStackTrace();
+            } finally {
+                updateSubjects();
+                updateUsers();
+                revertUIComponents();
+            }
+
             editButton.setEnabled(false);
             removeButton.setEnabled(false);
             usersTable.getSelectionModel().clearSelection();
@@ -365,5 +482,9 @@ public class usersPanel extends JFrame {
 
         adminCheckBox.setSelected(false);
         adminCheckBox.setEnabled(true);
+
+        selectedUserId = -1;
+        selectedUserName = "";
+        selectedUserIsTeacher = false;
     }
 }
