@@ -218,10 +218,10 @@ public class usersPanel extends JFrame {
                 removeButton.setEnabled(false);
                 addButton.setText("Save");
                 usersTable.setEnabled(false);
-                usernameTextField.setText(usersTable.getValueAt(usersTable.getSelectedRow(), 0).toString());
-                emailTextField.setText(usersTable.getValueAt(usersTable.getSelectedRow(), 1).toString());
                 passwordField.setText("");
                 passwordField.setEnabled(false);
+                usernameTextField.setText(usersTable.getValueAt(usersTable.getSelectedRow(), 0).toString());
+                emailTextField.setText(usersTable.getValueAt(usersTable.getSelectedRow(), 1).toString());
 
                 if (usersTable.getValueAt(usersTable.getSelectedRow(), 2).toString().equals("Teacher"))
                     userTypeComboBox.setSelectedIndex(0);
@@ -427,7 +427,7 @@ public class usersPanel extends JFrame {
     private void enableButtons() {
         // Enable or disable add button based on class name text
         if (!usernameTextField.getText().equals("") && !emailTextField.getText().equals("")
-            && !(passwordField.getPassword().length == 0 && !passwordField.isEnabled())
+            && !(passwordField.getPassword().length == 0 && passwordField.isEnabled())
             && !userBirthDayPicker.getDate().toString().equals("")) {
             addButton.setEnabled(true);
             cancelButton.setEnabled(true);
