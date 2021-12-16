@@ -48,6 +48,7 @@ public class usersPanel extends JFrame {
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        // Customize table to have no border, disable cell editing and switch single row selection
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         usersTable.setDefaultEditor(Object.class, null);
         usersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

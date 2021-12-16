@@ -51,7 +51,7 @@
       </component>
       <vspacer id="43928">
         <constraints>
-          <grid row="0" column="1" row-span="1" col-span="9" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
+          <grid row="0" column="7" row-span="1" col-span="3" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
             <preferred-size width="-1" height="10"/>
             <maximum-size width="-1" height="10"/>
           </grid>
@@ -67,7 +67,7 @@
       </hspacer>
       <vspacer id="900eb">
         <constraints>
-          <grid row="14" column="0" row-span="1" col-span="10" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
+          <grid row="14" column="7" row-span="1" col-span="3" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
             <preferred-size width="-1" height="10"/>
             <maximum-size width="-1" height="10"/>
           </grid>
