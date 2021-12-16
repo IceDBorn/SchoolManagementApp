@@ -63,7 +63,7 @@ public class usersPanel extends JFrame {
         ((JLabel) genderComboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
         // Set current date and custom format to birthday picker
         Date date = new Date(System.currentTimeMillis());
-        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         userBirthDayPicker.setDate(date);
         userBirthDayPicker.setFormats(format);
 
@@ -236,7 +236,7 @@ public class usersPanel extends JFrame {
                     userTypeComboBox.setSelectedIndex(1);
 
                 try {
-                    userBirthDayPicker.setDate(new SimpleDateFormat("dd/MM/yyyy").parse(usersTable.getValueAt(usersTable.getSelectedRow(), 5).toString()));
+                    userBirthDayPicker.setDate(new SimpleDateFormat("yyyy-MM-dd").parse(usersTable.getValueAt(usersTable.getSelectedRow(), 5).toString()));
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
