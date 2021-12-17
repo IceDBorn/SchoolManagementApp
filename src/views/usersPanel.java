@@ -23,7 +23,7 @@ import java.util.stream.IntStream;
 
 public class usersPanel extends JFrame {
     private final ArrayList<String> professionList;
-    DefaultTableModel usersTableModel;
+    private DefaultTableModel usersTableModel;
     private JPanel usersPanel;
     private JTextField usernameTextField;
     private JTextField emailTextField;
@@ -42,7 +42,7 @@ public class usersPanel extends JFrame {
     private JButton editButton;
     private JButton removeButton;
     private int selectedUserId;
-    private String selectedUserName;
+    private String selectedUserEmail;
     private boolean selectedUserIsTeacher;
 
     private TitledBorder title;
@@ -118,16 +118,17 @@ public class usersPanel extends JFrame {
                     int userYear = userDetailsComboBox.getSelectedIndex() + 1;
                     boolean isTeacher = Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher");
                     boolean isAdmin = adminCheckBox.isSelected();
-                    boolean isAddButton = addButton.getText().equals("Add");
                     boolean userExists = databaseController.selectQuery(String.format("SELECT id FROM \"Users\" WHERE email = '%s'", userEmail)).isBeforeFirst();
 
                     // Check if a user already exists with the same email if the name has been changed
-                    if (userExists && !selectedUserName.equals(userName))
+                    if (userExists && !selectedUserEmail.equals(userEmail))
                         System.out.println("A user already exists with that email.");
                     else {
                         String query;
+                        boolean isAddButton = addButton.getText().equals("Add");
+
                         if (isAddButton)
-                            query = "INSERT INTO \"Users\"(name, gender, birthday, \"isAdmin\", \"isTeacher\", email, password) VALUES (?, ?, ?, ?, ?, ?)";
+                            query = "INSERT INTO \"Users\"(name, gender, birthday, \"isAdmin\", \"isTeacher\", email, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
                         else
                             query = "UPDATE \"Users\" SET name = ?, gender = ?, birthday = ?, \"isAdmin\" = ?, \"isTeacher\" = ?, email = ? WHERE id = ?";
 
@@ -148,13 +149,13 @@ public class usersPanel extends JFrame {
 
                         preparedStatement.executeUpdate();
 
-                        // Get the userId of the newly inserted user
+                        // Get the userId of the inserted or updated user
                         int userId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
                         preparedStatement.close();
 
-                        if (isAddButton) {
-                            // Check whether the existing user was a teacher or a student and delete them from the corresponding table.
-                                preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
+                        // If it's a save button, check whether user was a student or a teacher and delete them from the corresponding table
+                        if (!isAddButton) {
+                            preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
                             preparedStatement.setInt(1, selectedUserId);
                             preparedStatement.executeUpdate();
                             preparedStatement.close();
@@ -204,10 +205,10 @@ public class usersPanel extends JFrame {
             else {
                 // Get the selected userId and store it to a global variable
                 try {
-                    CachedRowSet users = databaseController.selectQuery(String.format("SELECT id, name FROM \"Users\" WHERE email = '%s'", usersTable.getValueAt(usersTable.getSelectedRow(), 1).toString()));
+                    CachedRowSet users = databaseController.selectQuery(String.format("SELECT id, email FROM \"Users\" WHERE email = '%s'", usersTable.getValueAt(usersTable.getSelectedRow(), 1).toString()));
                     users.next();
                     selectedUserId = users.getInt("id");
-                    selectedUserName = users.getString("name");
+                    selectedUserEmail = users.getString("email");
                     selectedUserIsTeacher = databaseController.selectQuery(String.format("SELECT id FROM \"Teachers\" WHERE id = '%d'", selectedUserId)).isBeforeFirst();
                 } catch (SQLException err) {
                     System.out.println("SQL Exception: ");
@@ -458,7 +459,7 @@ public class usersPanel extends JFrame {
         adminCheckBox.setEnabled(true);
 
         selectedUserId = -1;
-        selectedUserName = "";
+        selectedUserEmail = "";
         selectedUserIsTeacher = false;
     }
 }
