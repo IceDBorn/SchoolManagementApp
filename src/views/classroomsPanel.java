@@ -1,6 +1,7 @@
 package views;
 
 import controllers.databaseController;
+import controllers.panelController;
 import models.Database;
 import models.User;
 
@@ -29,6 +30,7 @@ public class classroomsPanel extends JFrame {
     private JButton backButton;
     private JButton cancelButton;
     private int selectedClassroomId;
+    private String selectedClassroomName;
 
     public classroomsPanel() {
         add(classroomsPanel);
@@ -53,63 +55,47 @@ public class classroomsPanel extends JFrame {
         });
 
         addButton.addActionListener(action -> {
-            String classroomName = classNameTextField.getText();
-            int classroomLimit = (int) classCapacitySpinner.getValue();
+            try {
+                String classroomName = classNameTextField.getText();
+                int classroomLimit = (int) classCapacitySpinner.getValue();
+                boolean classroomExists = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName)).isBeforeFirst();
 
-            // Check if the text field is blank to avoid unnecessary sql errors
-            if (classroomName.equals(""))
-                System.out.println("You can not have a blank classroom name.");
-            else if (addButton.getText().equals("Save")) {
-                try {
+                if (classroomExists && !selectedClassroomName.equals(classroomName))
+                    System.out.println("A classroom already exists with that name.");
+                else {
+                    String query;
+                    boolean isAddButton = addButton.getText().equals("Add");
+
+                    if (isAddButton)
+                        query = "INSERT INTO \"Classrooms\"(name, \"limit\") VALUES (?, ?)";
+                    else
+                        query = "UPDATE \"Classrooms\" SET name = ?, \"limit\" = ? WHERE id = ?";
+
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                    PreparedStatement preparedStatement = connection.prepareStatement("UPDATE \"Classrooms\" SET name = ?, \"limit\" = ? WHERE id = ?");
+                    PreparedStatement preparedStatement = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
                     preparedStatement.setString(1, classroomName);
                     preparedStatement.setInt(2, classroomLimit);
-                    preparedStatement.setInt(3, selectedClassroomId);
+
+                    if (!isAddButton)
+                        preparedStatement.setInt(3, selectedClassroomId);
+
                     preparedStatement.executeUpdate();
+
+                    // Get the userId of the inserted or updated classroom
+                    int classroomId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
                     preparedStatement.close();
                     connection.close();
 
-                    System.out.printf("userId %d updated classroom: %d (name: %s, limit :%d)%n",
-                            User.getId(), selectedClassroomId, classroomName, classroomLimit);
-                } catch (SQLException err) {
-                    System.out.println("SQL Exception:");
-                    err.printStackTrace();
-                } finally {
-                    updateClassrooms();
-                    revertUIComponents();
+                    System.out.printf("userId %d %s classroom: %d (name: %s, limit :%d)%n",
+                            User.getId(), isAddButton ? "created" : "updated", classroomId, classroomName, classroomLimit);
                 }
-            } else if (addButton.getText().equals("Add")) {
-                try {
-                    boolean classroomExists = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName)).isBeforeFirst();
-
-                    // Check if a classroom already exists with that name
-                    if (classroomExists)
-                        System.out.println("A classroom already exists with that name.");
-                    else {
-                        Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                        PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"Classrooms\"(name, \"limit\") VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
-                        preparedStatement.setString(1, classroomName);
-                        preparedStatement.setInt(2, classroomLimit);
-                        preparedStatement.executeUpdate();
-
-                        // Get the classroomId of the newly inserted classroom
-                        int classroomId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
-
-                        preparedStatement.close();
-                        connection.close();
-
-                        System.out.printf("userId %d created classroom: %d (name: %s, limit :%d)%n",
-                                User.getId(), classroomId, classroomName, classroomLimit);
-                    }
-                } catch (SQLException err) {
-                    System.out.println("SQL Exception:");
-                    err.printStackTrace();
-                } finally {
-                    updateClassrooms();
-                    revertUIComponents();
-                }
+            } catch (SQLException err) {
+                System.out.println("SQL Exception:");
+                err.printStackTrace();
+            } finally {
+                updateClassrooms();
+                revertUIComponents();
             }
         });
 
@@ -131,10 +117,12 @@ public class classroomsPanel extends JFrame {
                 if (classroomsTable.getValueAt(selectedRow, 0).toString().equals(""))
                     System.out.println("You can not edit an empty row.");
                 else {
+                    // Get the selected classroomId and store it to a global variable
                     try {
-                        CachedRowSet classrooms = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
+                        CachedRowSet classrooms = databaseController.selectQuery(String.format("SELECT id, name FROM \"Classrooms\" WHERE name = '%s'", classroomName));
                         classrooms.next();
                         selectedClassroomId = classrooms.getInt("id");
+                        selectedClassroomName = classrooms.getString("name");
                     } catch (SQLException err) {
                         System.out.println("SQL Exception: ");
                         err.printStackTrace();
@@ -238,22 +226,17 @@ public class classroomsPanel extends JFrame {
 
             // Add rows
             while (classrooms.next()) {
+
                 classroomRow[0] = classrooms.getString("name");
                 classroomRow[1] = classrooms.getInt("limit");
+
                 classroomsTableModel.addRow(classroomRow);
             }
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
         } finally {
-            // Fill missing rows to fix white space
-            int rowCount = classroomsTableModel.getRowCount();
-
-            if (rowCount < 16) IntStream.range(0, 16 - rowCount).forEach(i -> {
-                classroomRow[0] = "";
-                classroomRow[1] = "";
-                classroomsTableModel.addRow(classroomRow);
-            });
+            panelController.fillEmptyRows(classroomRow, classroomsTableModel);
             classroomsTable.setModel(classroomsTableModel);
         }
     }
@@ -268,6 +251,7 @@ public class classroomsPanel extends JFrame {
         classroomsTable.setEnabled(true);
         cancelButton.setEnabled(false);
         selectedClassroomId = -1;
+        selectedClassroomName = "";
     }
 
     private void createUIComponents() {
