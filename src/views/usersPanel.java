@@ -314,7 +314,8 @@ public class usersPanel extends JFrame {
         });
 
         backButton.addActionListener(action -> {
-            // TODO: (IceDBorn) Close this panel and open the main panel
+            panelController.createMainPanel();
+            this.setVisible(false);
         });
 
         // Listen for changes in the username text
