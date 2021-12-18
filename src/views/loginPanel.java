@@ -3,6 +3,8 @@ package views;
 import controllers.userController;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class loginPanel extends JFrame {
     private JPanel loginPanel;
@@ -12,7 +14,7 @@ public class loginPanel extends JFrame {
 
     public loginPanel() {
         add(loginPanel);
-        setSize(400, 200);
+        setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -20,12 +22,41 @@ public class loginPanel extends JFrame {
         loginButton.addActionListener(action -> {
             String email = usernameTextField.getText();
             String password = String.valueOf(passwordField.getPassword());
-
-            // Check if the email or the password are blank
-            if (email.equals("") || password.equals(""))
-                System.out.println("You can not have a blank email or password.");
-            else
-                userController.Login(email, password);
+            userController.Login(email, password);
         });
+
+        // Listen for changes in the username text
+        usernameTextField.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                enableButtons();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                enableButtons();
+            }
+
+            public void insertUpdate(DocumentEvent e) {
+                enableButtons();
+            }
+        });
+
+        // Listen for changes in the password text
+        passwordField.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                enableButtons();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                enableButtons();
+            }
+
+            public void insertUpdate(DocumentEvent e) {
+                enableButtons();
+            }
+        });
+    }
+
+    private void enableButtons() {
+        loginButton.setEnabled(!usernameTextField.getText().equals("") && !(passwordField.getPassword().length == 0));
     }
 }
