@@ -72,4 +72,9 @@ public class panelController {
         lessonsPanel lessons = new lessonsPanel();
         lessons.setVisible(true);
     }
+
+    public static void createUsersPanel() {
+        usersPanel users = new usersPanel();
+        users.setVisible(true);
+    }
 }

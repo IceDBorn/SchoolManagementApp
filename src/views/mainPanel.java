@@ -58,5 +58,10 @@ public class mainPanel extends JFrame {
             panelController.createLessonsPanel();
             this.setVisible(false);
         });
+
+        usersButton.addActionListener(action -> {
+            panelController.createUsersPanel();
+            this.setVisible(false);
+        });
     }
 }
