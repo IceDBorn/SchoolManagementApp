@@ -1,10 +1,10 @@
 package models;
 
 public class User {
-    private static int userId;
-    private static String username;
-    private static String userEmail;
-    private static String userSpecificField;
+    private static int userId = -1;
+    private static String username = "";
+    private static String userEmail = "";
+    private static String userSpecificField = "";
     private static boolean isTeacher;
     private static boolean isAdmin;
 

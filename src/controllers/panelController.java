@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
+import views.*;
 
 public class panelController {
     /**
@@ -15,7 +16,7 @@ public class panelController {
         int rowCount = tableModel.getRowCount();
         Object[] row = new Object[tableModel.getColumnCount()];
 
-        if (rowCount < 16) IntStream.range(0, 16 - rowCount).forEach(i -> {
+        if (rowCount < 17) IntStream.range(0, 17 - rowCount).forEach(i -> {
             Arrays.fill(row, "");
             tableModel.addRow(row);
         });
@@ -35,5 +36,45 @@ public class panelController {
             System.out.println("SQL Exception:");
             err.printStackTrace();
         }
+    }
+
+    public static void createMainPanel() {
+        mainPanel main = new mainPanel();
+        main.setVisible(true);
+    }
+
+    public static void createLoginPanel() {
+        loginPanel login = new loginPanel();
+        login.setVisible(true);
+    }
+
+    public static void createSchedulePanel() {
+        schedulePanel schedule = new schedulePanel();
+        schedule.setVisible(true);
+    }
+
+    public static void createGradesPanel() {
+        gradesPanel grades = new gradesPanel();
+        grades.setVisible(true);
+    }
+
+    public static void createClassroomsPanel() {
+        classroomsPanel classrooms = new classroomsPanel();
+        classrooms.setVisible(true);
+    }
+
+    public static void createScheduleMakerPanel() {
+        scheduleMakerPanel courses = new scheduleMakerPanel();
+        courses.setVisible(true);
+    }
+
+    public static void createLessonsPanel() {
+        lessonsPanel lessons = new lessonsPanel();
+        lessons.setVisible(true);
+    }
+
+    public static void createUsersPanel() {
+        usersPanel users = new usersPanel();
+        users.setVisible(true);
     }
 }

@@ -51,7 +51,8 @@ public class classroomsPanel extends JFrame {
 
         // Listeners
         backButton.addActionListener(action -> {
-            // TODO: (IceDBorn) Close this panel and open the main panel
+            panelController.createMainPanel();
+            this.setVisible(false);
         });
 
         addButton.addActionListener(action -> {

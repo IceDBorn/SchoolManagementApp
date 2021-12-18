@@ -2,7 +2,6 @@ package views;
 
 import controllers.databaseController;
 import controllers.panelController;
-import models.Database;
 import models.User;
 
 import javax.swing.*;
@@ -10,14 +9,12 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.stream.IntStream;
 
 public class schedulePanel extends JFrame {
     private JTable scheduleTable;
     private JPanel schedulePanel;
-    private JLabel usernameLabel;
     private JScrollPane scrollPane;
-    private JButton homeButton;
+    private JButton backButton;
 
     public schedulePanel() {
         add(schedulePanel);
@@ -25,8 +22,12 @@ public class schedulePanel extends JFrame {
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        usernameLabel.setText(User.getName());
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+
+        backButton.addActionListener(action -> {
+            panelController.createMainPanel();
+            this.setVisible(false);
+        });
     }
 
     private void createUIComponents() {
