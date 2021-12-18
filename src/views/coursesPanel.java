@@ -1,6 +1,7 @@
 package views;
 
 import com.github.lgooddatepicker.components.TimePicker;
+import controllers.panelController;
 import models.*;
 import controllers.databaseController;
 
@@ -212,13 +213,14 @@ public class coursesPanel extends JFrame {
                     INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id""");
 
             // Add rows
-            Object[] scheduleRows = new Object[4];
+            Object[] row = new Object[4];
+
             while (courses.next()) {
-                scheduleRows[0] = courses.getString(2);
-                scheduleRows[1] = courses.getString(3);
-                scheduleRows[2] = courses.getString(4);
-                scheduleRows[3] = courses.getString(5);
-                scheduleTableModel.addRow(scheduleRows);
+                row[0] = courses.getString(2);
+                row[1] = courses.getString(3);
+                row[2] = courses.getString(4);
+                row[3] = courses.getString(5);
+                scheduleTableModel.addRow(row);
             }
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
@@ -233,7 +235,6 @@ public class coursesPanel extends JFrame {
         String teacherName = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
         String lessonName = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
         String classroomName = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
-        Object[] scheduleRow = new Object[4];
 
         try {
             CachedRowSet courses = databaseController.selectQuery(String.format("""
@@ -245,27 +246,20 @@ public class coursesPanel extends JFrame {
                     WHERE "Users".name = '%s' AND "Lessons"."name" = '%s' AND "Classrooms".name = '%s'""", teacherName, lessonName, classroomName));
 
             // Add rows
+            Object[] row = new Object[4];
+
             while (courses.next()) {
-                scheduleRow[0] = courses.getString("\"Lessons\".name");
-                scheduleRow[1] = courses.getString("\"Users\".name");
-                scheduleRow[2] = courses.getString("\"Courses\".day");
-                scheduleRow[3] = courses.getString("\"Courses\".time");
-                scheduleTableModel.addRow(scheduleRow);
+                row[0] = courses.getString("\"Lessons\".name");
+                row[1] = courses.getString("\"Users\".name");
+                row[2] = courses.getString("\"Courses\".day");
+                row[3] = courses.getString("\"Courses\".time");
+                scheduleTableModel.addRow(row);
             }
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
         } finally {
-            // Fill missing rows to fix white space
-            int rowCount = scheduleTableModel.getRowCount();
-
-            if (rowCount < 16) IntStream.range(0, 16 - rowCount).forEach(i -> {
-                scheduleRow[0] = "";
-                scheduleRow[1] = "";
-                scheduleRow[2] = "";
-                scheduleRow[3] = "";
-                scheduleTableModel.addRow(scheduleRow);
-            });
+            panelController.fillEmptyRows(scheduleTableModel);
             scheduleTable.setModel(scheduleTableModel);
         }
     }

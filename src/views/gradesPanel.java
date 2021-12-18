@@ -1,6 +1,7 @@
 package views;
 
 import controllers.databaseController;
+import controllers.panelController;
 import models.Database;
 import models.User;
 
@@ -111,11 +112,12 @@ public class gradesPanel extends JFrame {
         gradeTable.getTableHeader().setReorderingAllowed(false);
         infoTable.setEnabled(false);
 
-        Object[] infoRows = new Object[3];
-        Object[] gradeRow = new Object[1];
-
         try {
             CachedRowSet lessons = databaseController.selectQuery(query);
+
+            // Add rows
+            Object[] infoRows = new Object[3];
+            Object[] gradeRow = new Object[1];
 
             while (lessons.next()) {
                 if (User.isTeacher()) {
@@ -133,16 +135,8 @@ public class gradesPanel extends JFrame {
             err.printStackTrace();
         } finally {
             // Fill missing rows to fix white space
-            int rowCount = infoTableModel.getRowCount();
-
-            if (rowCount < 17) IntStream.range(0, 17 - rowCount).forEach(i -> {
-                infoRows[0] = "";
-                infoRows[1] = "";
-                infoRows[2] = "";
-                gradeRow[0] = "";
-                infoTableModel.addRow(infoRows);
-                gradeTableModel.addRow(gradeRow);
-            });
+            panelController.fillEmptyRows(infoTableModel);
+            panelController.fillEmptyRows(gradeTableModel);
         }
     }
 }
