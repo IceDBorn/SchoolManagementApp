@@ -2,6 +2,7 @@ package views;
 
 import javax.swing.*;
 import controllers.*;
+import models.User;
 
 public class mainPanel extends JFrame {
     private JPanel mainPanel;
@@ -19,6 +20,13 @@ public class mainPanel extends JFrame {
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
+        if (!User.isAdmin()) {
+            classroomsButton.setVisible(false);
+            scheduleMakerButton.setVisible(false);
+            lessonsButton.setVisible(false);
+            usersButton.setVisible(false);
+        }
 
         logoutButton.addActionListener(action -> {
             userController.Logout();
