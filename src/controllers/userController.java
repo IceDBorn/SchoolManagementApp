@@ -1,6 +1,5 @@
 package controllers;
 
-import models.Database;
 import models.User;
 
 import javax.sql.rowset.CachedRowSet;
@@ -8,28 +7,28 @@ import java.sql.SQLException;
 
 public class userController {
     public static void Login(String email, String password) {
-        CachedRowSet results;
         try {
-            results = databaseController.selectQuery(String.format("SELECT id, name, email, \"isAdmin\" FROM \"Users\" WHERE email = '%s' AND password = '%s'", email, password));
+            CachedRowSet user = databaseController.selectQuery(String.format("""
+                    SELECT "Users".id, name, email, "isTeacher", "isAdmin", year, subject FROM "Users"
+                    LEFT JOIN "Students" on "Users".id = "Students".id
+                    LEFT JOIN "Teachers" on "Users".id = "Teachers".id
+                    WHERE email = '%s' AND password = '%s'""", email, password));
 
             // If a user exists with the same email and password, let the user successfully log in
-            if (results.next()) {
-                User.setId(results.getInt("id"));
-                User.setName(results.getString("name"));
-                User.setEmail(results.getString("email"));
-                User.setAdmin(results.getBoolean("\"isAdmin\""));
+            if (user.next()) {
+                User.setId(user.getInt("id"));
+                User.setName(user.getString("name"));
+                User.setEmail(user.getString("email"));
+                User.setTeacher(user.getBoolean("isTeacher"));
+                User.setAdmin(user.getBoolean("isAdmin"));
 
-                results = databaseController.selectQuery(String.format("SELECT subject FROM \"Teachers\" WHERE id = '%d'", User.getId()));
-                User.setTeacher(results.isBeforeFirst());
+                if (User.isTeacher())
+                    User.setSpecificField(user.getString("subject"));
+                else
+                    User.setSpecificField(databaseController.findYearName(user.getInt("year")));
 
-                if (!User.isTeacher()) {
-                    results = databaseController.selectQuery(String.format("SELECT year FROM \"Students\" WHERE id = '%d'", User.getId()));
-                    User.setSpecificField(results.getString("year"));
-                } else
-                    User.setSpecificField(results.getString("subject"));
-
-                System.out.printf("userId %d successfully logged in as %s%s%n",
-                        User.getId(), User.getName(), User.isAdmin() ? " with admin rights" : "");
+                System.out.printf("userId %d successfully logged in as a %s%s%n",
+                        User.getId(), User.isTeacher() ? "teacher" : "student", User.isAdmin() ? " with admin rights" : "");
             } else System.out.println("You've specified an invalid email or password.");
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
@@ -38,6 +37,9 @@ public class userController {
     }
 
     public static void Logout() {
+        System.out.printf("userId %d successfully logged out as a %s%s%n",
+                User.getId(), User.isTeacher() ? "teacher" : "student", User.isAdmin() ? " with admin rights" : "");
+
         User.setId(-1);
         User.setName("");
         User.setEmail("");
