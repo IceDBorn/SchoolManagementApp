@@ -38,5 +38,10 @@ public class mainPanel extends JFrame {
             panelController.createSchedulePanel();
             this.setVisible(false);
         });
+
+        gradesButton.addActionListener(action -> {
+            panelController.createGradesPanel();
+            this.setVisible(false);
+        });
     }
 }

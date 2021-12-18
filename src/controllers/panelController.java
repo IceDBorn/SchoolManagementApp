@@ -53,4 +53,9 @@ public class panelController {
         schedulePanel schedule = new schedulePanel();
         schedule.setVisible(true);
     }
+
+    public static void createGradesPanel() {
+        gradesPanel grades = new gradesPanel();
+        grades.setVisible(true);
+    }
 }
