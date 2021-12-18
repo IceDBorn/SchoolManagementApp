@@ -1,6 +1,8 @@
 package views;
 
+import controllers.panelController;
 import controllers.userController;
+import models.User;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -23,6 +25,10 @@ public class loginPanel extends JFrame {
             String email = usernameTextField.getText();
             String password = String.valueOf(passwordField.getPassword());
             userController.Login(email, password);
+            if (User.getId() != -1) {
+                panelController.createMainPanel();
+                this.setVisible(false);
+            }
         });
 
         // Listen for changes in the username text
