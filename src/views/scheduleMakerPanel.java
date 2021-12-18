@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
-public class coursesPanel extends JFrame {
+public class scheduleMakerPanel extends JFrame {
     private final String[] scheduleTableColumns = {"Lesson", "Teacher", "Day", "Time"};
     private JPanel coursesPanel;
     private JButton addButton;
@@ -30,9 +30,10 @@ public class coursesPanel extends JFrame {
     private TimePicker timePickerEnd;
     private JTable scheduleTable;
     private JScrollPane scheduleScrollPane;
+    private JButton backButton;
     private DefaultTableModel scheduleTableModel;
 
-    public coursesPanel() {
+    public scheduleMakerPanel() {
         scheduleScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         // Fill the all available combo boxes
@@ -68,6 +69,11 @@ public class coursesPanel extends JFrame {
 
         for (String day : Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))
             dayComboBox.addItem(day);
+
+        backButton.addActionListener(action -> {
+            panelController.createMainPanel();
+            this.setVisible(false);
+        });
 
         // Add course based on the selected data
         addButton.addActionListener(action -> {

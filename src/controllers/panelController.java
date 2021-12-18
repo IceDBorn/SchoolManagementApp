@@ -1,7 +1,6 @@
 package controllers;
 
 import javax.sql.rowset.CachedRowSet;
-import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -65,7 +64,7 @@ public class panelController {
     }
 
     public static void createScheduleMakerPanel() {
-        coursesPanel courses = new coursesPanel();
+        scheduleMakerPanel courses = new scheduleMakerPanel();
         courses.setVisible(true);
     }
 }
