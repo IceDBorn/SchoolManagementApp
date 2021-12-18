@@ -13,7 +13,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.stream.IntStream;
 
 public class gradesPanel extends JFrame {
     private JPanel gradesPanel;
@@ -22,7 +21,7 @@ public class gradesPanel extends JFrame {
     private JScrollPane gradeScrollPane;
     private JTable infoTable;
     private JTable gradeTable;
-    private JButton homeButton;
+    private JButton backButton;
     private JButton saveButton;
 
     public gradesPanel() {
@@ -31,13 +30,17 @@ public class gradesPanel extends JFrame {
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        usernameLabel.setText(User.getName());
 
         infoScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         gradeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         // Sync tables scrolling
         infoScrollPane.getVerticalScrollBar().setModel(gradeScrollPane.getVerticalScrollBar().getModel());
+
+        backButton.addActionListener(action -> {
+            panelController.createMainPanel();
+            this.setVisible(false);
+        });
 
         saveButton.addActionListener(action -> {
             if (!User.isTeacher())
