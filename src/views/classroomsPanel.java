@@ -56,25 +56,22 @@ public class classroomsPanel extends JFrame {
 
         addButton.addActionListener(action -> {
             try {
-                String classroomName = classNameTextField.getText();
-                int classroomLimit = (int) classCapacitySpinner.getValue();
-                boolean classroomExists = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName)).isBeforeFirst();
+                String name = classNameTextField.getText();
+                int limit = (int) classCapacitySpinner.getValue();
+                boolean classroomExists = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", name)).isBeforeFirst();
 
-                if (classroomExists && !selectedClassroomName.equals(classroomName))
+                if (classroomExists && !selectedClassroomName.equals(name))
                     System.out.println("A classroom already exists with that name.");
                 else {
-                    String query;
                     boolean isAddButton = addButton.getText().equals("Add");
 
-                    if (isAddButton)
-                        query = "INSERT INTO \"Classrooms\"(name, \"limit\") VALUES (?, ?)";
-                    else
-                        query = "UPDATE \"Classrooms\" SET name = ?, \"limit\" = ? WHERE id = ?";
-
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                    PreparedStatement preparedStatement = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
-                    preparedStatement.setString(1, classroomName);
-                    preparedStatement.setInt(2, classroomLimit);
+                    PreparedStatement preparedStatement = connection.prepareStatement(
+                            isAddButton ? "INSERT INTO \"Classrooms\"(name, \"limit\") VALUES (?, ?)" : "UPDATE \"Classrooms\" SET name = ?, \"limit\" = ? WHERE id = ?",
+                            PreparedStatement.RETURN_GENERATED_KEYS);
+
+                    preparedStatement.setString(1, name);
+                    preparedStatement.setInt(2, limit);
 
                     if (!isAddButton)
                         preparedStatement.setInt(3, selectedClassroomId);
@@ -88,7 +85,7 @@ public class classroomsPanel extends JFrame {
                     connection.close();
 
                     System.out.printf("userId %d %s classroom: %d (name: %s, limit :%d)%n",
-                            User.getId(), isAddButton ? "created" : "updated", classroomId, classroomName, classroomLimit);
+                            User.getId(), isAddButton ? "created" : "updated", classroomId, name, limit);
                 }
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
@@ -102,81 +99,65 @@ public class classroomsPanel extends JFrame {
         cancelButton.addActionListener(action -> revertUIComponents());
 
         editButton.addActionListener(action -> {
-            // Get the selected row index
+            // Get the selected row's data
             int selectedRow = classroomsTable.getSelectedRow();
+            String name = classroomsTable.getValueAt(selectedRow, 0).toString();
+            int limit = Integer.parseInt(classroomsTable.getValueAt(selectedRow, 1).toString());
 
-            // Check if a row is selected
-            if (!classroomsTable.isRowSelected(selectedRow))
-                System.out.println("You don't have a selected row.");
-            else {
-                // Get the selected row's data
-                String classroomName = classroomsTable.getValueAt(selectedRow, 0).toString();
-                int classroomLimit = Integer.parseInt(classroomsTable.getValueAt(selectedRow, 1).toString());
-
-                // Check whether the selected row is empty or not
-                if (classroomsTable.getValueAt(selectedRow, 0).toString().equals(""))
-                    System.out.println("You can not edit an empty row.");
-                else {
-                    // Get the selected classroomId and store it to a global variable
-                    try {
-                        CachedRowSet classrooms = databaseController.selectQuery(String.format("SELECT id, name FROM \"Classrooms\" WHERE name = '%s'", classroomName));
-                        classrooms.next();
-                        selectedClassroomId = classrooms.getInt("id");
-                        selectedClassroomName = classrooms.getString("name");
-                    } catch (SQLException err) {
-                        System.out.println("SQL Exception: ");
-                        err.printStackTrace();
-                    }
-
-                    // Change name and capacity to match the ones of the selected row
-                    classNameTextField.setText(classroomName);
-                    classCapacitySpinner.setValue(classroomLimit);
-
-                    // Change add button text to save
-                    addButton.setText("Save");
-                    cancelButton.setEnabled(true);
-
-                    // Disable UI components and clear table selection until the save button is pressed
-                    classroomsTable.setEnabled(false);
-                    editButton.setEnabled(false);
-                    removeButton.setEnabled(false);
-                    classroomsTable.getSelectionModel().clearSelection();
-                }
+            // Get the selected classroomId and store it to a global variable
+            try {
+                CachedRowSet classrooms = databaseController.selectQuery(String.format("SELECT id, name FROM \"Classrooms\" WHERE name = '%s'", name));
+                classrooms.next();
+                selectedClassroomId = classrooms.getInt("id");
+                selectedClassroomName = classrooms.getString("name");
+            } catch (SQLException err) {
+                System.out.println("SQL Exception: ");
+                err.printStackTrace();
             }
+
+            // Change name and capacity to match the ones of the selected row
+            classNameTextField.setText(name);
+            classCapacitySpinner.setValue(limit);
+
+            // Change add button text to save
+            addButton.setText("Save");
+            cancelButton.setEnabled(true);
+
+            // Disable UI components and clear table selection until the save button is pressed
+            classroomsTable.setEnabled(false);
+            editButton.setEnabled(false);
+            removeButton.setEnabled(false);
+            classroomsTable.getSelectionModel().clearSelection();
+
         });
 
         removeButton.addActionListener(action -> {
-            // Get selected row index
-            int selectedRow = classroomsTable.getSelectedRow();
+            try {
+                // Delete the selected classroom from the database
+                Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Classrooms\" WHERE name = ?", PreparedStatement.RETURN_GENERATED_KEYS);
 
-            // Check if a row is selected
-            if (!classroomsTable.isRowSelected(selectedRow))
-                System.out.println("You don't have a selected row.");
-            else {
-                String classroomName = classroomsTable.getValueAt(selectedRow, 0).toString();
-                int classroomLimit = Integer.parseInt(classroomsTable.getValueAt(selectedRow, 1).toString());
+                // Get the selected row's data
+                int selectedRow = classroomsTable.getSelectedRow();
+                String name = classroomsTable.getValueAt(selectedRow, 0).toString();
+                int limit = Integer.parseInt(classroomsTable.getValueAt(selectedRow, 1).toString());
 
-                try {
-                    // Delete the selected classroom from the database
-                    Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                    PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Classrooms\" WHERE name = ?", PreparedStatement.RETURN_GENERATED_KEYS);
-                    preparedStatement.setString(1, classroomName);
-                    preparedStatement.executeUpdate();
+                preparedStatement.setString(1, name);
+                preparedStatement.executeUpdate();
 
-                    // Get the classroomId of the deleted row
-                    int classroomId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
+                // Get the id of the deleted classroom
+                int id = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
-                    preparedStatement.close();
-                    connection.close();
+                preparedStatement.close();
+                connection.close();
 
-                    System.out.printf("userId %d deleted classroom: %d (name: %s, limit: %d)%n",
-                            User.getId(), classroomId, classroomName, classroomLimit);
-                } catch (SQLException err) {
-                    System.out.println("SQL Exception:");
-                    err.printStackTrace();
-                } finally {
-                    updateClassrooms();
-                }
+                System.out.printf("userId %d deleted classroom: %d (name: %s, limit: %d)%n",
+                        User.getId(), id, name, limit);
+            } catch (SQLException err) {
+                System.out.println("SQL Exception:");
+                err.printStackTrace();
+            } finally {
+                updateClassrooms();
             }
         });
 
@@ -219,24 +200,24 @@ public class classroomsPanel extends JFrame {
 
     public void updateClassrooms() {
         IntStream.iterate(classroomsTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> classroomsTableModel.removeRow(i));
-        Object[] classroomRow = new Object[2];
 
         try {
             CachedRowSet classrooms = databaseController.selectQuery("SELECT name, \"limit\" FROM \"Classrooms\" ORDER BY name");
 
             // Add rows
+            Object[] row = new Object[2];
+
             while (classrooms.next()) {
+                row[0] = classrooms.getString("name");
+                row[1] = classrooms.getInt("limit");
 
-                classroomRow[0] = classrooms.getString("name");
-                classroomRow[1] = classrooms.getInt("limit");
-
-                classroomsTableModel.addRow(classroomRow);
+                classroomsTableModel.addRow(row);
             }
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
         } finally {
-            panelController.fillEmptyRows(classroomRow, classroomsTableModel);
+            panelController.fillEmptyRows(classroomsTableModel);
             classroomsTable.setModel(classroomsTableModel);
         }
     }

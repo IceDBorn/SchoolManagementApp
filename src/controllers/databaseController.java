@@ -27,6 +27,24 @@ public class databaseController {
     }
 
     /**
+     * Returns the name of the specified year id
+     */
+    public static String findYearName(int id) throws SQLException {
+        CachedRowSet years = selectQuery(String.format("SELECT name FROM \"Years\" WHERE id = '%d'", id));
+        years.next();
+        return years.getString("name");
+    }
+
+    /**
+     * Returns the id of the specified year name
+     */
+    public static int findYearId(String name) throws SQLException {
+        CachedRowSet years = selectQuery(String.format("SELECT id FROM \"Years\" WHERE name = '%s'", name));
+        years.next();
+        return years.getInt("id");
+    }
+
+    /**
      * Returns the id of the first inserted row
      */
     public static int getInsertedRowId(ResultSet resultSet) throws SQLException {

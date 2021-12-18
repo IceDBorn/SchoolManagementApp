@@ -1,6 +1,9 @@
 package controllers;
 
+import javax.sql.rowset.CachedRowSet;
 import javax.swing.table.DefaultTableModel;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -8,8 +11,9 @@ public class panelController {
     /**
      * Fill missing rows to fix white space
      */
-    public static void fillEmptyRows(Object[] row, DefaultTableModel tableModel) {
+    public static void fillEmptyRows(DefaultTableModel tableModel) {
         int rowCount = tableModel.getRowCount();
+        Object[] row = new Object[tableModel.getColumnCount()];
 
         if (rowCount < 16) IntStream.range(0, 16 - rowCount).forEach(i -> {
             Arrays.fill(row, "");
@@ -17,18 +21,19 @@ public class panelController {
         });
     }
 
-    /**
-     * Gets the year and returns the school year name.
-     */
-    public static String getYear(int year) {
-        return switch (year) {
-            case 1 -> "1η Γυμνασίου";
-            case 2 -> "2α Γυμνασίου";
-            case 3 -> "3η Γυμνασίου";
-            case 4 -> "1η Λυκείου";
-            case 5 -> "2α Λυκείου";
-            case 6 -> "3η Λυκείου";
-            default -> throw new IllegalStateException("Unexpected value: " + year);
-        };
+    public static void updateList(String sql, ArrayList<String> list) {
+        try {
+            CachedRowSet cachedRowSet = databaseController.selectQuery(sql);
+
+            while (cachedRowSet.next()) {
+                String name = cachedRowSet.getString(1);
+
+                if (!list.contains(name))
+                    list.add(name);
+            }
+        } catch (SQLException err) {
+            System.out.println("SQL Exception:");
+            err.printStackTrace();
+        }
     }
 }
