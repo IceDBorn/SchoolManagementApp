@@ -58,4 +58,9 @@ public class panelController {
         gradesPanel grades = new gradesPanel();
         grades.setVisible(true);
     }
+
+    public static void createClassroomsPanel() {
+        classroomsPanel classrooms = new classroomsPanel();
+        classrooms.setVisible(true);
+    }
 }

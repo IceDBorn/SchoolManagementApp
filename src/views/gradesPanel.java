@@ -16,7 +16,6 @@ import java.sql.SQLException;
 
 public class gradesPanel extends JFrame {
     private JPanel gradesPanel;
-    private JLabel usernameLabel;
     private JScrollPane infoScrollPane;
     private JScrollPane gradeScrollPane;
     private JTable infoTable;
@@ -102,7 +101,6 @@ public class gradesPanel extends JFrame {
                     WHERE "studentId" = %d""", User.getId());
 
             // Hide save button if a student account is viewing the grades
-            saveButton = new JButton();
             saveButton.setVisible(false);
         }
 
