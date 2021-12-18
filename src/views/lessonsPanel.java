@@ -71,7 +71,6 @@ public class lessonsPanel extends JFrame {
         });
 
         addButton.addActionListener(action -> {
-            // TODO: (Prionysis) Update this listener to edit existing entries too
             try {
                 boolean isAddButton = addButton.getText().equals("Add");
 
