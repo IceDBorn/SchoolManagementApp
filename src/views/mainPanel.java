@@ -33,5 +33,10 @@ public class mainPanel extends JFrame {
             panelController.createLoginPanel();
             this.setVisible(false);
         });
+
+        scheduleButton.addActionListener(action -> {
+            panelController.createSchedulePanel();
+            this.setVisible(false);
+        });
     }
 }

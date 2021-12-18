@@ -17,7 +17,7 @@ public class panelController {
         int rowCount = tableModel.getRowCount();
         Object[] row = new Object[tableModel.getColumnCount()];
 
-        if (rowCount < 16) IntStream.range(0, 16 - rowCount).forEach(i -> {
+        if (rowCount < 17) IntStream.range(0, 17 - rowCount).forEach(i -> {
             Arrays.fill(row, "");
             tableModel.addRow(row);
         });
@@ -47,5 +47,10 @@ public class panelController {
     public static void createLoginPanel() {
         loginPanel login = new loginPanel();
         login.setVisible(true);
+    }
+
+    public static void createSchedulePanel() {
+        schedulePanel schedule = new schedulePanel();
+        schedule.setVisible(true);
     }
 }
