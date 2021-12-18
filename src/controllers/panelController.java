@@ -67,4 +67,9 @@ public class panelController {
         scheduleMakerPanel courses = new scheduleMakerPanel();
         courses.setVisible(true);
     }
+
+    public static void createLessonsPanel() {
+        lessonsPanel lessons = new lessonsPanel();
+        lessons.setVisible(true);
+    }
 }
