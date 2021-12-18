@@ -60,6 +60,7 @@ public class classroomsPanel extends JFrame {
                 int limit = (int) classCapacitySpinner.getValue();
                 boolean classroomExists = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", name)).isBeforeFirst();
 
+                // Check if a classroom already exists with the same name
                 if (classroomExists && !selectedClassroomName.equals(name))
                     System.out.println("A classroom already exists with that name.");
                 else {
@@ -99,8 +100,10 @@ public class classroomsPanel extends JFrame {
         cancelButton.addActionListener(action -> revertUIComponents());
 
         editButton.addActionListener(action -> {
-            // Get the selected row's data
+            // Get the selected row index
             int selectedRow = classroomsTable.getSelectedRow();
+
+            // Get the selected row's data
             String name = classroomsTable.getValueAt(selectedRow, 0).toString();
             int limit = Integer.parseInt(classroomsTable.getValueAt(selectedRow, 1).toString());
 
@@ -137,8 +140,10 @@ public class classroomsPanel extends JFrame {
                 Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
                 PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Classrooms\" WHERE name = ?", PreparedStatement.RETURN_GENERATED_KEYS);
 
-                // Get the selected row's data
+                // Get the selected row index
                 int selectedRow = classroomsTable.getSelectedRow();
+
+                // Get the selected row's data
                 String name = classroomsTable.getValueAt(selectedRow, 0).toString();
                 int limit = Integer.parseInt(classroomsTable.getValueAt(selectedRow, 1).toString());
 
@@ -231,6 +236,7 @@ public class classroomsPanel extends JFrame {
         addButton.setText("Add");
         classroomsTable.setEnabled(true);
         cancelButton.setEnabled(false);
+
         selectedClassroomId = -1;
         selectedClassroomName = "";
     }

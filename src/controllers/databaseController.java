@@ -25,6 +25,23 @@ public class databaseController {
 
         return cachedRowSet;
     }
+    /**
+     * Returns a CachedRowSet of the specified sql query.
+     */
+    public static int selectFirstId(String sql) throws SQLException {
+        Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+        Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        ResultSet resultSet = statement.executeQuery(sql);
+
+        resultSet.next();
+        int id = resultSet.getInt("id");
+
+        resultSet.close();
+        statement.close();
+        connection.close();
+
+        return id;
+    }
 
     /**
      * Returns the name of the specified year id

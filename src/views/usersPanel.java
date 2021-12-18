@@ -126,16 +126,13 @@ public class usersPanel extends JFrame {
                     if (userExists && !selectedUserEmail.equals(email))
                         System.out.println("A user already exists with that email.");
                     else {
-                        String query;
                         boolean isAddButton = addButton.getText().equals("Add");
 
-                        if (isAddButton)
-                            query = "INSERT INTO \"Users\"(name, gender, birthday, \"isAdmin\", \"isTeacher\", email, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
-                        else
-                            query = "UPDATE \"Users\" SET name = ?, gender = ?, birthday = ?, \"isAdmin\" = ?, \"isTeacher\" = ?, email = ? WHERE id = ?";
-
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                        PreparedStatement preparedStatement = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
+                        PreparedStatement preparedStatement = connection.prepareStatement(isAddButton ?
+                                        "INSERT INTO \"Users\"(name, gender, birthday, \"isAdmin\", \"isTeacher\", email, password) VALUES (?, ?, ?, ?, ?, ?, ?)" :
+                                        "UPDATE \"Users\" SET name = ?, gender = ?, birthday = ?, \"isAdmin\" = ?, \"isTeacher\" = ?, email = ? WHERE id = ?",
+                                PreparedStatement.RETURN_GENERATED_KEYS);
 
                         String username = usernameTextField.getText();
                         Date birthday = new Date(userBirthDayPicker.getDate().getTime());
@@ -161,7 +158,7 @@ public class usersPanel extends JFrame {
                         int userId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
                         preparedStatement.close();
 
-                        // If it's a save button, check whether user was a student or a teacher and delete them from the corresponding table
+                        // If it's a save button, check whether the user was a student or a teacher and delete them from the corresponding table
                         if (!isAddButton) {
                             preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
                             preparedStatement.setInt(1, selectedUserId);
@@ -382,14 +379,10 @@ public class usersPanel extends JFrame {
         userDetailsComboBox.removeAllItems();
         userDetailsComboBox.addItem("Add new");
 
-        if (showProfessions) {
-            for (String subject : professionList)
-                userDetailsComboBox.addItem(subject);
-
-        } else {
-            for (String year : yearList)
-                userDetailsComboBox.addItem(year);
-        }
+        if (showProfessions) for (String subject : professionList)
+            userDetailsComboBox.addItem(subject);
+        else for (String year : yearList)
+            userDetailsComboBox.addItem(year);
 
         if (userDetailsComboBox.getItemCount() > 1)
             userDetailsComboBox.setSelectedIndex(1);

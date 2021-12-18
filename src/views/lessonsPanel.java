@@ -180,7 +180,6 @@ public class lessonsPanel extends JFrame {
         lessonsTable = new JTable(lessonsTableModel);
         // Stop users from interacting with the table
         lessonsTable.getTableHeader().setReorderingAllowed(false);
-        updateLessons();
     }
 
     private void revertUIComponents() {
@@ -190,17 +189,15 @@ public class lessonsPanel extends JFrame {
         lessonsTable.setEnabled(true);
         addButton.setText("Add");
 
-        if (professionComboBox.getItemCount() > 1) {
+        if (professionComboBox.getItemCount() > 1)
             professionComboBox.setSelectedIndex(1);
-        } else {
+        else
             professionComboBox.setSelectedIndex(0);
-        }
 
-        if (schoolYearComboBox.getItemCount() > 1) {
+        if (schoolYearComboBox.getItemCount() > 1)
             schoolYearComboBox.setSelectedIndex(1);
-        } else {
+        else
             schoolYearComboBox.setSelectedIndex(0);
-        }
 
         selectedId = -1;
         selectedName = "";
