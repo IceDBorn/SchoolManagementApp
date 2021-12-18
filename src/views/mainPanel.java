@@ -1,6 +1,7 @@
 package views;
 
 import javax.swing.*;
+import controllers.*;
 
 public class mainPanel extends JFrame {
     private JPanel mainPanel;
@@ -12,15 +13,17 @@ public class mainPanel extends JFrame {
     private JButton lessonsButton;
     private JButton usersButton;
 
-    public JPanel getMainPanel() {
-        return mainPanel;
-    }
-
     public mainPanel() {
         add(mainPanel);
         setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
+        logoutButton.addActionListener(action -> {
+            userController.Logout();
+            panelController.createLoginPanel();
+            this.setVisible(false);
+        });
     }
 }

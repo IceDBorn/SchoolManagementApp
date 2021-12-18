@@ -43,4 +43,9 @@ public class panelController {
         mainPanel main = new mainPanel();
         main.setVisible(true);
     }
+
+    public static void createLoginPanel() {
+        loginPanel login = new loginPanel();
+        login.setVisible(true);
+    }
 }
