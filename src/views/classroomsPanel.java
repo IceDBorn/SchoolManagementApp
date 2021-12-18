@@ -56,25 +56,22 @@ public class classroomsPanel extends JFrame {
 
         addButton.addActionListener(action -> {
             try {
-                String classroomName = classNameTextField.getText();
-                int classroomLimit = (int) classCapacitySpinner.getValue();
-                boolean classroomExists = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName)).isBeforeFirst();
+                String name = classNameTextField.getText();
+                int limit = (int) classCapacitySpinner.getValue();
+                boolean classroomExists = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", name)).isBeforeFirst();
 
-                if (classroomExists && !selectedClassroomName.equals(classroomName))
+                if (classroomExists && !selectedClassroomName.equals(name))
                     System.out.println("A classroom already exists with that name.");
                 else {
-                    String query;
                     boolean isAddButton = addButton.getText().equals("Add");
 
-                    if (isAddButton)
-                        query = "INSERT INTO \"Classrooms\"(name, \"limit\") VALUES (?, ?)";
-                    else
-                        query = "UPDATE \"Classrooms\" SET name = ?, \"limit\" = ? WHERE id = ?";
-
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                    PreparedStatement preparedStatement = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
-                    preparedStatement.setString(1, classroomName);
-                    preparedStatement.setInt(2, classroomLimit);
+                    PreparedStatement preparedStatement = connection.prepareStatement(
+                            isAddButton ? "INSERT INTO \"Classrooms\"(name, \"limit\") VALUES (?, ?)" : "UPDATE \"Classrooms\" SET name = ?, \"limit\" = ? WHERE id = ?",
+                            PreparedStatement.RETURN_GENERATED_KEYS);
+
+                    preparedStatement.setString(1, name);
+                    preparedStatement.setInt(2, limit);
 
                     if (!isAddButton)
                         preparedStatement.setInt(3, selectedClassroomId);
@@ -88,7 +85,7 @@ public class classroomsPanel extends JFrame {
                     connection.close();
 
                     System.out.printf("userId %d %s classroom: %d (name: %s, limit :%d)%n",
-                            User.getId(), isAddButton ? "created" : "updated", classroomId, classroomName, classroomLimit);
+                            User.getId(), isAddButton ? "created" : "updated", classroomId, name, limit);
                 }
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");

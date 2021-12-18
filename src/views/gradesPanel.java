@@ -134,9 +134,11 @@ public class gradesPanel extends JFrame {
             System.out.println("SQL Exception:");
             err.printStackTrace();
         } finally {
-            // Fill missing rows to fix white space
             panelController.fillEmptyRows(infoTableModel);
             panelController.fillEmptyRows(gradeTableModel);
+
+            infoTable.setModel(infoTableModel);
+            gradeTable.setModel(gradeTableModel);
         }
     }
 }
