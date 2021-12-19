@@ -3,6 +3,7 @@ package views;
 // TODO: (IceDBorn) Make empty rows un-editable
 
 import controllers.databaseController;
+import controllers.fileController;
 import controllers.panelController;
 import models.Database;
 import models.User;
@@ -11,6 +12,9 @@ import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -60,21 +64,29 @@ public class gradesPanel extends JFrame {
                         connection.close();
 
                         System.out.printf("userId %d modified studentId: %d grade to %d%n", User.getId(), studentId, studentGrade);
+                        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " modified (" + studentId + ") grade to " + studentGrade + ".");
                     }
 
                     // Checks if the next row has a null id to end the loop
                     if (infoTable.getValueAt(i + 1, 0) == "")
                         break;
                 }
-            } catch (SQLException err) {
-                System.out.println("SQL Exception:");
-                err.printStackTrace();
+            } catch (SQLException | IOException err) {
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message =  errors.toString();
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 panelController.createErrorPanel("Something went wrong.", this);
             }
         });
     }
 
-    private void createUIComponents() {
+    private void createUIComponents() throws IOException {
         // Add columns
         String[] infoTableColumns;
         String[] gradeTableColumns = {"Grade"};
@@ -131,8 +143,11 @@ public class gradesPanel extends JFrame {
                 gradeTableModel.addRow(gradeRow);
             }
         } catch (SQLException err) {
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
+            StringWriter errors = new StringWriter();
+            err.printStackTrace(new PrintWriter(errors));
+            String message =  errors.toString();
+            fileController.saveFile("SQL Exception: " + message);
+
             panelController.createErrorPanel("Something went wrong.", this);
         } finally {
             panelController.fillEmptyRows(infoTableModel);
