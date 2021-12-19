@@ -62,6 +62,7 @@ public class schedulePanel extends JFrame {
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
+            panelController.createErrorPanel("Something went wrong.", this);
         } finally {
             panelController.fillEmptyRows(scheduleTableModel);
             scheduleTable.setModel(scheduleTableModel);

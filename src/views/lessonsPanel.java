@@ -56,7 +56,7 @@ public class lessonsPanel extends JFrame {
 
         // Update professionList from the professions table
         this.professionList = new ArrayList<>();
-        panelController.updateList("SELECT name FROM \"Professions\"", professionList);
+        panelController.updateList("SELECT name FROM \"Professions\"", professionList, this);
         professionComboBox.removeAllItems();
 
         for (String profession : professionList)
@@ -64,7 +64,7 @@ public class lessonsPanel extends JFrame {
 
         // Update yearList from the years table
         this.yearList = new ArrayList<>();
-        panelController.updateList("SELECT name FROM \"Years\"", yearList);
+        panelController.updateList("SELECT name FROM \"Years\"", yearList, this);
         schoolYearComboBox.removeAllItems();
 
         for (String year : yearList)
@@ -107,6 +107,7 @@ public class lessonsPanel extends JFrame {
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
+                panelController.createErrorPanel("Something went wrong.", this);
             } finally {
                 updateLessons();
                 revertUIComponents();
@@ -137,6 +138,7 @@ public class lessonsPanel extends JFrame {
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
+                panelController.createErrorPanel("Something went wrong.", this);
             }
         });
 
@@ -186,6 +188,7 @@ public class lessonsPanel extends JFrame {
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
+                panelController.createErrorPanel("Something went wrong.", this);
             } finally {
                 updateLessons();
                 revertUIComponents();
@@ -287,6 +290,7 @@ public class lessonsPanel extends JFrame {
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
+            panelController.createErrorPanel("Something went wrong.", this);
         } finally {
             panelController.fillEmptyRows(lessonsTableModel);
             lessonsTable.setModel(lessonsTableModel);

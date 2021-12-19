@@ -24,7 +24,7 @@ public class loginPanel extends JFrame {
         loginButton.addActionListener(action -> {
             String email = usernameTextField.getText();
             String password = String.valueOf(passwordField.getPassword());
-            userController.Login(email, password);
+            userController.Login(email, password, this);
             if (User.getId() != -1) {
                 panelController.createMainPanel();
                 this.setVisible(false);

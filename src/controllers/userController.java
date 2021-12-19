@@ -3,10 +3,12 @@ package controllers;
 import models.User;
 
 import javax.sql.rowset.CachedRowSet;
+import javax.swing.*;
+import java.awt.*;
 import java.sql.SQLException;
 
 public class userController {
-    public static void Login(String email, String password) {
+    public static void Login(String email, String password, Component panel) {
         try {
             CachedRowSet user = databaseController.selectQuery(String.format("""
                     SELECT "Users".id, name, email, "isTeacher", "isAdmin", "yearId", "professionId" FROM "Users"
@@ -29,10 +31,11 @@ public class userController {
 
                 System.out.printf("userId %d successfully logged in as a %s%s%n",
                         User.getId(), User.isTeacher() ? "teacher" : "student", User.isAdmin() ? " with admin rights" : "");
-            } else System.out.println("You've specified an invalid email or password.");
+            } else panelController.createErrorPanel("You've specified an invalid email or password.", panel);
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
+            panelController.createErrorPanel("Something went wrong.", panel);
         }
     }
 

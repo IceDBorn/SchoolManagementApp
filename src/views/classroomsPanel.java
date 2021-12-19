@@ -62,7 +62,7 @@ public class classroomsPanel extends JFrame {
                 boolean classroomExists = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", name)).isBeforeFirst();
 
                 if (classroomExists && !selectedClassroomName.equals(name))
-                    System.out.println("A classroom already exists with that name.");
+                panelController.createErrorPanel("A classroom already exists with that name.", this);
                 else {
                     boolean isAddButton = addButton.getText().equals("Add");
 
@@ -91,6 +91,7 @@ public class classroomsPanel extends JFrame {
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
+                panelController.createErrorPanel("Something went wrong.", this);
             } finally {
                 updateClassrooms();
                 revertUIComponents();
@@ -114,6 +115,7 @@ public class classroomsPanel extends JFrame {
             } catch (SQLException err) {
                 System.out.println("SQL Exception: ");
                 err.printStackTrace();
+                panelController.createErrorPanel("Something went wrong.", this);
             }
 
             // Change name and capacity to match the ones of the selected row
@@ -176,6 +178,7 @@ public class classroomsPanel extends JFrame {
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
+                panelController.createErrorPanel("Something went wrong.", this);
             } finally {
                 updateClassrooms();
                 revertUIComponents();
@@ -241,6 +244,7 @@ public class classroomsPanel extends JFrame {
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
+            panelController.createErrorPanel("Something went wrong.", this);
         } finally {
             panelController.fillEmptyRows(classroomsTableModel);
             classroomsTable.setModel(classroomsTableModel);
