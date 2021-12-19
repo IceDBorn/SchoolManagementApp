@@ -25,7 +25,7 @@ public class panelController {
         });
     }
 
-    public static void updateList(String sql, ArrayList<String> list) {
+    public static void updateList(String sql, ArrayList<String> list, Component panel) {
         try {
             CachedRowSet cachedRowSet = databaseController.selectQuery(sql);
 
@@ -38,6 +38,7 @@ public class panelController {
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
+            panelController.createErrorPanel("Something went wrong.", panel);
         }
     }
 
@@ -90,5 +91,10 @@ public class panelController {
         String message = "Any entries associated will be deleted too.";
         UIManager.put("OptionPane.minimumSize",new Dimension(325,100));
         return JOptionPane.showConfirmDialog(panel, message, "Delete this entry?", JOptionPane.YES_NO_OPTION);
+    }
+
+    public static void createErrorPanel(String message, Component panel) {
+        UIManager.put("OptionPane.minimumSize",new Dimension(350,100));
+        JOptionPane.showMessageDialog (panel, message, "", JOptionPane.ERROR_MESSAGE);
     }
 }

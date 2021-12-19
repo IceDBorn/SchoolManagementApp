@@ -74,10 +74,10 @@ public class usersPanel extends JFrame {
         userBirthDayPicker.setFormats(format);
 
         // Get all distinct professions from teachers and update professionlist
-        panelController.updateList("SELECT name FROM \"Professions\"", professionList);
+        panelController.updateList("SELECT name FROM \"Professions\"", professionList, this);
 
         // Get all year names and update yearList
-        panelController.updateList("SELECT name FROM \"Years\"", yearList);
+        panelController.updateList("SELECT name FROM \"Years\"", yearList, this);
 
         updateDetails(true);
 
@@ -115,18 +115,15 @@ public class usersPanel extends JFrame {
             if (userDetailsComboBox.getSelectedIndex() == 0) {
                 // TODO: (IceDBorn) Add profession addition panel
                 // TODO: (Prionysis) Add new profession to the database
-                System.out.println(userDetailsComboBox.getSelectedIndex());
-                System.out.println("Add new profession");
-
                 // TODO: (Prionysis) Update professionlist or yearList when a new profession or year is added
                 boolean isTeacher = Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher");
 
                 if (isTeacher)
                     // Update professionList when a new profession is added to the database
-                    panelController.updateList("SELECT name FROM \"Professions\"", professionList);
+                    panelController.updateList("SELECT name FROM \"Professions\"", professionList, this);
                 else
                     // Update yearList when a new year is added to the database
-                    panelController.updateList("SELECT name FROM \"Years\"", yearList);
+                    panelController.updateList("SELECT name FROM \"Years\"", yearList, this);
             } else {
                 try {
                     String email = emailTextField.getText();
@@ -134,7 +131,7 @@ public class usersPanel extends JFrame {
 
                     // Check if a user already exists with the same email if the name has been changed
                     if (userExists && !selectedUserEmail.equals(email))
-                        System.out.println("A user already exists with that email.");
+                    panelController.createErrorPanel("A user with that email already exists", this);
                     else {
                         boolean isAddButton = addButton.getText().equals("Add");
 
@@ -199,6 +196,7 @@ public class usersPanel extends JFrame {
                 } catch (SQLException err) {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
+                    panelController.createErrorPanel("Something went wrong.", this);
                 } finally {
                     updateDetails(true);
                     updateUsers();
@@ -224,6 +222,7 @@ public class usersPanel extends JFrame {
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
+                panelController.createErrorPanel("Something went wrong.", this);
             }
 
             editButton.setEnabled(false);
@@ -310,6 +309,7 @@ public class usersPanel extends JFrame {
             } catch (SQLException err) {
                 System.out.println("SQL Exception: ");
                 err.printStackTrace();
+                panelController.createErrorPanel("Something went wrong.", this);
             } finally {
                 updateUsers();
                 revertUIComponents();
@@ -432,6 +432,7 @@ public class usersPanel extends JFrame {
         } catch (SQLException err) {
             System.out.println("SQL Exception:");
             err.printStackTrace();
+            panelController.createErrorPanel("Something went wrong.", this);
         } finally {
             panelController.fillEmptyRows(usersTableModel);
             usersTable.setModel(usersTableModel);
