@@ -1,6 +1,7 @@
 package views;
 
 import controllers.databaseController;
+import controllers.fileController;
 import controllers.panelController;
 import models.Database;
 import models.User;
@@ -12,6 +13,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -104,13 +107,26 @@ public class lessonsPanel extends JFrame {
                 preparedStatement.close();
                 connection.close();
 
-                System.out.printf("userId %d created lesson: %d (name: %s, profession: %s, year: %d)%n", User.getId(), id, name, professionId, yearId);
-            } catch (SQLException err) {
-                System.out.println("SQL Exception:");
-                err.printStackTrace();
+                fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
+                        + " created lesson (" + id + ") " + name + " with " + professionId + " as profession and "
+                        + yearId + " as year.");
+            } catch (SQLException | IOException err) {
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message =  errors.toString();
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 panelController.createErrorPanel("Something went wrong.", this);
             } finally {
-                updateLessons();
+                try {
+                    updateLessons();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 revertUIComponents();
             }
         });
@@ -137,8 +153,15 @@ public class lessonsPanel extends JFrame {
 
                 selectedLessonId = lessons.getInt("id");
             } catch (SQLException err) {
-                System.out.println("SQL Exception:");
-                err.printStackTrace();
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message =  errors.toString();
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 panelController.createErrorPanel("Something went wrong.", this);
             }
         });
@@ -170,8 +193,8 @@ public class lessonsPanel extends JFrame {
                         preparedStatement.close();
                         connection.close();
 
-                        System.out.printf("userId %d deleted %d course(s) using the lessonId %d%n",
-                                User.getId(), count, id);
+                        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
+                                + " deleted " + count + " courses, by deleting lesson (" + id + ") " + name + ".");
                     }
                 } else {
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
@@ -182,16 +205,26 @@ public class lessonsPanel extends JFrame {
                     preparedStatement.close();
                     connection.close();
 
-                    System.out.printf("userId %d deleted lesson: %d (name: %s, professionId: %d, yearId: %d)%n",
-                            User.getId(), id, name, professionId, yearId);
+                    fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " deleted lesson (" + id + ") " + name + ".");
                 }
 
-            } catch (SQLException err) {
-                System.out.println("SQL Exception:");
-                err.printStackTrace();
+            } catch (SQLException | IOException err) {
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message =  errors.toString();
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 panelController.createErrorPanel("Something went wrong.", this);
             } finally {
-                updateLessons();
+                try {
+                    updateLessons();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 revertUIComponents();
 
                 editButton.setEnabled(false);
@@ -228,7 +261,7 @@ public class lessonsPanel extends JFrame {
         });
     }
 
-    private void createUIComponents() {
+    private void createUIComponents() throws IOException {
         // Add columns
         String[] lessonsTableColumns = {"Name", "Profession", "School Year"};
         lessonsTableModel = new DefaultTableModel(lessonsTableColumns, 0);
@@ -273,7 +306,7 @@ public class lessonsPanel extends JFrame {
         }
     }
 
-    private void updateLessons() {
+    private void updateLessons() throws IOException {
         IntStream.iterate(lessonsTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> lessonsTableModel.removeRow(i));
 
         try {
@@ -289,8 +322,11 @@ public class lessonsPanel extends JFrame {
                 lessonsTableModel.addRow(row);
             }
         } catch (SQLException err) {
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
+            StringWriter errors = new StringWriter();
+            err.printStackTrace(new PrintWriter(errors));
+            String message =  errors.toString();
+            fileController.saveFile("SQL Exception: " + message);
+
             panelController.createErrorPanel("Something went wrong.", this);
         } finally {
             panelController.fillEmptyRows(lessonsTableModel);
