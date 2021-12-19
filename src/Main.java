@@ -3,17 +3,13 @@
 import controllers.panelController;
 import mdlaf.MaterialLookAndFeel;
 import mdlaf.themes.MaterialOceanicTheme;
-import views.loginPanel;
-
 import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) throws UnsupportedLookAndFeelException {
+        // Use material theme
         UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialOceanicTheme()));
-
-        SwingUtilities.invokeLater(() -> {
-            loginPanel login = new loginPanel();
-            login.setVisible(true);
-    });
-}
+        // Launch the login window
+        SwingUtilities.invokeLater(panelController::createLoginPanel);
+    }
 }

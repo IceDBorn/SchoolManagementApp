@@ -1,5 +1,7 @@
 package views;
 
+// TODO: (IceDBorn) Make empty rows un-editable
+
 import controllers.databaseController;
 import controllers.panelController;
 import models.Database;
