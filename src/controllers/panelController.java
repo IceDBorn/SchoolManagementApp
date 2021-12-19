@@ -78,4 +78,9 @@ public class panelController {
         usersPanel users = new usersPanel();
         users.setVisible(true);
     }
+
+    public static void createAddNewEntryPanel(boolean isProfession) {
+        addNewEntryPanel add = new addNewEntryPanel(isProfession);
+        add.setVisible(true);
+    }
 }
