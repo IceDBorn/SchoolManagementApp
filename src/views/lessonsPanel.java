@@ -158,12 +158,7 @@ public class lessonsPanel extends JFrame {
                 int count = databaseController.selectFirstId(String.format("SELECT COUNT(id) FROM \"Courses\" WHERE \"lessonId\" = '%d'", id));
 
                 if (count > 0) {
-                    System.out.printf("You are about to delete %d course(s) that use the lessonId %d", count, id);
-
-                    boolean delete = false;
-
-                    // TODO: (IceDBorn) Create a confirmation panel before deleting any courses.
-                    if (delete) {
+                    if (panelController.createConfirmationPanel(this) == JOptionPane.YES_OPTION) {
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
                         PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE \"lessonId\" = ?");
                         preparedStatement.setInt(1, id);
