@@ -259,45 +259,70 @@ public class usersPanel extends JFrame {
         });
 
         removeButton.addActionListener(action -> {
-            // Get the selected row index
-            int selectedRow = usersTable.getSelectedRow();
-
             try {
+                // Get the selected row index
+                int selectedRow = usersTable.getSelectedRow();
+
                 // Get the id of the selected user
-                CachedRowSet users = databaseController.selectQuery(String.format("SELECT id FROM \"Users\" WHERE email = '%s'", usersTable.getValueAt(selectedRow, 1).toString()));
-                users.next();
-                int id = users.getInt("id");
+                int id = databaseController.selectFirstId(String.format("SELECT id FROM \"Users\" WHERE email = '%s'", usersTable.getValueAt(selectedRow, 1).toString()));
 
                 // Check whether the user is a teacher or not
                 boolean isTeacher = usersTable.getValueAt(selectedRow, 2).toString().equals("Teacher");
 
-                // Check whether the selected user is a teacher or a student and delete them from the corresponding table
-                Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                PreparedStatement preparedStatement = connection.prepareStatement(isTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
-                preparedStatement.setInt(1, id);
-                preparedStatement.executeUpdate();
-                preparedStatement.close();
+                // Check how many courses exist using that userId
+                int count = databaseController.selectFirstId(String.format(isTeacher ?
+                        "SELECT COUNT(id) FROM \"Courses\" WHERE \"teacherId\" = '%d'" :
+                        "SELECT COUNT(id) FROM \"StudentLessons\" WHERE \"studentId\" = '%d'", id));
 
-                // Delete the user from the database
-                preparedStatement = connection.prepareStatement("DELETE FROM \"Users\" WHERE id = ?");
-                preparedStatement.setInt(1, id);
-                preparedStatement.executeUpdate();
-                preparedStatement.close();
-                connection.close();
+                if (count > 0) {
+                    System.out.printf("You are about to delete %d %s that use the classroomId %d", count, isTeacher ? "course(s)" : "student lesson(s)", id);
 
-                System.out.printf("id %d deleted user: %d (type: %s)%n",
-                        User.getId(), id, isTeacher ? "teacher" : "student");
+                    boolean delete = false;
+
+                    // TODO: (IceDBorn) Create a confirmation panel before deleting any courses or student lessons.
+                    if (delete) {
+                        Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+
+                        // Check whether the selected user is a teacher or a student and delete them from the corresponding table
+                        PreparedStatement preparedStatement = connection.prepareStatement(isTeacher ? "DELETE FROM \"Courses\" WHERE \"teacherId\" = ?" : "DELETE FROM \"StudentLessons\" WHERE \"studentId\" = ?");
+                        preparedStatement.setInt(1, id);
+
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
+
+                        System.out.printf("userId %d deleted %d %s using the userId %d%n",
+                                User.getId(), count, isTeacher ? "course(s)" : "student lesson(s)", id);
+                    }
+                } else {
+                    Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+
+                    // Check whether the selected user is a teacher or a student and delete them from the corresponding table
+                    PreparedStatement preparedStatement = connection.prepareStatement(isTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
+                    preparedStatement.setInt(1, id);
+                    preparedStatement.executeUpdate();
+                    preparedStatement.close();
+
+                    // Delete the user from the database
+                    preparedStatement = connection.prepareStatement("DELETE FROM \"Users\" WHERE id = ?");
+                    preparedStatement.setInt(1, id);
+                    preparedStatement.executeUpdate();
+                    preparedStatement.close();
+                    connection.close();
+
+                    System.out.printf("id %d deleted user: %d (type: %s)%n",
+                            User.getId(), id, isTeacher ? "teacher" : "student");
+                }
             } catch (SQLException err) {
                 System.out.println("SQL Exception: ");
                 err.printStackTrace();
             } finally {
                 updateUsers();
                 revertUIComponents();
-            }
 
-            editButton.setEnabled(false);
-            removeButton.setEnabled(false);
-            usersTable.getSelectionModel().clearSelection();
+                editButton.setEnabled(false);
+                removeButton.setEnabled(false);
+                usersTable.getSelectionModel().clearSelection();
+            }
         });
 
         backButton.addActionListener(action -> {

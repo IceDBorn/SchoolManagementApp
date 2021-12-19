@@ -134,31 +134,60 @@ public class classroomsPanel extends JFrame {
 
         removeButton.addActionListener(action -> {
             try {
-                // Delete the selected classroom from the database
-                Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Classrooms\" WHERE name = ?", PreparedStatement.RETURN_GENERATED_KEYS);
+                // Get the selected row index
+                int selectedRow = classroomsTable.getSelectedRow();
 
                 // Get the selected row's data
-                int selectedRow = classroomsTable.getSelectedRow();
                 String name = classroomsTable.getValueAt(selectedRow, 0).toString();
                 int limit = Integer.parseInt(classroomsTable.getValueAt(selectedRow, 1).toString());
 
-                preparedStatement.setString(1, name);
-                preparedStatement.executeUpdate();
+                // Get the id of the selected classroom
+                int id = databaseController.selectFirstId(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", name));
 
-                // Get the id of the deleted classroom
-                int id = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
+                // Check how many classrooms exist using that classroomId
+                int count = databaseController.selectFirstId(String.format("SELECT COUNT(id) FROM \"Courses\" WHERE \"classroomId\" = '%d'", id));
 
-                preparedStatement.close();
-                connection.close();
+                if (count > 0) {
+                    System.out.printf("You are about to delete %d course(s) that use the classroomId %d", count, id);
 
-                System.out.printf("userId %d deleted classroom: %d (name: %s, limit: %d)%n",
-                        User.getId(), id, name, limit);
+                    boolean delete = false;
+
+                    // TODO: (IceDBorn) Create a confirmation panel before deleting any courses.
+                    if (delete) {
+                        Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                        PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE \"classroomId\" = ?");
+                        preparedStatement.setInt(1, id);
+                        preparedStatement.executeUpdate();
+
+                        preparedStatement.close();
+                        connection.close();
+
+                        System.out.printf("userId %d deleted %d course(s) using the classroomId %d%n",
+                                User.getId(), count, id);
+                    }
+                } else {
+                    Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                    PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Classrooms\" WHERE id = ?");
+                    preparedStatement.setInt(1, id);
+                    preparedStatement.executeUpdate();
+
+                    preparedStatement.close();
+                    connection.close();
+
+                    System.out.printf("userId %d deleted classroom: %d (name: %s, limit: %d)%n",
+                            User.getId(), id, name, limit);
+                }
+
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
             } finally {
                 updateClassrooms();
+                revertUIComponents();
+
+                editButton.setEnabled(false);
+                removeButton.setEnabled(false);
+                classroomsTable.getSelectionModel().clearSelection();
             }
         });
 

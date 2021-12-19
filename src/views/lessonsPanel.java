@@ -38,8 +38,6 @@ public class lessonsPanel extends JFrame {
     private int selectedLessonId;
 
     public lessonsPanel() {
-        this.professionList = new ArrayList<>();
-        this.yearList = new ArrayList<>();
 
         add(lessonsPanel);
         setSize(1280, 720);
@@ -56,13 +54,21 @@ public class lessonsPanel extends JFrame {
         ((JLabel) professionComboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
         ((JLabel) schoolYearComboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
 
-        // Update professionList with distinct professions
+        // Update professionList from the professions table
+        this.professionList = new ArrayList<>();
         panelController.updateList("SELECT name FROM \"Professions\"", professionList);
+        professionComboBox.removeAllItems();
 
-        // Update yearList with year names
+        for (String profession : professionList)
+            professionComboBox.addItem(profession);
+
+        // Update yearList from the years table
+        this.yearList = new ArrayList<>();
         panelController.updateList("SELECT name FROM \"Years\"", yearList);
+        schoolYearComboBox.removeAllItems();
 
-        updateDetails();
+        for (String year : yearList)
+            schoolYearComboBox.addItem(year);
 
         backButton.addActionListener(action -> {
             panelController.createMainPanel();
@@ -102,7 +108,6 @@ public class lessonsPanel extends JFrame {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
             } finally {
-                updateDetails();
                 updateLessons();
                 revertUIComponents();
             }
@@ -136,10 +141,64 @@ public class lessonsPanel extends JFrame {
         });
 
         removeButton.addActionListener(action -> {
-            // TODO: (Prionysis) Remove entry from database
-            editButton.setEnabled(false);
-            removeButton.setEnabled(false);
-            lessonsTable.getSelectionModel().clearSelection();
+            try {
+                // Get the selected row index
+                int selectedRow = lessonsTable.getSelectedRow();
+
+                // Get the selected row's data
+                String name = lessonNameTextField.getText();
+                int professionId = databaseController.findProfessionId(Objects.requireNonNull(professionComboBox.getSelectedItem()).toString());
+                int yearId = databaseController.findYearId(Objects.requireNonNull(schoolYearComboBox.getSelectedItem()).toString());
+
+
+                // Get the id of the selected lesson
+                int id = databaseController.selectFirstId(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", name));
+
+                // Check how many lessons exist using that lessonId
+                int count = databaseController.selectFirstId(String.format("SELECT COUNT(id) FROM \"Courses\" WHERE \"lessonId\" = '%d'", id));
+
+                if (count > 0) {
+                    System.out.printf("You are about to delete %d course(s) that use the lessonId %d", count, id);
+
+                    boolean delete = false;
+
+                    // TODO: (IceDBorn) Create a confirmation panel before deleting any courses.
+                    if (delete) {
+                        Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                        PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE \"lessonId\" = ?");
+                        preparedStatement.setInt(1, id);
+                        preparedStatement.executeUpdate();
+
+                        preparedStatement.close();
+                        connection.close();
+
+                        System.out.printf("userId %d deleted %d course(s) using the lessonId %d%n",
+                                User.getId(), count, id);
+                    }
+                } else {
+                    Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                    PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Lessons\" WHERE id = ?");
+                    preparedStatement.setInt(1, id);
+                    preparedStatement.executeUpdate();
+
+                    preparedStatement.close();
+                    connection.close();
+
+                    System.out.printf("userId %d deleted lesson: %d (name: %s, professionId: %d, yearId: %d)%n",
+                            User.getId(), id, name, professionId, yearId);
+                }
+
+            } catch (SQLException err) {
+                System.out.println("SQL Exception:");
+                err.printStackTrace();
+            } finally {
+                updateLessons();
+                revertUIComponents();
+
+                editButton.setEnabled(false);
+                removeButton.setEnabled(false);
+                lessonsTable.getSelectionModel().clearSelection();
+            }
         });
 
         // Listen for changes in the lesson name text
@@ -213,29 +272,6 @@ public class lessonsPanel extends JFrame {
             addButton.setEnabled(false);
             cancelButton.setEnabled(false);
         }
-    }
-
-    /**
-     * Update professionComboBox and schoolYearComboBox with new values (if any)
-     */
-    private void updateDetails() {
-        // Update professions
-        professionComboBox.removeAllItems();
-
-        for (String profession : professionList)
-            professionComboBox.addItem(profession);
-
-        if (professionComboBox.getItemCount() > 1)
-            professionComboBox.setSelectedIndex(1);
-
-        // Update school years
-        schoolYearComboBox.removeAllItems();
-
-        for (String year : yearList)
-            schoolYearComboBox.addItem(year);
-
-        if (schoolYearComboBox.getItemCount() > 1)
-            schoolYearComboBox.setSelectedIndex(1);
     }
 
     private void updateLessons() {
