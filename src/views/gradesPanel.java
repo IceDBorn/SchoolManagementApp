@@ -1,6 +1,7 @@
 package views;
 
 // TODO: (IceDBorn) Make empty rows un-editable
+// TODO: (IceDBorn) Fix an error that occurs when trying to open this panel
 
 import controllers.databaseController;
 import controllers.fileController;
@@ -74,7 +75,7 @@ public class gradesPanel extends JFrame {
             } catch (SQLException | IOException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
-                String message =  errors.toString();
+                String message = errors.toString();
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -98,17 +99,18 @@ public class gradesPanel extends JFrame {
             query = String.format("""
                     SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
                     FROM "StudentLessons"
-                    INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
-                    INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
+                    INNER JOIN "Courses" ON "StudentLessons"."courseId" = "Courses".id
+                    INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
                     INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
-                    WHERE "Courses"."teacherId" = %d""", User.getId());
+                    WHERE "teacherId" = %d""", User.getId());
         } else {
             infoTableColumns = new String[]{"Subject"};
             query = String.format("""
-                    SELECT "Lessons".name, "StudentLessons".grade
+                    SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
                     FROM "StudentLessons"
-                    JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
-                    JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
+                    INNER JOIN "Courses" ON "StudentLessons"."courseId" = "Courses".id
+                    INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
+                    INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
                     WHERE "studentId" = %d""", User.getId());
 
             // Hide save button if a student account is viewing the grades
@@ -145,7 +147,7 @@ public class gradesPanel extends JFrame {
         } catch (SQLException err) {
             StringWriter errors = new StringWriter();
             err.printStackTrace(new PrintWriter(errors));
-            String message =  errors.toString();
+            String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
             panelController.createErrorPanel("Something went wrong.", this);

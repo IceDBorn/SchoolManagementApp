@@ -113,15 +113,14 @@ create table "StudentLessons"
     id          serial
         constraint studentlessons_pk
             primary key,
-    "courseId"  integer not null
+    "courseId"  integer           not null
         constraint studentlessons_courses_id_fk
             references "Courses",
-    "studentId" integer not null
+    "studentId" integer           not null
         constraint studentlessons_students_id_fk
             references "Students",
-    "yearId"    integer not null
+    "yearId"    integer           not null
         constraint studentlessons_years_id_fk
             references "Years",
-    grade       integer not null
+    grade       integer default 0 not null
 );
-

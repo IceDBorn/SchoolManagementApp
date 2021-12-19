@@ -47,7 +47,7 @@ public class schedulePanel extends JFrame {
             ResultSet lessons = databaseController.selectQuery(String.format("""
                     SELECT "Lessons".name, "Classrooms".name, "Courses".day, "Courses".time
                     FROM "StudentLessons"
-                    INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
+                    INNER JOIN "Courses" ON "StudentLessons"."courseId" = "Courses".id
                     INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
                     INNER JOIN "Classrooms" ON "Classrooms".id = "Courses"."classroomId"
                     WHERE "StudentLessons"."studentId" = %d""", User.getId()));
@@ -56,10 +56,10 @@ public class schedulePanel extends JFrame {
             Object[] row = new Object[4];
 
             while (lessons.next()) {
-                row[0] = lessons.getString("\"Lessons\".name");
-                row[1] = lessons.getString("\"Classrooms\".name");
-                row[2] = lessons.getString("\"Courses\".day");
-                row[3] = lessons.getString("\"Courses\".time");
+                row[0] = lessons.getString(1);
+                row[1] = lessons.getString(2);
+                row[2] = lessons.getString(3);
+                row[3] = lessons.getString(4);
 
                 scheduleTableModel.addRow(row);
             }
