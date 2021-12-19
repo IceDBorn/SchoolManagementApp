@@ -275,12 +275,7 @@ public class usersPanel extends JFrame {
                         "SELECT COUNT(id) FROM \"StudentLessons\" WHERE \"studentId\" = '%d'", id));
 
                 if (count > 0) {
-                    System.out.printf("You are about to delete %d %s that use the classroomId %d", count, isTeacher ? "course(s)" : "student lesson(s)", id);
-
-                    boolean delete = false;
-
-                    // TODO: (IceDBorn) Create a confirmation panel before deleting any courses or student lessons.
-                    if (delete) {
+                    if (panelController.createConfirmationPanel(this) == JOptionPane.YES_OPTION) {
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
 
                         // Check whether the selected user is a teacher or a student and delete them from the corresponding table

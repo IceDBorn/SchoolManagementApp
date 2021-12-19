@@ -3,7 +3,9 @@ package controllers;
 import views.*;
 
 import javax.sql.rowset.CachedRowSet;
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,5 +84,11 @@ public class panelController {
     public static void createAddNewEntryPanel(boolean isProfession) {
         addNewEntryPanel add = new addNewEntryPanel(isProfession);
         add.setVisible(true);
+    }
+
+    public static int createConfirmationPanel(Component panel) {
+        String message = "Any entries associated will be deleted too.";
+        UIManager.put("OptionPane.minimumSize",new Dimension(325,100));
+        return JOptionPane.showConfirmDialog(panel, message, "Delete this entry?", JOptionPane.YES_NO_OPTION);
     }
 }
