@@ -17,7 +17,7 @@ create unique index user_email_uindex
 
 create table "Classrooms"
 (
-    id      integer not null
+    id      serial
         constraint classroom_pk
             primary key,
     name    text,
@@ -50,21 +50,6 @@ create table "Students"
             references "Years"
 );
 
-create table "StudentLessons"
-(
-    id          serial
-        constraint studentlessons_pk
-            primary key,
-    "lessonId"  integer not null,
-    "studentId" integer not null
-        constraint studentlessons_students_id_fk
-            references "Students",
-    "yearId"    integer not null
-        constraint studentlessons_years_id_fk
-            references "Years",
-    grade       integer not null
-);
-
 create table "Professions"
 (
     id   serial
@@ -78,7 +63,7 @@ create unique index professions_name_uindex
 
 create table "Lessons"
 (
-    id             integer not null
+    id             serial
         constraint lesson_pk
             primary key,
     name           text    not null,
@@ -107,7 +92,7 @@ create table "Teachers"
 
 create table "Courses"
 (
-    id            integer not null
+    id            serial
         constraint course_pk
             primary key,
     "lessonId"    integer not null
@@ -122,3 +107,21 @@ create table "Courses"
     day           text    not null,
     time          text    not null
 );
+
+create table "StudentLessons"
+(
+    id          serial
+        constraint studentlessons_pk
+            primary key,
+    "courseId"  integer not null
+        constraint studentlessons_courses_id_fk
+            references "Courses",
+    "studentId" integer not null
+        constraint studentlessons_students_id_fk
+            references "Students",
+    "yearId"    integer not null
+        constraint studentlessons_years_id_fk
+            references "Years",
+    grade       integer not null
+);
+
