@@ -52,9 +52,6 @@ public class usersPanel extends JFrame {
     private TitledBorder title;
 
     public usersPanel() throws IOException {
-        this.professionList = new ArrayList<>();
-        this.yearList = new ArrayList<>();
-
         add(usersPanel);
         setSize(1280, 720);
         setResizable(false);
@@ -77,10 +74,12 @@ public class usersPanel extends JFrame {
         userBirthDayPicker.setDate(date);
         userBirthDayPicker.setFormats(format);
 
-        // Get all distinct professions from teachers and update professionlist
+        // Update professionList with profession names
+        this.professionList = new ArrayList<>();
         panelController.updateList("SELECT name FROM \"Professions\"", professionList, this);
 
-        // Get all year names and update yearList
+        // Update yearList with year names
+        this.yearList = new ArrayList<>();
         panelController.updateList("SELECT name FROM \"Years\"", yearList, this);
 
         updateDetails(true);
@@ -118,26 +117,19 @@ public class usersPanel extends JFrame {
         addButton.addActionListener(action -> {
             if (userDetailsComboBox.getSelectedIndex() == 0) {
                 // TODO: (IceDBorn) Add profession addition panel
-                // TODO: (Prionysis) Add new profession to the database
-                // TODO: (Prionysis) Update professionlist or yearList when a new profession or year is added
                 boolean isTeacher = Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher");
 
-                if (isTeacher)
-                // Update professionList when a new profession is added to the database
-                {
-                    try {
+                panelController.createAddNewEntryPanel(isTeacher);
+
+                try {
+                    if (isTeacher)
+                        // Update professionList when a new profession is added to the database
                         panelController.updateList("SELECT name FROM \"Professions\"", professionList, this);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                } else
-                // Update yearList when a new year is added to the database
-                {
-                    try {
+                    else
+                        // Update yearList when a new year is added to the database
                         panelController.updateList("SELECT name FROM \"Years\"", yearList, this);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             } else {
                 try {

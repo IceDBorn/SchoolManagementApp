@@ -72,7 +72,6 @@ public class addNewEntryPanel extends JFrame {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
                 panelController.createErrorPanel("Something went wrong.", this);
             } catch (IOException e) {
                 e.printStackTrace();
