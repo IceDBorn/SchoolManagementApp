@@ -1,12 +1,16 @@
 package views;
 
 import controllers.databaseController;
+import controllers.fileController;
 import controllers.panelController;
 import models.User;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -30,7 +34,7 @@ public class schedulePanel extends JFrame {
         });
     }
 
-    private void createUIComponents() {
+    private void createUIComponents() throws IOException {
         // Add columns
         String[] scheduleTableColumns = {"Classroom", "Subject", "Day", "Time"};
         DefaultTableModel scheduleTableModel = new DefaultTableModel(scheduleTableColumns, 0);
@@ -60,8 +64,11 @@ public class schedulePanel extends JFrame {
                 scheduleTableModel.addRow(row);
             }
         } catch (SQLException err) {
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
+            StringWriter errors = new StringWriter();
+            err.printStackTrace(new PrintWriter(errors));
+            String message =  errors.toString();
+            fileController.saveFile("SQL Exception: " + message);
+
             panelController.createErrorPanel("Something went wrong.", this);
         } finally {
             panelController.fillEmptyRows(scheduleTableModel);
