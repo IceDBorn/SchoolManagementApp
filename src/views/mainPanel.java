@@ -5,6 +5,7 @@ import controllers.userController;
 import models.User;
 
 import javax.swing.*;
+import java.io.IOException;
 
 public class mainPanel extends JFrame {
     private JPanel mainPanel;
@@ -31,7 +32,11 @@ public class mainPanel extends JFrame {
         }
 
         logoutButton.addActionListener(action -> {
-            userController.Logout();
+            try {
+                userController.Logout();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             panelController.createLoginPanel();
             this.setVisible(false);
         });
