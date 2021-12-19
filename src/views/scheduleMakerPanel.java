@@ -27,11 +27,12 @@ public class scheduleMakerPanel extends JFrame {
     private JComboBox<String> teachersComboBox;
     private JComboBox<String> classroomComboBox;
     private JComboBox<String> dayComboBox;
-    private TimePicker timePickerStart;
-    private TimePicker timePickerEnd;
     private JTable scheduleTable;
     private JScrollPane scheduleScrollPane;
     private JButton backButton;
+    private JButton editButton;
+    private JComboBox<String> startTime;
+    private JComboBox<String> endTime;
     private DefaultTableModel scheduleTableModel;
 
     public scheduleMakerPanel() {
@@ -59,7 +60,7 @@ public class scheduleMakerPanel extends JFrame {
         }
 
         add(coursesPanel);
-        setSize(800, 600);
+        setSize(1280, 720);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -67,6 +68,9 @@ public class scheduleMakerPanel extends JFrame {
         model.setValue(1);
         model.setMinimum(1);
         model.setMaximum(99);
+
+        for (String time : Arrays.asList("8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00"))
+            startTime.addItem(time);
 
         for (String day : Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))
             dayComboBox.addItem(day);
@@ -78,17 +82,12 @@ public class scheduleMakerPanel extends JFrame {
 
         // Add course based on the selected data
         addButton.addActionListener(action -> {
-            if (timePickerStart.getText().equals("") || timePickerEnd.getText().equals(""))
-                System.out.println("You can not have a blank start or end time.");
-            else if (timePickerStart.getText().equals(timePickerEnd.getText()))
-                System.out.println("You can not have the same start and end time.");
-            else {
                 try {
                     String lessonName = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
                     String teacherName = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
                     String classroomName = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
                     String courseDay = Objects.requireNonNull(dayComboBox.getSelectedItem()).toString();
-                    String courseTime = timePickerStart.getText() + "-" + timePickerEnd.getText();
+                    String courseTime = startTime.getSelectedItem() + " - " + endTime.getSelectedItem();
 
                     // Get the lessonId using the selected lesson from the panel
                     CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
@@ -138,7 +137,6 @@ public class scheduleMakerPanel extends JFrame {
                 } finally {
                     updateCourses();
                 }
-            }
         });
 
         // TODO: When deleting the bottom row, the above row has a white column
@@ -189,12 +187,35 @@ public class scheduleMakerPanel extends JFrame {
                 } finally {
                     updateCourses();
                 }
+
+                scheduleTable.clearSelection();
             }
         });
 
         lessonsComboBox.addActionListener(action -> updateCourses());
         teachersComboBox.addActionListener(action -> updateCourses());
         classroomComboBox.addActionListener(action -> updateCourses());
+
+        startTime.addActionListener(action -> {
+            enableButtons();
+        });
+
+        startTime.addActionListener(action -> {
+            setEndTime();
+        });
+
+        scheduleTable.getSelectionModel().addListSelectionListener(action -> {
+            if (scheduleTable.getSelectedRow() != -1 && !scheduleTable.getValueAt(scheduleTable.getSelectedRow(), 0).toString().equals("")) {
+                editButton.setEnabled(true);
+                removeButton.setEnabled(true);
+            } else {
+                editButton.setEnabled(false);
+                removeButton.setEnabled(false);
+            }
+        });
+
+        setEndTime();
+        enableButtons();
     }
 
     private void createUIComponents() {
@@ -260,5 +281,22 @@ public class scheduleMakerPanel extends JFrame {
             panelController.fillEmptyRows(scheduleTableModel);
             scheduleTable.setModel(scheduleTableModel);
         }
+    }
+
+    private void enableButtons() {
+        addButton.setEnabled(lessonsComboBox.getSelectedItem() != null && teachersComboBox.getSelectedItem() != null
+                && classroomComboBox.getSelectedItem() != null && dayComboBox.getSelectedItem() != null
+                && startTime.getSelectedItem() != null && endTime.getSelectedItem() != null);
+    }
+
+    // Fill end time combobox with items coming after start time combobox selected item
+    private void setEndTime() {
+        endTime.removeAllItems();
+        startTime.getSelectedIndex();
+        for (int i = startTime.getSelectedIndex() + 1; i < startTime.getItemCount(); i++) {
+            endTime.addItem(startTime.getItemAt(i));
+        }
+        System.out.println(endTime.getItemCount());
+        endTime.setEnabled(endTime.getItemCount() > 0);
     }
 }
