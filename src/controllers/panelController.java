@@ -6,6 +6,9 @@ import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +28,7 @@ public class panelController {
         });
     }
 
-    public static void updateList(String sql, ArrayList<String> list, Component panel) {
+    public static void updateList(String sql, ArrayList<String> list, Component panel) throws IOException {
         try {
             CachedRowSet cachedRowSet = databaseController.selectQuery(sql);
 
@@ -36,8 +39,11 @@ public class panelController {
                     list.add(name);
             }
         } catch (SQLException err) {
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
+            StringWriter errors = new StringWriter();
+            err.printStackTrace(new PrintWriter(errors));
+            String message =  errors.toString();
+            fileController.saveFile("SQL Exception: " + message);
+
             panelController.createErrorPanel("Something went wrong.", panel);
         }
     }
@@ -67,17 +73,17 @@ public class panelController {
         classrooms.setVisible(true);
     }
 
-    public static void createScheduleMakerPanel() {
+    public static void createScheduleMakerPanel() throws IOException {
         scheduleMakerPanel courses = new scheduleMakerPanel();
         courses.setVisible(true);
     }
 
-    public static void createLessonsPanel() {
+    public static void createLessonsPanel() throws IOException {
         lessonsPanel lessons = new lessonsPanel();
         lessons.setVisible(true);
     }
 
-    public static void createUsersPanel() {
+    public static void createUsersPanel() throws IOException {
         usersPanel users = new usersPanel();
         users.setVisible(true);
     }

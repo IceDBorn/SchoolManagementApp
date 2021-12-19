@@ -1,14 +1,15 @@
 package controllers;
 
 import models.User;
-
 import javax.sql.rowset.CachedRowSet;
-import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.SQLException;
 
 public class userController {
-    public static void Login(String email, String password, Component panel) {
+    public static void Login(String email, String password, Component panel) throws IOException {
         try {
             CachedRowSet user = databaseController.selectQuery(String.format("""
                     SELECT "Users".id, name, email, "isTeacher", "isAdmin", "yearId", "professionId" FROM "Users"
@@ -29,19 +30,21 @@ public class userController {
                 else
                     User.setSpecificField(user.getInt("yearId"));
 
-                System.out.printf("userId %d successfully logged in as a %s%s%n",
-                        User.getId(), User.isTeacher() ? "teacher" : "student", User.isAdmin() ? " with admin rights" : "");
+                fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " logged in as "
+                        + (User.isTeacher() ? "teacher" : "student") + (User.isAdmin() ? " with admin rights." : "."));
             } else panelController.createErrorPanel("You've specified an invalid email or password.", panel);
-        } catch (SQLException err) {
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
+        } catch (SQLException | IOException err) {
+            StringWriter errors = new StringWriter();
+            err.printStackTrace(new PrintWriter(errors));
+            String message =  errors.toString();
+            fileController.saveFile("SQL Exception: " + message);
+
             panelController.createErrorPanel("Something went wrong.", panel);
         }
     }
 
-    public static void Logout() {
-        System.out.printf("userId %d successfully logged out as a %s%s%n",
-                User.getId(), User.isTeacher() ? "teacher" : "student", User.isAdmin() ? " with admin rights" : "");
+    public static void Logout() throws IOException {
+        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " logged out");
 
         User.setId(-1);
         User.setSpecificField(-1);

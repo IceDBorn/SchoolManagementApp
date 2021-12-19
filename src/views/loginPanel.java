@@ -7,6 +7,7 @@ import models.User;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import java.io.IOException;
 
 public class loginPanel extends JFrame {
     private JPanel loginPanel;
@@ -24,7 +25,11 @@ public class loginPanel extends JFrame {
         loginButton.addActionListener(action -> {
             String email = usernameTextField.getText();
             String password = String.valueOf(passwordField.getPassword());
-            userController.Login(email, password, this);
+            try {
+                userController.Login(email, password, this);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             if (User.getId() != -1) {
                 panelController.createMainPanel();
                 this.setVisible(false);

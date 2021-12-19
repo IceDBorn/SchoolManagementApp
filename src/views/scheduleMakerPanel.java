@@ -1,6 +1,7 @@
 package views;
 
 import controllers.databaseController;
+import controllers.fileController;
 import controllers.panelController;
 import models.Database;
 import models.User;
@@ -9,6 +10,9 @@ import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -34,7 +38,7 @@ public class scheduleMakerPanel extends JFrame {
     private JComboBox<String> endTime;
     private DefaultTableModel scheduleTableModel;
 
-    public scheduleMakerPanel() {
+    public scheduleMakerPanel() throws IOException {
         scheduleScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         // Fill the all available combo boxes
@@ -54,9 +58,11 @@ public class scheduleMakerPanel extends JFrame {
             while (classrooms.next())
                 classroomComboBox.addItem(classrooms.getString("name"));
         } catch (SQLException err) {
-            // TODO: (IceDBorn) Record errors in log file
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
+            StringWriter errors = new StringWriter();
+            err.printStackTrace(new PrintWriter(errors));
+            String message =  errors.toString();
+            fileController.saveFile("SQL Exception: " + message);
+
             panelController.createErrorPanel("Something went wrong.", this);
         }
 
@@ -83,6 +89,7 @@ public class scheduleMakerPanel extends JFrame {
 
         // Add course based on the selected data
         addButton.addActionListener(action -> {
+            boolean isAddButton = addButton.getText().equals("Add");
             try {
                 String lessonName = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
                 String teacherName = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
@@ -129,15 +136,26 @@ public class scheduleMakerPanel extends JFrame {
                     preparedStatement.close();
                     connection.close();
 
-                    System.out.printf("userId %d created course: %d (lessonId: %d, teacherId %d, classroomId: %d, day %s, time: %s%n",
-                            User.getId(), courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
+                    fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
+                            + (isAddButton ? " created " : " updated ") + " schedule entry (" + courseId + ").");
                 }
-            } catch (SQLException err) {
-                System.out.println("SQL Exception:");
-                err.printStackTrace();
+            } catch (SQLException | IOException err) {
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message =  errors.toString();
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 panelController.createErrorPanel("Something went wrong.", this);
             } finally {
-                updateCourses();
+                try {
+                    updateCourses();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -176,22 +194,50 @@ public class scheduleMakerPanel extends JFrame {
                 preparedStatement.close();
                 connection.close();
 
-                System.out.printf("userId %d deleted course: %d (lessonId: %d, teacherId %d, classroomId: %d, day %s, time: %s%n",
-                        User.getId(), courseId, lessonId, teacherId, classroomId, courseDay, courseTime);
-            } catch (SQLException err) {
-                System.out.println("SQL Exception:");
-                err.printStackTrace();
+                fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " deleted schedule entry (" + courseId + ")");
+            } catch (SQLException | IOException err) {
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message =  errors.toString();
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 panelController.createErrorPanel("Something went wrong.", this);
             } finally {
-                updateCourses();
+                try {
+                    updateCourses();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             scheduleTable.clearSelection();
         });
 
-        lessonsComboBox.addActionListener(action -> updateCourses());
-        teachersComboBox.addActionListener(action -> updateCourses());
-        classroomComboBox.addActionListener(action -> updateCourses());
+        lessonsComboBox.addActionListener(action -> {
+            try {
+                updateCourses();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        teachersComboBox.addActionListener(action -> {
+            try {
+                updateCourses();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        classroomComboBox.addActionListener(action -> {
+            try {
+                updateCourses();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
         startTime.addActionListener(action -> {
             enableButtons();
@@ -215,7 +261,7 @@ public class scheduleMakerPanel extends JFrame {
         enableButtons();
     }
 
-    private void createUIComponents() {
+    private void createUIComponents() throws IOException {
         scheduleTableModel = new DefaultTableModel(scheduleTableColumns, 0);
         scheduleTable = new JTable(scheduleTableModel);
 
@@ -239,13 +285,16 @@ public class scheduleMakerPanel extends JFrame {
                 scheduleTableModel.addRow(row);
             }
         } catch (SQLException err) {
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
+            StringWriter errors = new StringWriter();
+            err.printStackTrace(new PrintWriter(errors));
+            String message =  errors.toString();
+            fileController.saveFile("SQL Exception: " + message);
+
             panelController.createErrorPanel("Something went wrong.", this);
         }
     }
 
-    private void updateCourses() {
+    private void updateCourses() throws IOException {
         // Remove all rows
         IntStream.iterate(scheduleTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> scheduleTableModel.removeRow(i));
 
@@ -273,8 +322,11 @@ public class scheduleMakerPanel extends JFrame {
                 scheduleTableModel.addRow(row);
             }
         } catch (SQLException err) {
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
+            StringWriter errors = new StringWriter();
+            err.printStackTrace(new PrintWriter(errors));
+            String message =  errors.toString();
+            fileController.saveFile("SQL Exception: " + message);
+
             panelController.createErrorPanel("Something went wrong.", this);
         } finally {
             panelController.fillEmptyRows(scheduleTableModel);
@@ -295,7 +347,6 @@ public class scheduleMakerPanel extends JFrame {
         for (int i = startTime.getSelectedIndex() + 1; i < startTime.getItemCount(); i++) {
             endTime.addItem(startTime.getItemAt(i));
         }
-        System.out.println(endTime.getItemCount());
         endTime.setEnabled(endTime.getItemCount() > 0);
     }
 }
