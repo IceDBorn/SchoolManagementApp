@@ -1,6 +1,7 @@
 package views;
 
 import controllers.databaseController;
+import controllers.fileController;
 import controllers.panelController;
 import models.Database;
 import models.User;
@@ -11,6 +12,9 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -85,15 +89,30 @@ public class classroomsPanel extends JFrame {
                     preparedStatement.close();
                     connection.close();
 
-                    System.out.printf("userId %d %s classroom: %d (name: %s, limit :%d)%n",
-                            User.getId(), isAddButton ? "created" : "updated", classroomId, name, limit);
+                    fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
+                            + (isAddButton ? " created " : " updated ") + " classroom (" + classroomId + ") "
+                            + name + " with capacity of " + limit + ".");
                 }
             } catch (SQLException err) {
-                System.out.println("SQL Exception:");
-                err.printStackTrace();
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message =  errors.toString();
+
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 panelController.createErrorPanel("Something went wrong.", this);
+            } catch (IOException e) {
+                e.printStackTrace();
             } finally {
-                updateClassrooms();
+                try {
+                    updateClassrooms();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 revertUIComponents();
             }
         });
@@ -113,8 +132,16 @@ public class classroomsPanel extends JFrame {
                 selectedClassroomId = classrooms.getInt("id");
                 selectedClassroomName = classrooms.getString("name");
             } catch (SQLException err) {
-                System.out.println("SQL Exception: ");
-                err.printStackTrace();
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message =  errors.toString();
+
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 panelController.createErrorPanel("Something went wrong.", this);
             }
 
@@ -159,8 +186,8 @@ public class classroomsPanel extends JFrame {
                         preparedStatement.close();
                         connection.close();
 
-                        System.out.printf("userId %d deleted %d course(s) using the classroomId %d%n",
-                                User.getId(), count, id);
+                        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
+                                + " deleted " + count + " courses, by deleting classroom (" + id + ") " + name + "." );
                     }
                 } else {
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
@@ -171,16 +198,29 @@ public class classroomsPanel extends JFrame {
                     preparedStatement.close();
                     connection.close();
 
-                    System.out.printf("userId %d deleted classroom: %d (name: %s, limit: %d)%n",
-                            User.getId(), id, name, limit);
+                    fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
+                            + " deleted classroom (" + id + ") " + name + ".");
                 }
 
             } catch (SQLException err) {
-                System.out.println("SQL Exception:");
-                err.printStackTrace();
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message =  errors.toString();
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 panelController.createErrorPanel("Something went wrong.", this);
+            } catch (IOException e) {
+                e.printStackTrace();
             } finally {
-                updateClassrooms();
+                try {
+                    updateClassrooms();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 revertUIComponents();
 
                 editButton.setEnabled(false);
@@ -226,7 +266,7 @@ public class classroomsPanel extends JFrame {
         });
     }
 
-    public void updateClassrooms() {
+    public void updateClassrooms() throws IOException {
         IntStream.iterate(classroomsTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> classroomsTableModel.removeRow(i));
 
         try {
@@ -242,8 +282,11 @@ public class classroomsPanel extends JFrame {
                 classroomsTableModel.addRow(row);
             }
         } catch (SQLException err) {
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
+            StringWriter errors = new StringWriter();
+            err.printStackTrace(new PrintWriter(errors));
+            String message =  errors.toString();
+            fileController.saveFile("SQL Exception: " + message);
+
             panelController.createErrorPanel("Something went wrong.", this);
         } finally {
             panelController.fillEmptyRows(classroomsTableModel);
@@ -264,7 +307,7 @@ public class classroomsPanel extends JFrame {
         selectedClassroomName = "";
     }
 
-    private void createUIComponents() {
+    private void createUIComponents() throws IOException {
         // Add columns
         String[] classroomsTableColumns = {"Name", "Capacity"};
         classroomsTableModel = new DefaultTableModel(classroomsTableColumns, 0);
