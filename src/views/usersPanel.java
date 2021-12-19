@@ -1,6 +1,7 @@
 package views;
 
 import controllers.databaseController;
+import controllers.fileController;
 import controllers.panelController;
 import models.Database;
 import models.User;
@@ -14,6 +15,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -195,24 +198,28 @@ public class usersPanel extends JFrame {
                         preparedStatement.close();
                         connection.close();
 
-                        System.out.printf("userId %d %s user: %d (type: %s, name: %s, gender: %s, birthday: %s, email: %s, admin: %s)%n",
-                                User.getId(),
-                                isAddButton ? "created" : "updated",
-                                id,
-                                isTeacher ? "teacher" : "student",
-                                username,
-                                gender,
-                                new SimpleDateFormat("dd/MM/yyyy").format(birthday),
-                                email,
-                                isAdmin ? "Yes" : "No");
+                        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
+                                + (isAddButton ? " created " : " updated ") + " user (" + id + ") "
+                                + username + ".");
                     }
-                } catch (SQLException err) {
-                    System.out.println("SQL Exception:");
-                    err.printStackTrace();
+                } catch (SQLException | IOException err) {
+                    StringWriter errors = new StringWriter();
+                    err.printStackTrace(new PrintWriter(errors));
+                    String message =  errors.toString();
+                    try {
+                        fileController.saveFile("SQL Exception: " + message);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                     panelController.createErrorPanel("Something went wrong.", this);
                 } finally {
                     updateDetails(true);
-                    updateUsers();
+                    try {
+                        updateUsers();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     revertUIComponents();
                 }
             }
@@ -233,8 +240,15 @@ public class usersPanel extends JFrame {
                 selectedUserEmail = users.getString("email");
                 selectedUserIsTeacher = users.getBoolean("isTeacher");
             } catch (SQLException err) {
-                System.out.println("SQL Exception:");
-                err.printStackTrace();
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message =  errors.toString();
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 panelController.createErrorPanel("Something went wrong.", this);
             }
 
@@ -297,8 +311,7 @@ public class usersPanel extends JFrame {
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
 
-                        System.out.printf("userId %d deleted %d %s using the userId %d%n",
-                                User.getId(), count, isTeacher ? "course(s)" : "student lesson(s)", id);
+                        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " deleted user (" + id + ").");
                     }
                 } else {
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
@@ -316,15 +329,25 @@ public class usersPanel extends JFrame {
                     preparedStatement.close();
                     connection.close();
 
-                    System.out.printf("id %d deleted user: %d (type: %s)%n",
-                            User.getId(), id, isTeacher ? "teacher" : "student");
+                    fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " deleted user (" + id + ").");
                 }
-            } catch (SQLException err) {
-                System.out.println("SQL Exception: ");
-                err.printStackTrace();
+            } catch (SQLException | IOException err) {
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message =  errors.toString();
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 panelController.createErrorPanel("Something went wrong.", this);
             } finally {
-                updateUsers();
+                try {
+                    updateUsers();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 revertUIComponents();
 
                 editButton.setEnabled(false);
@@ -416,7 +439,7 @@ public class usersPanel extends JFrame {
             userDetailsComboBox.setSelectedIndex(1);
     }
 
-    private void updateUsers() {
+    private void updateUsers() throws IOException {
         IntStream.iterate(usersTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> usersTableModel.removeRow(i));
 
         try {
@@ -443,8 +466,11 @@ public class usersPanel extends JFrame {
                 usersTableModel.addRow(row);
             }
         } catch (SQLException err) {
-            System.out.println("SQL Exception:");
-            err.printStackTrace();
+            StringWriter errors = new StringWriter();
+            err.printStackTrace(new PrintWriter(errors));
+            String message =  errors.toString();
+            fileController.saveFile("SQL Exception: " + message);
+
             panelController.createErrorPanel("Something went wrong.", this);
         } finally {
             panelController.fillEmptyRows(usersTableModel);
@@ -467,7 +493,7 @@ public class usersPanel extends JFrame {
         }
     }
 
-    private void createUIComponents() {
+    private void createUIComponents() throws IOException {
         // Add columns
         String[] usersTableColumns = {"Name", "Email", "Type", "Profession/School Year", "Gender", "Birthday", "Admin"};
         usersTableModel = new DefaultTableModel(usersTableColumns, 0);

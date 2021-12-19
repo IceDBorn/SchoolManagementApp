@@ -57,7 +57,11 @@ public class mainPanel extends JFrame {
         });
 
         scheduleMakerButton.addActionListener(action -> {
-            panelController.createScheduleMakerPanel();
+            try {
+                panelController.createScheduleMakerPanel();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             this.setVisible(false);
         });
 

@@ -73,7 +73,7 @@ public class panelController {
         classrooms.setVisible(true);
     }
 
-    public static void createScheduleMakerPanel() {
+    public static void createScheduleMakerPanel() throws IOException {
         scheduleMakerPanel courses = new scheduleMakerPanel();
         courses.setVisible(true);
     }
