@@ -98,19 +98,13 @@ public class scheduleMakerPanel extends JFrame {
                 String courseTime = startTime.getSelectedItem() + " - " + endTime.getSelectedItem();
 
                 // Get the lessonId using the selected lesson
-                CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
-                lessons.next();
-                int lessonId = lessons.getInt("id");
+                int lessonId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
 
                 // Get the teacherId using the selected teacher
-                CachedRowSet teachers = databaseController.selectQuery(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
-                teachers.next();
-                int teacherId = teachers.getInt("id");
+                int teacherId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
 
                 // Get the classroomId using the selected classroom
-                CachedRowSet classrooms = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
-                classrooms.next();
-                int classroomId = classrooms.getInt("id");
+                int classroomId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
 
                 // Check if a course exists with the same classroom, day and time
                 CachedRowSet courses = databaseController.selectQuery(String.format("SELECT id FROM \"Courses\" WHERE \"classroomId\" = '%d' AND day = '%s' AND time = '%s'", classroomId, courseDay, courseTime));
@@ -130,14 +124,14 @@ public class scheduleMakerPanel extends JFrame {
                     preparedStatement.setString(5, courseTime);
                     preparedStatement.executeUpdate();
 
-                    // Get the courseId of the newly inserted course
-                    int courseId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
+                    // Get the id of the newly inserted course
+                    int id = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
                     preparedStatement.close();
                     connection.close();
 
                     fileController.saveFile("User (%d) %s%s schedule entry (%d).".formatted(
-                            User.getId(), User.getName(), isAddButton ? " created " : " updated ", courseId));
+                            User.getId(), User.getName(), isAddButton ? " created " : " updated ", id));
                 }
             } catch (SQLException | IOException err) {
                 StringWriter errors = new StringWriter();
@@ -342,9 +336,9 @@ public class scheduleMakerPanel extends JFrame {
     private void setEndTime() {
         endTime.removeAllItems();
         startTime.getSelectedIndex();
-        for (int i = startTime.getSelectedIndex() + 1; i < startTime.getItemCount(); i++) {
+        for (int i = startTime.getSelectedIndex() + 1; i < startTime.getItemCount(); i++)
             endTime.addItem(startTime.getItemAt(i));
-        }
+
         endTime.setEnabled(endTime.getItemCount() > 0);
     }
 }

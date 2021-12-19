@@ -83,14 +83,14 @@ public class classroomsPanel extends JFrame {
 
                     preparedStatement.executeUpdate();
 
-                    // Get the userId of the inserted or updated classroom
-                    int classroomId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
+                    // Get the id of the inserted or updated classroom
+                    int id = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
                     preparedStatement.close();
                     connection.close();
 
                     fileController.saveFile("User (%d) %s%s classroom (%d) %s with capacity of %d.".formatted(
-                            User.getId(), User.getName(), isAddButton ? " created " : " updated ", classroomId, name, limit));
+                            User.getId(), User.getName(), isAddButton ? " created " : " updated ", id, name, limit));
                 }
             } catch (SQLException err) {
                 StringWriter errors = new StringWriter();
