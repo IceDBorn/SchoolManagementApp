@@ -60,7 +60,7 @@ public class scheduleMakerPanel extends JFrame {
         } catch (SQLException err) {
             StringWriter errors = new StringWriter();
             err.printStackTrace(new PrintWriter(errors));
-            String message =  errors.toString();
+            String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
             panelController.createErrorPanel("Something went wrong.", this);
@@ -97,17 +97,17 @@ public class scheduleMakerPanel extends JFrame {
                 String courseDay = Objects.requireNonNull(dayComboBox.getSelectedItem()).toString();
                 String courseTime = startTime.getSelectedItem() + " - " + endTime.getSelectedItem();
 
-                // Get the lessonId using the selected lesson from the panel
+                // Get the lessonId using the selected lesson
                 CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
                 lessons.next();
                 int lessonId = lessons.getInt("id");
 
-                // Get the teacherId using the selected teacher from the panel
+                // Get the teacherId using the selected teacher
                 CachedRowSet teachers = databaseController.selectQuery(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
                 teachers.next();
                 int teacherId = teachers.getInt("id");
 
-                // Get the classroomId using the selected classroom from the panel
+                // Get the classroomId using the selected classroom
                 CachedRowSet classrooms = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
                 classrooms.next();
                 int classroomId = classrooms.getInt("id");
@@ -136,13 +136,13 @@ public class scheduleMakerPanel extends JFrame {
                     preparedStatement.close();
                     connection.close();
 
-                    fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
-                            + (isAddButton ? " created " : " updated ") + " schedule entry (" + courseId + ").");
+                    fileController.saveFile("User (%d) %s%s schedule entry (%d).".formatted(
+                            User.getId(), User.getName(), isAddButton ? " created " : " updated ", courseId));
                 }
             } catch (SQLException | IOException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
-                String message =  errors.toString();
+                String message = errors.toString();
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -164,7 +164,8 @@ public class scheduleMakerPanel extends JFrame {
         removeButton.addActionListener(action -> {
             // Get the selected row index
             int selectedRow = scheduleTable.getSelectedRow();
-            // Get the selected row's data
+
+            // Get the selected course data
             String lessonName = String.valueOf(scheduleTable.getValueAt(selectedRow, 0));
             String teacherName = String.valueOf(scheduleTable.getValueAt(selectedRow, 1));
             String classroomName = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
@@ -173,16 +174,16 @@ public class scheduleMakerPanel extends JFrame {
 
             try {
                 // Get the lesson id using the name of the lesson from the selected row
-                int lessonId = databaseController.selectFirstId(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
+                int lessonId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
 
                 // Get the teacher id using the name of the lesson from the selected row
-                int teacherId = databaseController.selectFirstId(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
+                int teacherId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
 
                 // Get the classroom id using the name of the selected classroom
-                int classroomId = databaseController.selectFirstId(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
+                int classroomId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
 
                 // Get the courseId using the data from the selected row
-                int courseId = databaseController.selectFirstId(String.format(
+                int courseId = databaseController.selectFirstIntColumn(String.format(
                         "SELECT id FROM \"Courses\" WHERE \"lessonId\" = '%d' AND \"teacherId\" = '%d' AND \"classroomId\" = '%d' AND day = '%s' AND time = '%s'",
                         lessonId, teacherId, classroomId, courseDay, courseTime));
 
@@ -194,11 +195,12 @@ public class scheduleMakerPanel extends JFrame {
                 preparedStatement.close();
                 connection.close();
 
-                fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " deleted schedule entry (" + courseId + ")");
+                fileController.saveFile("User (%d) %s deleted schedule entry (%d)".formatted(
+                        User.getId(), User.getName(), courseId));
             } catch (SQLException | IOException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
-                String message =  errors.toString();
+                String message = errors.toString();
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -239,13 +241,9 @@ public class scheduleMakerPanel extends JFrame {
             }
         });
 
-        startTime.addActionListener(action -> {
-            enableButtons();
-        });
+        startTime.addActionListener(action -> enableButtons());
 
-        startTime.addActionListener(action -> {
-            setEndTime();
-        });
+        startTime.addActionListener(action -> setEndTime());
 
         scheduleTable.getSelectionModel().addListSelectionListener(action -> {
             if (scheduleTable.getSelectedRow() != -1 && !scheduleTable.getValueAt(scheduleTable.getSelectedRow(), 0).toString().equals("")) {
@@ -287,7 +285,7 @@ public class scheduleMakerPanel extends JFrame {
         } catch (SQLException err) {
             StringWriter errors = new StringWriter();
             err.printStackTrace(new PrintWriter(errors));
-            String message =  errors.toString();
+            String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
             panelController.createErrorPanel("Something went wrong.", this);
@@ -324,7 +322,7 @@ public class scheduleMakerPanel extends JFrame {
         } catch (SQLException err) {
             StringWriter errors = new StringWriter();
             err.printStackTrace(new PrintWriter(errors));
-            String message =  errors.toString();
+            String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
             panelController.createErrorPanel("Something went wrong.", this);
@@ -336,8 +334,8 @@ public class scheduleMakerPanel extends JFrame {
 
     private void enableButtons() {
         addButton.setEnabled(lessonsComboBox.getSelectedItem() != null && teachersComboBox.getSelectedItem() != null
-                && classroomComboBox.getSelectedItem() != null && dayComboBox.getSelectedItem() != null
-                && startTime.getSelectedItem() != null && endTime.getSelectedItem() != null);
+                             && classroomComboBox.getSelectedItem() != null && dayComboBox.getSelectedItem() != null
+                             && startTime.getSelectedItem() != null && endTime.getSelectedItem() != null);
     }
 
     // Fill end time combobox with items coming after start time combobox selected item

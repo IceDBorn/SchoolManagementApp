@@ -123,16 +123,15 @@ public class usersPanel extends JFrame {
                 boolean isTeacher = Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher");
 
                 if (isTeacher)
-                    // Update professionList when a new profession is added to the database
+                // Update professionList when a new profession is added to the database
                 {
                     try {
                         panelController.updateList("SELECT name FROM \"Professions\"", professionList, this);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }
-                else
-                    // Update yearList when a new year is added to the database
+                } else
+                // Update yearList when a new year is added to the database
                 {
                     try {
                         panelController.updateList("SELECT name FROM \"Years\"", yearList, this);
@@ -147,7 +146,7 @@ public class usersPanel extends JFrame {
 
                     // Check if a user already exists with the same email if the name has been changed
                     if (userExists && !selectedUserEmail.equals(email))
-                    panelController.createErrorPanel("A user with that email already exists", this);
+                        panelController.createErrorPanel("A user with that email already exists", this);
                     else {
                         boolean isAddButton = addButton.getText().equals("Add");
 
@@ -198,14 +197,13 @@ public class usersPanel extends JFrame {
                         preparedStatement.close();
                         connection.close();
 
-                        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
-                                + (isAddButton ? " created " : " updated ") + " user (" + id + ") "
-                                + username + ".");
+                        fileController.saveFile("User (%d) %s%s user (%d) %s.".formatted(
+                                User.getId(), User.getName(), isAddButton ? " created " : " updated ", id, username));
                     }
                 } catch (SQLException | IOException err) {
                     StringWriter errors = new StringWriter();
                     err.printStackTrace(new PrintWriter(errors));
-                    String message =  errors.toString();
+                    String message = errors.toString();
                     try {
                         fileController.saveFile("SQL Exception: " + message);
                     } catch (IOException e) {
@@ -242,7 +240,7 @@ public class usersPanel extends JFrame {
             } catch (SQLException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
-                String message =  errors.toString();
+                String message = errors.toString();
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -289,14 +287,14 @@ public class usersPanel extends JFrame {
                 // Get the selected row index
                 int selectedRow = usersTable.getSelectedRow();
 
-                // Get the id of the selected user
-                int id = databaseController.selectFirstId(String.format("SELECT id FROM \"Users\" WHERE email = '%s'", usersTable.getValueAt(selectedRow, 1).toString()));
+                // Get the selected user id
+                int id = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Users\" WHERE email = '%s'", usersTable.getValueAt(selectedRow, 1).toString()));
 
                 // Check whether the user is a teacher or not
                 boolean isTeacher = usersTable.getValueAt(selectedRow, 2).toString().equals("Teacher");
 
                 // Check how many courses exist using that userId
-                int count = databaseController.selectFirstId(String.format(isTeacher ?
+                int count = databaseController.selectFirstIntColumn(String.format(isTeacher ?
                         "SELECT COUNT(id) FROM \"Courses\" WHERE \"teacherId\" = '%d'" :
                         "SELECT COUNT(id) FROM \"StudentLessons\" WHERE \"studentId\" = '%d'", id));
 
@@ -311,7 +309,8 @@ public class usersPanel extends JFrame {
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
 
-                        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " deleted user (" + id + ").");
+                        fileController.saveFile("User (%d) %s deleted user (%d).".formatted(
+                                User.getId(), User.getName(), id));
                     }
                 } else {
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
@@ -329,12 +328,13 @@ public class usersPanel extends JFrame {
                     preparedStatement.close();
                     connection.close();
 
-                    fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " deleted user (" + id + ").");
+                    fileController.saveFile("User (%d) %s deleted user (%d).".formatted(
+                            User.getId(), User.getName(), id));
                 }
             } catch (SQLException | IOException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
-                String message =  errors.toString();
+                String message = errors.toString();
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -468,7 +468,7 @@ public class usersPanel extends JFrame {
         } catch (SQLException err) {
             StringWriter errors = new StringWriter();
             err.printStackTrace(new PrintWriter(errors));
-            String message =  errors.toString();
+            String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
             panelController.createErrorPanel("Something went wrong.", this);

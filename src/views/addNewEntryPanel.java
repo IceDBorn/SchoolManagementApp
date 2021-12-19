@@ -4,7 +4,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-public class addNewEntryPanel extends JFrame{
+public class addNewEntryPanel extends JFrame {
     private JPanel addNewEntryPanel;
     private JLabel messageLabel;
     private JTextField entryTextField;
@@ -24,9 +24,7 @@ public class addNewEntryPanel extends JFrame{
             messageLabel.setText("Add new school year");
         }
 
-        cancelButton.addActionListener(action -> {
-            this.dispose();
-        });
+        cancelButton.addActionListener(action -> this.dispose());
 
         addButton.addActionListener(action -> {
             // TODO: (Prionysis) Add entry to database

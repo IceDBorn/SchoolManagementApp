@@ -27,22 +27,21 @@ public class databaseController {
     }
 
     /**
-     * Returns the very first row id of the specified sql query
+     * Returns the first row column of the specified sql query
      */
-    // TODO: (Prionysis) Rename this to selectFirstColumn
-    public static int selectFirstId(String sql) throws SQLException {
+    public static int selectFirstIntColumn(String sql) throws SQLException {
         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
         Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         ResultSet resultSet = statement.executeQuery(sql);
 
         resultSet.next();
-        int id = resultSet.getInt(1);
+        int column = resultSet.getInt(1);
 
         resultSet.close();
         statement.close();
         connection.close();
 
-        return id;
+        return column;
     }
 
     /**

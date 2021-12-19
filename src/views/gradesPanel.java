@@ -63,8 +63,8 @@ public class gradesPanel extends JFrame {
                         preparedStatement.close();
                         connection.close();
 
-                        System.out.printf("userId %d modified studentId: %d grade to %d%n", User.getId(), studentId, studentGrade);
-                        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " modified (" + studentId + ") grade to " + studentGrade + ".");
+                        fileController.saveFile("User (%d) %s modified (%d) grade to %d.".formatted(
+                                User.getId(), User.getName(), studentId, studentGrade));
                     }
 
                     // Checks if the next row has a null id to end the loop

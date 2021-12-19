@@ -1,6 +1,7 @@
 package controllers;
 
 import models.User;
+
 import javax.sql.rowset.CachedRowSet;
 import java.awt.*;
 import java.io.IOException;
@@ -30,13 +31,13 @@ public class userController {
                 else
                     User.setSpecificField(user.getInt("yearId"));
 
-                fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " logged in as "
-                        + (User.isTeacher() ? "teacher" : "student") + (User.isAdmin() ? " with admin rights." : "."));
+                fileController.saveFile("User (%d) %s logged in as %s%s".formatted(
+                        User.getId(), User.getName(), User.isTeacher() ? "teacher" : "student", User.isAdmin() ? " with admin rights." : "."));
             } else panelController.createErrorPanel("You've specified an invalid email or password.", panel);
         } catch (SQLException | IOException err) {
             StringWriter errors = new StringWriter();
             err.printStackTrace(new PrintWriter(errors));
-            String message =  errors.toString();
+            String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
             panelController.createErrorPanel("Something went wrong.", panel);
@@ -44,7 +45,8 @@ public class userController {
     }
 
     public static void Logout() throws IOException {
-        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " logged out");
+        fileController.saveFile("User (%d) %s logged out".formatted(
+                User.getId(), User.getName()));
 
         User.setId(-1);
         User.setSpecificField(-1);
