@@ -1,95 +1,31 @@
 create table "Users"
 (
-    id          integer default nextval('"User_id_seq"'::regclass) not null
+    id          serial
         constraint user_pk
             primary key,
-    name        text                                               not null,
-    birthday    date                                               not null,
-    password    text                                               not null,
-    email       text                                               not null,
-    "isAdmin"   boolean default false                              not null,
-    gender      integer                                            not null,
-    "isTeacher" boolean
+    name        text                  not null,
+    password    text                  not null,
+    email       text                  not null,
+    gender      integer               not null,
+    birthday    date                  not null,
+    "isTeacher" boolean default false not null,
+    "isAdmin"   boolean default false not null
 );
 
 create unique index user_email_uindex
     on "Users" (email);
 
-create table "Teachers"
-(
-    id      integer not null
-        constraint teacher_pk
-            primary key
-        constraint teacher_user_id_fk
-            references "Users",
-    subject text    not null
-);
-
-create table "Students"
-(
-    id   integer not null
-        constraint student_pk
-            primary key
-        constraint student_user_id_fk
-            references "Users",
-    year integer not null
-);
-
 create table "Classrooms"
 (
-    id      integer default nextval('"Classroom_id_seq"'::regclass) not null
+    id      integer not null
         constraint classroom_pk
             primary key,
     name    text,
-    "limit" integer default 20                                      not null
+    "limit" integer not null
 );
 
 create unique index classroom_name_uindex
     on "Classrooms" (name);
-
-create table "Lessons"
-(
-    id      integer default nextval('"Lesson_id_seq"'::regclass) not null
-        constraint lesson_pk
-            primary key,
-    name    text                                                 not null,
-    subject text                                                 not null,
-    year    integer                                              not null
-);
-
-create unique index lesson_name_uindex
-    on "Lessons" (name);
-
-create table "Courses"
-(
-    id            integer default nextval('"Course_id_seq"'::regclass) not null
-        constraint course_pk
-            primary key,
-    "classroomId" integer                                              not null
-        constraint course_classroom_id_fk
-            references "Classrooms",
-    "teacherId"   integer                                              not null
-        constraint course_teacher_id_fk
-            references "Teachers",
-    day           text,
-    time          text,
-    "lessonId"    integer
-        constraint courses_lessons_id_fk
-            references "Lessons"
-);
-
-create table "StudentLessons"
-(
-    id            serial
-        constraint studentlessons_pk
-            primary key,
-    "lessonId"    integer           not null,
-    "studentId"   integer           not null
-        constraint studentlessons_students_id_fk
-            references "Students",
-    "studentYear" integer           not null,
-    grade         integer default 0 not null
-);
 
 create table "Years"
 (
@@ -102,3 +38,87 @@ create table "Years"
 create unique index years_name_uindex
     on "Years" (name);
 
+create table "Students"
+(
+    id       integer not null
+        constraint student_pk
+            primary key
+        constraint student_user_id_fk
+            references "Users",
+    "yearId" integer not null
+        constraint students_years_id_fk
+            references "Years"
+);
+
+create table "StudentLessons"
+(
+    id          serial
+        constraint studentlessons_pk
+            primary key,
+    "lessonId"  integer not null,
+    "studentId" integer not null
+        constraint studentlessons_students_id_fk
+            references "Students",
+    "yearId"    integer not null
+        constraint studentlessons_years_id_fk
+            references "Years",
+    grade       integer not null
+);
+
+create table "Professions"
+(
+    id   serial
+        constraint professions_pk
+            primary key,
+    name text not null
+);
+
+create unique index professions_name_uindex
+    on "Professions" (name);
+
+create table "Lessons"
+(
+    id             integer not null
+        constraint lesson_pk
+            primary key,
+    name           text    not null,
+    "professionId" integer not null
+        constraint lessons_professions_id_fk
+            references "Professions",
+    "yearId"       integer not null
+        constraint lessons_years_id_fk
+            references "Years"
+);
+
+create unique index lesson_name_uindex
+    on "Lessons" (name);
+
+create table "Teachers"
+(
+    id             integer not null
+        constraint teacher_pk
+            primary key
+        constraint teachers_users_id_fk
+            references "Users",
+    "professionId" integer not null
+        constraint teachers_professions_id_fk
+            references "Professions"
+);
+
+create table "Courses"
+(
+    id            integer not null
+        constraint course_pk
+            primary key,
+    "lessonId"    integer not null
+        constraint courses_lessons_id_fk
+            references "Lessons",
+    "teacherId"   integer not null
+        constraint courses_teachers_id_fk
+            references "Teachers",
+    "classroomId" integer not null
+        constraint courses_classrooms_id_fk
+            references "Classrooms",
+    day           text    not null,
+    time          text    not null
+);

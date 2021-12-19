@@ -35,9 +35,7 @@ public class lessonsPanel extends JFrame {
     private JButton removeButton;
     private JButton cancelButton;
 
-    private int selectedId;
-    private String selectedName;
-    private String selectedProfession;
+    private int selectedLessonId;
 
     public lessonsPanel() {
         this.professionList = new ArrayList<>();
@@ -59,7 +57,7 @@ public class lessonsPanel extends JFrame {
         ((JLabel) schoolYearComboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
 
         // Update professionList with distinct professions
-        panelController.updateList("SELECT DISTINCT(subject) FROM \"Teachers\"", professionList);
+        panelController.updateList("SELECT name FROM \"Professions\"", professionList);
 
         // Update yearList with year names
         panelController.updateList("SELECT name FROM \"Years\"", yearList);
@@ -77,19 +75,19 @@ public class lessonsPanel extends JFrame {
 
                 Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
                 PreparedStatement preparedStatement = connection.prepareStatement(
-                        isAddButton ? "INSERT INTO \"Lessons\"(name, subject, year) VALUES (?, ?, ?)" : "UPDATE \"Lessons\" SET name = ?, subject = ?, year = ? WHERE id = ?",
+                        isAddButton ? "INSERT INTO \"Lessons\"(name, \"professionId\", \"yearId\") VALUES (?, ?, ?)" : "UPDATE \"Lessons\" SET name = ?, \"professionId\" = ?, \"yearId\" = ? WHERE id = ?",
                         PreparedStatement.RETURN_GENERATED_KEYS);
 
-                String lesson = lessonNameTextField.getText();
-                String subject = Objects.requireNonNull(professionComboBox.getSelectedItem()).toString();
-                int year = databaseController.findYearId(Objects.requireNonNull(schoolYearComboBox.getSelectedItem()).toString());
+                String name = lessonNameTextField.getText();
+                int professionId = databaseController.findProfessionId(Objects.requireNonNull(professionComboBox.getSelectedItem()).toString());
+                int yearId = databaseController.findYearId(Objects.requireNonNull(schoolYearComboBox.getSelectedItem()).toString());
 
-                preparedStatement.setString(1, lesson);
-                preparedStatement.setString(2, subject);
-                preparedStatement.setInt(3, year);
+                preparedStatement.setString(1, name);
+                preparedStatement.setInt(2, professionId);
+                preparedStatement.setInt(3, yearId);
 
                 if (!isAddButton)
-                    preparedStatement.setInt(4, selectedId);
+                    preparedStatement.setInt(4, selectedLessonId);
 
                 preparedStatement.executeUpdate();
 
@@ -99,7 +97,7 @@ public class lessonsPanel extends JFrame {
                 preparedStatement.close();
                 connection.close();
 
-                System.out.printf("userId %d created lesson: %d (name: %s, subject: %s, year: %d)%n", User.getId(), id, lesson, subject, year);
+                System.out.printf("userId %d created lesson: %d (name: %s, profession: %s, year: %d)%n", User.getId(), id, name, professionId, yearId);
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
@@ -127,12 +125,10 @@ public class lessonsPanel extends JFrame {
 
             // Store the selected user id, email and type to a global variable
             try {
-                CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id, name, subject FROM \"Lessons\" WHERE name = '%s'", lessonNameTextField.getText()));
+                CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonNameTextField.getText()));
                 lessons.next();
 
-                selectedId = lessons.getInt("id");
-                selectedName = lessons.getString("name");
-                selectedProfession = lessons.getString("subject");
+                selectedLessonId = lessons.getInt("id");
             } catch (SQLException err) {
                 System.out.println("SQL Exception:");
                 err.printStackTrace();
@@ -203,13 +199,13 @@ public class lessonsPanel extends JFrame {
             schoolYearComboBox.setSelectedIndex(0);
         }
 
-        selectedId = -1;
-        selectedName = "";
-        selectedProfession = "";
+        selectedLessonId = -1;
     }
 
+    /**
+     * Enable or disable buttons based on class name text
+     */
     private void enableButtons() {
-        // Enable or disable buttons based on class name text
         if (!lessonNameTextField.getText().equals("")) {
             addButton.setEnabled(true);
             cancelButton.setEnabled(true);
@@ -226,8 +222,8 @@ public class lessonsPanel extends JFrame {
         // Update professions
         professionComboBox.removeAllItems();
 
-        for (String subject : professionList)
-            professionComboBox.addItem(subject);
+        for (String profession : professionList)
+            professionComboBox.addItem(profession);
 
         if (professionComboBox.getItemCount() > 1)
             professionComboBox.setSelectedIndex(1);
@@ -243,19 +239,17 @@ public class lessonsPanel extends JFrame {
     }
 
     private void updateLessons() {
-        // TODO: (Prionysis) Update table with lessons from the database
-
         IntStream.iterate(lessonsTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> lessonsTableModel.removeRow(i));
 
         try {
             Object[] row = new Object[3];
-            CachedRowSet lessons = databaseController.selectQuery("SELECT name, subject, year FROM \"Lessons\" ORDER BY name");
+            CachedRowSet lessons = databaseController.selectQuery("SELECT name, \"professionId\", \"yearId\" FROM \"Lessons\" ORDER BY name");
 
             // Add rows
             while (lessons.next()) {
                 row[0] = lessons.getString("name");
-                row[1] = lessons.getString("subject");
-                row[2] = databaseController.findYearName(lessons.getInt("year"));
+                row[1] = databaseController.findProfessionName(lessons.getInt("professionId"));
+                row[2] = databaseController.findYearName(lessons.getInt("yearId"));
 
                 lessonsTableModel.addRow(row);
             }

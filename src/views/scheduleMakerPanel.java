@@ -1,9 +1,10 @@
 package views;
 
 import com.github.lgooddatepicker.components.TimePicker;
-import controllers.panelController;
-import models.*;
 import controllers.databaseController;
+import controllers.panelController;
+import models.Database;
+import models.User;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
@@ -158,28 +159,19 @@ public class scheduleMakerPanel extends JFrame {
                 String courseTime = String.valueOf(scheduleTable.getValueAt(selectedRow, 3));
 
                 try {
-                    // Get the lessonId using the name of the lesson from the selected row
-                    CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
-                    lessons.next();
-                    int lessonId = lessons.getInt("id");
+                    // Get the lesson id using the name of the lesson from the selected row
+                    int lessonId = databaseController.selectFirstId(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonName));
 
-                    // Get the teacherId using the name of the lesson from the selected row
-                    CachedRowSet teachers = databaseController.selectQuery(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
-                    teachers.next();
-                    int teacherId = teachers.getInt("id");
+                    // Get the teacher id using the name of the lesson from the selected row
+                    int teacherId = databaseController.selectFirstId(String.format("SELECT id FROM \"Users\" WHERE name = '%s'", teacherName));
 
-                    // Get the classroomId using the name of the selected classroom
-                    CachedRowSet classrooms = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
-                    classrooms.next();
-                    int classroomId = classrooms.getInt("id");
+                    // Get the classroom id using the name of the selected classroom
+                    int classroomId = databaseController.selectFirstId(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
 
                     // Get the courseId using the data from the selected row
-                    CachedRowSet courses = databaseController.selectQuery(String.format("""
-                            SELECT id FROM "Courses"
-                            WHERE "lessonId" = '%d' AND "teacherId" = '%d' AND "classroomId" = '%d' AND day = '%s' AND time = '%s'""", lessonId, teacherId, classroomId, courseDay, courseTime
-                    ));
-                    courses.next();
-                    int courseId = courses.getInt("id");
+                    int courseId = databaseController.selectFirstId(String.format(
+                            "SELECT id FROM \"Courses\" WHERE \"lessonId\" = '%d' AND \"teacherId\" = '%d' AND \"classroomId\" = '%d' AND day = '%s' AND time = '%s'",
+                            lessonId, teacherId, classroomId, courseDay, courseTime));
 
                     // Delete the selected course from the database
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
@@ -255,10 +247,10 @@ public class scheduleMakerPanel extends JFrame {
             Object[] row = new Object[4];
 
             while (courses.next()) {
-                row[0] = courses.getString("\"Lessons\".name");
-                row[1] = courses.getString("\"Users\".name");
-                row[2] = courses.getString("\"Courses\".day");
-                row[3] = courses.getString("\"Courses\".time");
+                row[0] = courses.getString(2);
+                row[1] = courses.getString(3);
+                row[2] = courses.getString(4);
+                row[3] = courses.getString(5);
                 scheduleTableModel.addRow(row);
             }
         } catch (SQLException err) {

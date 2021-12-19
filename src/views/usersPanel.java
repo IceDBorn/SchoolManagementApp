@@ -74,7 +74,7 @@ public class usersPanel extends JFrame {
         userBirthDayPicker.setFormats(format);
 
         // Get all distinct professions from teachers and update professionlist
-        panelController.updateList("SELECT DISTINCT(subject) FROM \"Teachers\"", professionList);
+        panelController.updateList("SELECT name FROM \"Professions\"", professionList);
 
         // Get all year names and update yearList
         panelController.updateList("SELECT name FROM \"Years\"", yearList);
@@ -117,6 +117,16 @@ public class usersPanel extends JFrame {
                 // TODO: (Prionysis) Add new profession to the database
                 System.out.println(userDetailsComboBox.getSelectedIndex());
                 System.out.println("Add new profession");
+
+                // TODO: (Prionysis) Update professionlist or yearList when a new profession or year is added
+                boolean isTeacher = Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher");
+
+                if (isTeacher)
+                    // Update professionList when a new profession is added to the database
+                    panelController.updateList("SELECT name FROM \"Professions\"", professionList);
+                else
+                    // Update yearList when a new year is added to the database
+                    panelController.updateList("SELECT name FROM \"Years\"", yearList);
             } else {
                 try {
                     String email = emailTextField.getText();
@@ -126,18 +136,15 @@ public class usersPanel extends JFrame {
                     if (userExists && !selectedUserEmail.equals(email))
                         System.out.println("A user already exists with that email.");
                     else {
-                        String query;
                         boolean isAddButton = addButton.getText().equals("Add");
 
-                        if (isAddButton)
-                            query = "INSERT INTO \"Users\"(name, gender, birthday, \"isAdmin\", \"isTeacher\", email, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
-                        else
-                            query = "UPDATE \"Users\" SET name = ?, gender = ?, birthday = ?, \"isAdmin\" = ?, \"isTeacher\" = ?, email = ? WHERE id = ?";
-
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                        PreparedStatement preparedStatement = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
+                        PreparedStatement preparedStatement = connection.prepareStatement(isAddButton ?
+                                "INSERT INTO \"Users\"(name, gender, birthday, \"isAdmin\", \"isTeacher\", email, password) VALUES (?, ?, ?, ?, ?, ?, ?)" :
+                                "UPDATE \"Users\" SET name = ?, gender = ?, birthday = ?, \"isAdmin\" = ?, \"isTeacher\" = ?, email = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS);
 
                         String username = usernameTextField.getText();
+                        String details = Objects.requireNonNull(userDetailsComboBox.getSelectedItem()).toString();
                         Date birthday = new Date(userBirthDayPicker.getDate().getTime());
                         int gender = genderComboBox.getSelectedIndex();
                         boolean isTeacher = Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher");
@@ -157,8 +164,8 @@ public class usersPanel extends JFrame {
 
                         preparedStatement.executeUpdate();
 
-                        // Get the userId of the inserted or updated user
-                        int userId = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
+                        // Get the id of the inserted or updated user
+                        int id = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
                         preparedStatement.close();
 
                         // If it's a save button, check whether user was a student or a teacher and delete them from the corresponding table
@@ -170,17 +177,9 @@ public class usersPanel extends JFrame {
                         }
 
                         // Check whether the new user type is a student or a teacher and import them into the corresponding table
-                        preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, subject) VALUES (?, ?)" : "INSERT INTO \"Students\"(id, year) VALUES (?, ?)");
-                        preparedStatement.setInt(1, userId);
-
-                        // Get profession or year based on user type
-                        String details = Objects.requireNonNull(userDetailsComboBox.getSelectedItem()).toString();
-
-                        if (isTeacher)
-                            preparedStatement.setString(2, details);
-                        else
-                            preparedStatement.setInt(2, databaseController.findYearId(details));
-
+                        preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, \"professionId\") VALUES (?, ?)" : "INSERT INTO \"Students\"(id, \"yearId\") VALUES (?, ?)");
+                        preparedStatement.setInt(1, id);
+                        preparedStatement.setInt(2, isTeacher ? databaseController.findProfessionId(details) : databaseController.findYearId(details));
 
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
@@ -189,7 +188,7 @@ public class usersPanel extends JFrame {
                         System.out.printf("userId %d %s user: %d (type: %s, name: %s, gender: %s, birthday: %s, email: %s, admin: %s)%n",
                                 User.getId(),
                                 isAddButton ? "created" : "updated",
-                                userId,
+                                id,
                                 isTeacher ? "teacher" : "student",
                                 username,
                                 gender,
@@ -201,12 +200,6 @@ public class usersPanel extends JFrame {
                     System.out.println("SQL Exception:");
                     err.printStackTrace();
                 } finally {
-                    // Get all distinct professions from teachers and update professionlist
-                    panelController.updateList("SELECT DISTINCT(subject) FROM \"Teachers\"", professionList);
-
-                    // Get all year names and update yearList
-                    panelController.updateList("SELECT name FROM \"Years\"", yearList);
-
                     updateDetails(true);
                     updateUsers();
                     revertUIComponents();
@@ -298,12 +291,6 @@ public class usersPanel extends JFrame {
                 System.out.println("SQL Exception: ");
                 err.printStackTrace();
             } finally {
-                // Get all distinct professions from teachers and update professionlist
-                panelController.updateList("SELECT DISTINCT(subject) FROM \"Teachers\"", professionList);
-
-                // Get all year names and update yearList
-                panelController.updateList("SELECT name FROM \"Years\"", yearList);
-
                 updateUsers();
                 revertUIComponents();
             }
@@ -384,8 +371,8 @@ public class usersPanel extends JFrame {
         userDetailsComboBox.addItem("Add new");
 
         if (showProfessions) {
-            for (String subject : professionList)
-                userDetailsComboBox.addItem(subject);
+            for (String profession : professionList)
+                userDetailsComboBox.addItem(profession);
 
         } else {
             for (String year : yearList)
@@ -401,7 +388,7 @@ public class usersPanel extends JFrame {
 
         try {
             CachedRowSet users = databaseController.selectQuery("""
-                    SELECT name, email, gender, birthday, "isAdmin", "isTeacher", year, subject FROM "Users"
+                    SELECT name, email, gender, birthday, "isAdmin", "isTeacher", "yearId", "professionId" FROM "Users"
                     LEFT JOIN "Students" on "Users".id = "Students".id
                     LEFT JOIN "Teachers" on "Users".id = "Teachers".id
                     ORDER BY name""");
@@ -415,7 +402,7 @@ public class usersPanel extends JFrame {
                 row[0] = users.getString("name");
                 row[1] = users.getString("email");
                 row[2] = isTeacher ? "Teacher" : "Student";
-                row[3] = isTeacher ? users.getString("subject") : databaseController.findYearName(users.getInt("year"));
+                row[3] = isTeacher ? databaseController.findProfessionName(users.getInt("professionId")) : databaseController.findYearName(users.getInt("yearId"));
                 row[4] = users.getInt("gender") == 0 ? "Male" : "Female";
                 row[5] = users.getDate("birthday");
                 row[6] = users.getBoolean("isAdmin") ? "Yes" : "No";

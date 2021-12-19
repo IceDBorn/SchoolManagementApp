@@ -2,9 +2,9 @@ package models;
 
 public class User {
     private static int userId = -1;
+    private static int userSpecificField = -1;
     private static String username = "";
     private static String userEmail = "";
-    private static String userSpecificField = "";
     private static boolean isTeacher;
     private static boolean isAdmin;
 
@@ -32,11 +32,11 @@ public class User {
         User.userEmail = userEmail;
     }
 
-    public static String getSpecificField() {
+    public static int getSpecificField() {
         return userSpecificField;
     }
 
-    public static void setSpecificField(String userSpecificField) {
+    public static void setSpecificField(int userSpecificField) {
         User.userSpecificField = userSpecificField;
     }
 

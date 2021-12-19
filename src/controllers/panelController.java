@@ -1,12 +1,13 @@
 package controllers;
 
+import views.*;
+
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.table.DefaultTableModel;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
-import views.*;
 
 public class panelController {
     /**

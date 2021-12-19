@@ -9,7 +9,7 @@ public class userController {
     public static void Login(String email, String password) {
         try {
             CachedRowSet user = databaseController.selectQuery(String.format("""
-                    SELECT "Users".id, name, email, "isTeacher", "isAdmin", year, subject FROM "Users"
+                    SELECT "Users".id, name, email, "isTeacher", "isAdmin", "yearId", "professionId" FROM "Users"
                     LEFT JOIN "Students" on "Users".id = "Students".id
                     LEFT JOIN "Teachers" on "Users".id = "Teachers".id
                     WHERE email = '%s' AND password = '%s'""", email, password));
@@ -23,9 +23,9 @@ public class userController {
                 User.setAdmin(user.getBoolean("isAdmin"));
 
                 if (User.isTeacher())
-                    User.setSpecificField(user.getString("subject"));
+                    User.setSpecificField(user.getInt("professionId"));
                 else
-                    User.setSpecificField(databaseController.findYearName(user.getInt("year")));
+                    User.setSpecificField(user.getInt("yearId"));
 
                 System.out.printf("userId %d successfully logged in as a %s%s%n",
                         User.getId(), User.isTeacher() ? "teacher" : "student", User.isAdmin() ? " with admin rights" : "");
@@ -41,9 +41,9 @@ public class userController {
                 User.getId(), User.isTeacher() ? "teacher" : "student", User.isAdmin() ? " with admin rights" : "");
 
         User.setId(-1);
+        User.setSpecificField(-1);
         User.setName("");
         User.setEmail("");
-        User.setSpecificField("");
         User.setTeacher(false);
         User.setAdmin(false);
     }

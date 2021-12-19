@@ -27,6 +27,42 @@ public class databaseController {
     }
 
     /**
+     * Returns the very first row id of the specified sql query
+     */
+    public static int selectFirstId(String sql) throws SQLException {
+        Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+        Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        ResultSet resultSet = statement.executeQuery(sql);
+
+        resultSet.next();
+        int id = resultSet.getInt("id");
+
+        resultSet.close();
+        statement.close();
+        connection.close();
+
+        return id;
+    }
+
+    /**
+     * Returns the name of the specified profession id
+     */
+    public static String findProfessionName(int id) throws SQLException {
+        CachedRowSet professions = selectQuery(String.format("SELECT name FROM \"Professions\" WHERE id = '%d'", id));
+        professions.next();
+        return professions.getString("name");
+    }
+
+    /**
+     * Returns the id of the specified profession name
+     */
+    public static int findProfessionId(String name) throws SQLException {
+        CachedRowSet professions = selectQuery(String.format("SELECT id FROM \"Professions\" WHERE name = '%s'", name));
+        professions.next();
+        return professions.getInt("id");
+    }
+
+    /**
      * Returns the name of the specified year id
      */
     public static String findYearName(int id) throws SQLException {
