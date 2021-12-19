@@ -108,8 +108,8 @@ public class lessonsPanel extends JFrame {
                 connection.close();
 
                 fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
-                        + " created lesson (" + id + ") " + name + " with " + professionId + " as profession and "
-                        + yearId + " as year.");
+                        + (isAddButton ? " created " : " updated ") + " lesson (" + id + ") "
+                        + name + ".");
             } catch (SQLException | IOException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
