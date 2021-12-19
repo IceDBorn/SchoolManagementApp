@@ -1,8 +1,10 @@
 package views;
 
-import javax.swing.*;
-import controllers.*;
+import controllers.panelController;
+import controllers.userController;
 import models.User;
+
+import javax.swing.*;
 
 public class mainPanel extends JFrame {
     private JPanel mainPanel;
