@@ -62,12 +62,20 @@ public class mainPanel extends JFrame {
         });
 
         lessonsButton.addActionListener(action -> {
-            panelController.createLessonsPanel();
+            try {
+                panelController.createLessonsPanel();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             this.setVisible(false);
         });
 
         usersButton.addActionListener(action -> {
-            panelController.createUsersPanel();
+            try {
+                panelController.createUsersPanel();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             this.setVisible(false);
         });
     }

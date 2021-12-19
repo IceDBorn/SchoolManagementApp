@@ -11,6 +11,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -37,7 +38,7 @@ public class lessonsPanel extends JFrame {
 
     private int selectedLessonId;
 
-    public lessonsPanel() {
+    public lessonsPanel() throws IOException {
 
         add(lessonsPanel);
         setSize(1280, 720);

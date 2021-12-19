@@ -13,6 +13,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import java.io.IOException;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -47,7 +48,7 @@ public class usersPanel extends JFrame {
 
     private TitledBorder title;
 
-    public usersPanel() {
+    public usersPanel() throws IOException {
         this.professionList = new ArrayList<>();
         this.yearList = new ArrayList<>();
 
@@ -120,10 +121,22 @@ public class usersPanel extends JFrame {
 
                 if (isTeacher)
                     // Update professionList when a new profession is added to the database
-                    panelController.updateList("SELECT name FROM \"Professions\"", professionList, this);
+                {
+                    try {
+                        panelController.updateList("SELECT name FROM \"Professions\"", professionList, this);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
                 else
                     // Update yearList when a new year is added to the database
-                    panelController.updateList("SELECT name FROM \"Years\"", yearList, this);
+                {
+                    try {
+                        panelController.updateList("SELECT name FROM \"Years\"", yearList, this);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             } else {
                 try {
                     String email = emailTextField.getText();
