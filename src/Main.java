@@ -12,9 +12,8 @@ public class Main {
         UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialOceanicTheme()));
 
         SwingUtilities.invokeLater(() -> {
-            //loginPanel login = new loginPanel();
-            //login.setVisible(true);
-            panelController.createScheduleMakerPanel();
+            loginPanel login = new loginPanel();
+            login.setVisible(true);
     });
 }
 }
