@@ -177,6 +177,7 @@ public class classroomsPanel extends JFrame {
                 // Check how many classrooms exist using that classroomId
                 int count = databaseController.selectFirstIntColumn(String.format("SELECT COUNT(id) FROM \"Courses\" WHERE \"classroomId\" = '%d'", id));
 
+                // Check if the classroom is being used by a course and ask for deletion confirmation
                 if (count > 0) {
                     if (panelController.createConfirmationPanel(this) == JOptionPane.YES_OPTION) {
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());

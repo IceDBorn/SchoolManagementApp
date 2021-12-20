@@ -62,7 +62,7 @@ public class scheduleMakerPanel extends JFrame {
                 lessonsComboBox.addItem(lessons.getString("name"));
 
             // Select all teacher names and display them in teachersComboBox
-            CachedRowSet teachers = databaseController.selectQuery("SELECT name FROM \"Users\" INNER JOIN \"Teachers\" ON \"Users\".id = \"Teachers\".id");
+            CachedRowSet teachers = databaseController.selectQuery("SELECT name FROM \"Users\" WHERE \"isTeacher\" = true");
             while (teachers.next())
                 teachersComboBox.addItem(teachers.getString("name"));
 
@@ -110,9 +110,8 @@ public class scheduleMakerPanel extends JFrame {
                 int classroomId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroomName));
 
                 // Check if a course exists with the same classroom, day and time
-                CachedRowSet courses = databaseController.selectQuery(String.format("SELECT id FROM \"Courses\" WHERE \"classroomId\" = '%d' AND day = '%s' AND time = '%s'", classroomId, courseDay, courseTime));
-                courses.next();
-                boolean courseExists = courses.isBeforeFirst();
+                boolean courseExists = databaseController.selectQuery(String.format("SELECT id FROM \"Courses\" WHERE \"classroomId\" = '%d' AND day = '%s' AND time = '%s'",
+                        classroomId, courseDay, courseTime)).isBeforeFirst();
 
                 if (courseExists)
                     panelController.createErrorPanel("A course using this classroom at the given day and time already exists.", this, 500);
@@ -150,13 +149,13 @@ public class scheduleMakerPanel extends JFrame {
             } finally {
                 try {
                     updateCourses();
+                    panelController.fillEmptyRows(scheduleTableModel);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
 
-        // TODO: When deleting the bottom row, the above row has a white column
         // Remove the selected course from the database
         removeButton.addActionListener(action -> {
             // Get the selected row index
@@ -184,16 +183,35 @@ public class scheduleMakerPanel extends JFrame {
                         "SELECT id FROM \"Courses\" WHERE \"lessonId\" = '%d' AND \"teacherId\" = '%d' AND \"classroomId\" = '%d' AND day = '%s' AND time = '%s'",
                         lessonId, teacherId, classroomId, courseDay, courseTime));
 
-                // Delete the selected course from the database
-                Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE id = ?");
-                preparedStatement.setInt(1, courseId);
-                preparedStatement.executeUpdate();
-                preparedStatement.close();
-                connection.close();
+                // Check how many student lessons exist using that courseId
+                int count = databaseController.selectFirstIntColumn(String.format("SELECT COUNT(id) FROM \"StudentLessons\" WHERE \"courseId\" = '%d'", courseId));
 
-                fileController.saveFile("User (%d) %s deleted schedule entry (%d)".formatted(
-                        User.getId(), User.getName(), courseId));
+                // Check if the course is being used by a student lesson and ask for deletion confirmation
+                if (count > 0) {
+                    if (panelController.createConfirmationPanel(this) == JOptionPane.YES_OPTION) {
+                        Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                        PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" = ?");
+                        preparedStatement.setInt(1, courseId);
+                        preparedStatement.executeUpdate();
+
+                        preparedStatement.close();
+                        connection.close();
+
+                        fileController.saveFile("User (%d) %s deleted %d student lessons, by deleting schedule entry (%d).".formatted(
+                                User.getId(), User.getName(), count, courseId));
+                    }
+                } else {
+                    // Delete the selected course from the database
+                    Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                    PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE id = ?");
+                    preparedStatement.setInt(1, courseId);
+                    preparedStatement.executeUpdate();
+                    preparedStatement.close();
+                    connection.close();
+
+                    fileController.saveFile("User (%d) %s deleted schedule entry (%d)".formatted(
+                            User.getId(), User.getName(), courseId));
+                }
             } catch (SQLException | IOException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
@@ -243,7 +261,10 @@ public class scheduleMakerPanel extends JFrame {
         startTime.addActionListener(action -> setEndTime());
 
         scheduleTable.getSelectionModel().addListSelectionListener(action -> {
-            if (scheduleTable.getSelectedRow() != -1 && !scheduleTable.getValueAt(scheduleTable.getSelectedRow(), 0).toString().equals("")) {
+            // Get selected row index
+            int selectedRow = scheduleTable.getSelectedRow();
+
+            if (selectedRow != -1 && !scheduleTable.getValueAt(selectedRow, 0).toString().equals("")) {
                 editButton.setEnabled(true);
                 removeButton.setEnabled(true);
             } else {

@@ -176,6 +176,7 @@ public class lessonsPanel extends JFrame {
                 // Check how many lessons exist using that lessonId
                 int count = databaseController.selectFirstIntColumn(String.format("SELECT COUNT(id) FROM \"Courses\" WHERE \"lessonId\" = '%d'", id));
 
+                // Check if the lesson is being used by a course and ask for deletion confirmation
                 if (count > 0) {
                     if (panelController.createConfirmationPanel(this) == JOptionPane.YES_OPTION) {
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
