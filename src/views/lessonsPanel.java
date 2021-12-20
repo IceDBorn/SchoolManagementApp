@@ -12,6 +12,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -24,8 +25,6 @@ import java.util.Objects;
 import java.util.stream.IntStream;
 
 public class lessonsPanel extends JFrame {
-    private final ArrayList<String> professionList;
-    private final ArrayList<String> yearList;
     DefaultTableModel lessonsTableModel;
     private JPanel lessonsPanel;
     private JTextField lessonNameTextField;
@@ -41,12 +40,12 @@ public class lessonsPanel extends JFrame {
 
     private int selectedLessonId;
 
-    public lessonsPanel() throws IOException {
-
+    public lessonsPanel(Point location) throws IOException {
         add(lessonsPanel);
+        setTitle("Lessons");
         setSize(1280, 720);
         setResizable(false);
-        setLocationRelativeTo(null);
+        setLocation(location);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         // Customize table to have no border, disable cell editing and switch single row selection
@@ -59,7 +58,7 @@ public class lessonsPanel extends JFrame {
         ((JLabel) schoolYearComboBox.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
 
         // Update professionList from the professions table
-        this.professionList = new ArrayList<>();
+        ArrayList<String> professionList = new ArrayList<>();
         panelController.updateList("SELECT name FROM \"Professions\"", professionList, this);
         professionComboBox.removeAllItems();
 
@@ -67,7 +66,7 @@ public class lessonsPanel extends JFrame {
             professionComboBox.addItem(profession);
 
         // Update yearList from the years table
-        this.yearList = new ArrayList<>();
+        ArrayList<String> yearList = new ArrayList<>();
         panelController.updateList("SELECT name FROM \"Years\"", yearList, this);
         schoolYearComboBox.removeAllItems();
 
@@ -75,7 +74,7 @@ public class lessonsPanel extends JFrame {
             schoolYearComboBox.addItem(year);
 
         backButton.addActionListener(action -> {
-            panelController.createMainPanel();
+            panelController.createMainPanel(this.getLocation());
             this.setVisible(false);
         });
 

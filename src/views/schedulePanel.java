@@ -8,6 +8,7 @@ import models.User;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -20,16 +21,17 @@ public class schedulePanel extends JFrame {
     private JScrollPane scrollPane;
     private JButton backButton;
 
-    public schedulePanel() {
+    public schedulePanel(Point location) {
         add(schedulePanel);
+        setTitle("Schedule");
         setSize(1280, 720);
         setResizable(false);
-        setLocationRelativeTo(null);
+        setLocation(location);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         backButton.addActionListener(action -> {
-            panelController.createMainPanel();
+            panelController.createMainPanel(this.getLocation());
             this.setVisible(false);
         });
     }

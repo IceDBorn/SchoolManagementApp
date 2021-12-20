@@ -12,6 +12,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -36,11 +37,12 @@ public class classroomsPanel extends JFrame {
     private int selectedClassroomId;
     private String selectedClassroomName;
 
-    public classroomsPanel() {
+    public classroomsPanel(Point location) {
         add(classroomsPanel);
+        setTitle("Classrooms");
         setSize(1280, 720);
         setResizable(false);
-        setLocationRelativeTo(null);
+        setLocation(location);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         // Customize table to have no border, disable cell editing and switch single row selection
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
@@ -55,7 +57,7 @@ public class classroomsPanel extends JFrame {
 
         // Listeners
         backButton.addActionListener(action -> {
-            panelController.createMainPanel();
+            panelController.createMainPanel(this.getLocation());
             this.setVisible(false);
         });
 
