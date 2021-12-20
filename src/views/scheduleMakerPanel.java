@@ -75,7 +75,7 @@ public class scheduleMakerPanel extends JFrame {
             String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
-            panelController.createErrorPanel("Something went wrong.", this);
+            panelController.createErrorPanel("Something went wrong.", this, 220);
         }
 
         for (String time : Arrays.asList("8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00"))
@@ -114,7 +114,7 @@ public class scheduleMakerPanel extends JFrame {
                 boolean courseExists = courses.isBeforeFirst();
 
                 if (courseExists)
-                    panelController.createErrorPanel("A course using this classroom at the given day and time already exists.", this);
+                    panelController.createErrorPanel("A course using this classroom at the given day and time already exists.", this, 500);
                 else {
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
                     PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"Courses\"(\"lessonId\", \"teacherId\", \"classroomId\", day, time) VALUES (?, ?, ?, ?, ?)",
@@ -145,7 +145,7 @@ public class scheduleMakerPanel extends JFrame {
                     e.printStackTrace();
                 }
 
-                panelController.createErrorPanel("Something went wrong.", this);
+                panelController.createErrorPanel("Something went wrong.", this, 220);
             } finally {
                 try {
                     updateCourses();
@@ -203,7 +203,7 @@ public class scheduleMakerPanel extends JFrame {
                     e.printStackTrace();
                 }
 
-                panelController.createErrorPanel("Something went wrong.", this);
+                panelController.createErrorPanel("Something went wrong.", this, 220);
             } finally {
                 try {
                     updateCourses();
@@ -284,7 +284,7 @@ public class scheduleMakerPanel extends JFrame {
             String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
-            panelController.createErrorPanel("Something went wrong.", this);
+            panelController.createErrorPanel("Something went wrong.", this, 220);
         }
     }
 
@@ -321,7 +321,7 @@ public class scheduleMakerPanel extends JFrame {
             String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
-            panelController.createErrorPanel("Something went wrong.", this);
+            panelController.createErrorPanel("Something went wrong.", this, 220);
         } finally {
             panelController.fillEmptyRows(scheduleTableModel);
             scheduleTable.setModel(scheduleTableModel);

@@ -68,7 +68,7 @@ public class classroomsPanel extends JFrame {
                 boolean classroomExists = databaseController.selectQuery(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", name)).isBeforeFirst();
 
                 if (classroomExists && !selectedClassroomName.equals(name))
-                    panelController.createErrorPanel("A classroom already exists with that name.", this);
+                    panelController.createErrorPanel("A classroom with that name already exists.", this, 325);
                 else {
                     boolean isAddButton = addButton.getText().equals("Add");
 
@@ -105,7 +105,7 @@ public class classroomsPanel extends JFrame {
                     e.printStackTrace();
                 }
 
-                panelController.createErrorPanel("Something went wrong.", this);
+                panelController.createErrorPanel("Something went wrong.", this, 220);
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
@@ -143,7 +143,7 @@ public class classroomsPanel extends JFrame {
                     e.printStackTrace();
                 }
 
-                panelController.createErrorPanel("Something went wrong.", this);
+                panelController.createErrorPanel("Something went wrong.", this, 220);
             }
 
             // Change name and capacity to match the ones of the selected row
@@ -212,7 +212,7 @@ public class classroomsPanel extends JFrame {
                     e.printStackTrace();
                 }
 
-                panelController.createErrorPanel("Something went wrong.", this);
+                panelController.createErrorPanel("Something went wrong.", this, 220);
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
@@ -287,7 +287,7 @@ public class classroomsPanel extends JFrame {
             String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
-            panelController.createErrorPanel("Something went wrong.", this);
+            panelController.createErrorPanel("Something went wrong.", this, 220);
         } finally {
             panelController.fillEmptyRows(classroomsTableModel);
             classroomsTable.setModel(classroomsTableModel);

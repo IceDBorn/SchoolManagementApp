@@ -144,7 +144,7 @@ public class usersPanel extends JFrame {
 
                     // Check if a user already exists with the same email if the name has been changed
                     if (userExists && !selectedUserEmail.equals(email))
-                        panelController.createErrorPanel("A user with that email already exists", this);
+                        panelController.createErrorPanel("A user with that email already exists", this, 300);
                     else {
                         boolean isAddButton = addButton.getText().equals("Add");
 
@@ -208,7 +208,7 @@ public class usersPanel extends JFrame {
                         e.printStackTrace();
                     }
 
-                    panelController.createErrorPanel("Something went wrong.", this);
+                    panelController.createErrorPanel("Something went wrong.", this, 220);
                 } finally {
                     updateDetails(true);
                     try {
@@ -245,7 +245,7 @@ public class usersPanel extends JFrame {
                     e.printStackTrace();
                 }
 
-                panelController.createErrorPanel("Something went wrong.", this);
+                panelController.createErrorPanel("Something went wrong.", this, 220);
             }
 
             editButton.setEnabled(false);
@@ -339,7 +339,7 @@ public class usersPanel extends JFrame {
                     e.printStackTrace();
                 }
 
-                panelController.createErrorPanel("Something went wrong.", this);
+                panelController.createErrorPanel("Something went wrong.", this, 220);
             } finally {
                 try {
                     updateUsers();
@@ -469,7 +469,7 @@ public class usersPanel extends JFrame {
             String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
-            panelController.createErrorPanel("Something went wrong.", this);
+            panelController.createErrorPanel("Something went wrong.", this, 220);
         } finally {
             panelController.fillEmptyRows(usersTableModel);
             usersTable.setModel(usersTableModel);

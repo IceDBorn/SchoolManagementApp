@@ -88,7 +88,7 @@ public class gradesPanel extends JFrame {
                     e.printStackTrace();
                 }
 
-                panelController.createErrorPanel("Something went wrong.", this);
+                panelController.createErrorPanel("Something went wrong.", this, 220);
             }
         });
 
@@ -179,7 +179,7 @@ public class gradesPanel extends JFrame {
             String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
-            panelController.createErrorPanel("Something went wrong.", this);
+            panelController.createErrorPanel("Something went wrong.", this, 220);
         } finally {
             panelController.fillEmptyRows(infoTableModel);
             panelController.fillEmptyRows(gradeTableModel);
