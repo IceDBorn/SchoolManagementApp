@@ -71,7 +71,7 @@ public class schedulePanel extends JFrame {
             String message =  errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
-            panelController.createErrorPanel("Something went wrong.", this);
+            panelController.createErrorPanel("Something went wrong.", this, 220);
         } finally {
             panelController.fillEmptyRows(scheduleTableModel);
             scheduleTable.setModel(scheduleTableModel);

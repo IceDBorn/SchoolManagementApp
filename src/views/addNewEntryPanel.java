@@ -49,7 +49,7 @@ public class addNewEntryPanel extends JDialog {
                         "SELECT id FROM \"Professions\" WHERE name = '%s'" : "SELECT id FROM \"Years\" WHERE name = '%s'", name)).isBeforeFirst();
 
                 if (entryExists)
-                    panelController.createErrorPanel("A %s already exists with that name.".formatted(isProfession ? "profession" : "year"), this);
+                    panelController.createErrorPanel("A %s with that name already exists.".formatted(isProfession ? "profession" : "year"), this, isProfession ? 330 : 300);
                 else {
                     PreparedStatement preparedStatement = connection.prepareStatement(isProfession ?
                             "INSERT INTO \"Professions\"(name) VALUES (?)" : "INSERT INTO \"Years\"(name) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS);
@@ -74,7 +74,7 @@ public class addNewEntryPanel extends JDialog {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                panelController.createErrorPanel("Something went wrong.", this);
+                panelController.createErrorPanel("Something went wrong.", this, 220);
             } catch (IOException e) {
                 e.printStackTrace();
             }

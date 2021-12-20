@@ -33,14 +33,14 @@ public class userController {
 
                 fileController.saveFile("User (%d) %s logged in as %s%s".formatted(
                         User.getId(), User.getName(), User.isTeacher() ? "teacher" : "student", User.isAdmin() ? " with admin rights." : "."));
-            } else panelController.createErrorPanel("You've specified an invalid email or password.", panel);
+            } else panelController.createErrorPanel("You've specified an invalid email or password.", panel, 350);
         } catch (SQLException | IOException err) {
             StringWriter errors = new StringWriter();
             err.printStackTrace(new PrintWriter(errors));
             String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
-            panelController.createErrorPanel("Something went wrong.", panel);
+            panelController.createErrorPanel("Something went wrong.", panel, 220);
         }
     }
 

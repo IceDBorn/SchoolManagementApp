@@ -44,7 +44,7 @@ public class panelController {
             String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
-            panelController.createErrorPanel("Something went wrong.", panel);
+            createErrorPanel("Something went wrong.", panel, 220);
         }
     }
 
@@ -99,8 +99,8 @@ public class panelController {
         return JOptionPane.showConfirmDialog(panel, message, "Delete this entry?", JOptionPane.YES_NO_OPTION);
     }
 
-    public static void createErrorPanel(String message, Component panel) {
-        UIManager.put("OptionPane.minimumSize", new Dimension(350, 100));
+    public static void createErrorPanel(String message, Component panel, int width) {
+        UIManager.put("OptionPane.minimumSize", new Dimension(width, 100));
         JOptionPane.showMessageDialog(panel, message, "", JOptionPane.ERROR_MESSAGE);
     }
 }
