@@ -14,6 +14,7 @@
         </constraints>
         <properties>
           <alignmentX value="0.0"/>
+          <focusable value="false"/>
           <horizontalScrollBarPolicy value="31"/>
           <verticalScrollBarPolicy value="21"/>
         </properties>
@@ -79,11 +80,12 @@
           </grid>
         </constraints>
         <properties>
+          <focusable value="false"/>
           <verticalScrollBarPolicy value="22"/>
         </properties>
         <border type="none"/>
         <children>
-          <component id="6444f" class="javax.swing.JTable" binding="gradeTable" custom-create="true">
+          <component id="6444f" class="javax.swing.JTable" binding="gradesTable" custom-create="true">
             <constraints/>
             <properties/>
           </component>

@@ -1,14 +1,10 @@
 package views;
 
-// TODO: (IceDBorn) Make empty rows un-editable
-// TODO: (IceDBorn) Fix an error that occurs when trying to open this panel
-
 import controllers.databaseController;
 import controllers.fileController;
 import controllers.panelController;
 import models.Database;
 import models.User;
-
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -27,7 +23,7 @@ public class gradesPanel extends JFrame {
     private JScrollPane infoScrollPane;
     private JScrollPane gradeScrollPane;
     private JTable infoTable;
-    private JTable gradeTable;
+    private JTable gradesTable;
     private JButton backButton;
     private JButton saveButton;
 
@@ -40,6 +36,12 @@ public class gradesPanel extends JFrame {
 
         infoScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         gradeScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+        infoTable.setDefaultEditor(Object.class, null);
+        infoTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        gradesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        // Stop users from interacting with the table
+        infoTable.getTableHeader().setReorderingAllowed(false);
+        gradesTable.getTableHeader().setReorderingAllowed(false);
 
         // Sync tables scrolling
         infoScrollPane.getVerticalScrollBar().setModel(gradeScrollPane.getVerticalScrollBar().getModel());
@@ -54,7 +56,7 @@ public class gradesPanel extends JFrame {
                 // Loop through all the table rows in order to update them one by one.
                 for (int i = 0; i < infoTable.getRowCount(); i++) {
                     int studentId = Integer.parseInt(infoTable.getValueAt(i, 0).toString());
-                    int studentGrade = Integer.parseInt(gradeTable.getValueAt(i, 0).toString());
+                    int studentGrade = Integer.parseInt(gradesTable.getValueAt(i, 0).toString());
 
                     if (studentGrade <= 20 && studentGrade >= 0) {
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
@@ -85,6 +87,19 @@ public class gradesPanel extends JFrame {
 
                 panelController.createErrorPanel("Something went wrong.", this);
             }
+        });
+
+        gradesTable.getSelectionModel().addListSelectionListener(action -> {
+            infoTable.setRowSelectionInterval(gradesTable.getSelectedRow(), gradesTable.getSelectedRow());
+            if (gradesTable.getValueAt(gradesTable.getSelectedRow(), 0).toString().equals("")) {
+                gradesTable.setDefaultEditor(Object.class, null);
+            } else {
+                gradesTable.setDefaultEditor(Object.class, new DefaultCellEditor(new JTextField()));
+            }
+        });
+
+        infoTable.getSelectionModel().addListSelectionListener(action -> {
+            gradesTable.setRowSelectionInterval(infoTable.getSelectedRow(), infoTable.getSelectedRow());
         });
     }
 
@@ -121,11 +136,7 @@ public class gradesPanel extends JFrame {
         DefaultTableModel infoTableModel = new DefaultTableModel(infoTableColumns, 0);
         DefaultTableModel gradeTableModel = new DefaultTableModel(gradeTableColumns, 0);
         infoTable = new JTable(infoTableModel);
-        gradeTable = new JTable(gradeTableModel);
-        // Stop users from interacting with the table
-        infoTable.getTableHeader().setReorderingAllowed(false);
-        gradeTable.getTableHeader().setReorderingAllowed(false);
-        infoTable.setEnabled(false);
+        gradesTable = new JTable(gradeTableModel);
 
         try {
             CachedRowSet lessons = databaseController.selectQuery(query);
@@ -159,7 +170,7 @@ public class gradesPanel extends JFrame {
             panelController.fillEmptyRows(gradeTableModel);
 
             infoTable.setModel(infoTableModel);
-            gradeTable.setModel(gradeTableModel);
+            gradesTable.setModel(gradeTableModel);
         }
     }
 }
