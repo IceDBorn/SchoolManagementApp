@@ -7,6 +7,7 @@ import models.User;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import java.awt.*;
 import java.io.IOException;
 
 public class loginPanel extends JFrame {
@@ -15,11 +16,15 @@ public class loginPanel extends JFrame {
     private JPasswordField passwordField;
     private JButton loginButton;
 
-    public loginPanel() {
+    public loginPanel(Point location) {
         add(loginPanel);
         setSize(1280, 720);
         setResizable(false);
-        setLocationRelativeTo(null);
+        if (location == null) {
+            setLocationRelativeTo(null);
+        } else {
+            setLocation(location);
+        }
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         loginButton.addActionListener(action -> {
@@ -31,7 +36,7 @@ public class loginPanel extends JFrame {
                 e.printStackTrace();
             }
             if (User.getId() != -1) {
-                panelController.createMainPanel();
+                panelController.createMainPanel(this.getLocation());
                 this.setVisible(false);
             }
         });

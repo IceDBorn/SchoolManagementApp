@@ -5,6 +5,7 @@ import controllers.userController;
 import models.User;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 
 public class mainPanel extends JFrame {
@@ -17,11 +18,11 @@ public class mainPanel extends JFrame {
     private JButton lessonsButton;
     private JButton usersButton;
 
-    public mainPanel() {
+    public mainPanel(Point location) {
         add(mainPanel);
         setSize(1280, 720);
         setResizable(false);
-        setLocationRelativeTo(null);
+        setLocation(location);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         if (!User.isAdmin()) {
@@ -37,28 +38,28 @@ public class mainPanel extends JFrame {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            panelController.createLoginPanel();
+            panelController.createLoginPanel(this.getLocation());
             this.setVisible(false);
         });
 
         scheduleButton.addActionListener(action -> {
-            panelController.createSchedulePanel();
+            panelController.createSchedulePanel(this.getLocation());
             this.setVisible(false);
         });
 
         gradesButton.addActionListener(action -> {
-            panelController.createGradesPanel();
+            panelController.createGradesPanel(this.getLocation());
             this.setVisible(false);
         });
 
         classroomsButton.addActionListener(action -> {
-            panelController.createClassroomsPanel();
+            panelController.createClassroomsPanel(this.getLocation());
             this.setVisible(false);
         });
 
         scheduleMakerButton.addActionListener(action -> {
             try {
-                panelController.createScheduleMakerPanel();
+                panelController.createScheduleMakerPanel(this.getLocation());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -67,7 +68,7 @@ public class mainPanel extends JFrame {
 
         lessonsButton.addActionListener(action -> {
             try {
-                panelController.createLessonsPanel();
+                panelController.createLessonsPanel(this.getLocation());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -76,7 +77,7 @@ public class mainPanel extends JFrame {
 
         usersButton.addActionListener(action -> {
             try {
-                panelController.createUsersPanel();
+                panelController.createUsersPanel(this.getLocation());
             } catch (IOException e) {
                 e.printStackTrace();
             }

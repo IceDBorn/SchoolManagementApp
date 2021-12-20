@@ -10,6 +10,7 @@ import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -38,8 +39,19 @@ public class scheduleMakerPanel extends JFrame {
     private JComboBox<String> endTime;
     private DefaultTableModel scheduleTableModel;
 
-    public scheduleMakerPanel() throws IOException {
+    public scheduleMakerPanel(Point location) throws IOException {
+
+        add(coursesPanel);
+        setSize(1280, 720);
+        setResizable(false);
+        setLocation(location);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
         scheduleScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+        SpinnerNumberModel model = new SpinnerNumberModel();
+        model.setValue(1);
+        model.setMinimum(1);
+        model.setMaximum(99);
 
         // Fill the all available combo boxes
         try {
@@ -66,16 +78,6 @@ public class scheduleMakerPanel extends JFrame {
             panelController.createErrorPanel("Something went wrong.", this);
         }
 
-        add(coursesPanel);
-        setSize(1280, 720);
-        setResizable(false);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        SpinnerNumberModel model = new SpinnerNumberModel();
-        model.setValue(1);
-        model.setMinimum(1);
-        model.setMaximum(99);
-
         for (String time : Arrays.asList("8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00"))
             startTime.addItem(time);
 
@@ -83,7 +85,7 @@ public class scheduleMakerPanel extends JFrame {
             dayComboBox.addItem(day);
 
         backButton.addActionListener(action -> {
-            panelController.createMainPanel();
+            panelController.createMainPanel(this.getLocation());
             this.setVisible(false);
         });
 

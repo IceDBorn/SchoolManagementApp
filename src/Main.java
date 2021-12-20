@@ -1,5 +1,3 @@
-// TODO: Add a label or an alert box to each panel for errors, instead of showing them in the console.
-
 import controllers.panelController;
 import mdlaf.MaterialLookAndFeel;
 import mdlaf.themes.MaterialOceanicTheme;
@@ -10,6 +8,6 @@ public class Main {
         // Use material theme
         UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialOceanicTheme()));
         // Launch the login window
-        SwingUtilities.invokeLater(panelController::createLoginPanel);
+        SwingUtilities.invokeLater(() -> panelController.createLoginPanel(null));
     }
 }

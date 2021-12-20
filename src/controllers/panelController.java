@@ -48,43 +48,43 @@ public class panelController {
         }
     }
 
-    public static void createMainPanel() {
-        mainPanel main = new mainPanel();
+    public static void createMainPanel(Point location) {
+        mainPanel main = new mainPanel(location);
         main.setVisible(true);
     }
 
-    public static void createLoginPanel() {
-        loginPanel login = new loginPanel();
+    public static void createLoginPanel(Point location) {
+        loginPanel login = new loginPanel(location);
         login.setVisible(true);
     }
 
-    public static void createSchedulePanel() {
-        schedulePanel schedule = new schedulePanel();
+    public static void createSchedulePanel(Point location) {
+        schedulePanel schedule = new schedulePanel(location);
         schedule.setVisible(true);
     }
 
-    public static void createGradesPanel() {
-        gradesPanel grades = new gradesPanel();
+    public static void createGradesPanel(Point location) {
+        gradesPanel grades = new gradesPanel(location);
         grades.setVisible(true);
     }
 
-    public static void createClassroomsPanel() {
-        classroomsPanel classrooms = new classroomsPanel();
+    public static void createClassroomsPanel(Point location) {
+        classroomsPanel classrooms = new classroomsPanel(location);
         classrooms.setVisible(true);
     }
 
-    public static void createScheduleMakerPanel() throws IOException {
-        scheduleMakerPanel courses = new scheduleMakerPanel();
+    public static void createScheduleMakerPanel(Point location) throws IOException {
+        scheduleMakerPanel courses = new scheduleMakerPanel(location);
         courses.setVisible(true);
     }
 
-    public static void createLessonsPanel() throws IOException {
-        lessonsPanel lessons = new lessonsPanel();
+    public static void createLessonsPanel(Point location) throws IOException {
+        lessonsPanel lessons = new lessonsPanel(location);
         lessons.setVisible(true);
     }
 
-    public static void createUsersPanel() throws IOException {
-        usersPanel users = new usersPanel();
+    public static void createUsersPanel(Point location) throws IOException {
+        usersPanel users = new usersPanel(location);
         users.setVisible(true);
     }
 
