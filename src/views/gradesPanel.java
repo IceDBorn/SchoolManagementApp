@@ -105,6 +105,10 @@ public class gradesPanel extends JFrame {
                     public void editingStopped(ChangeEvent e) {
                         if (gradesTable.getValueAt(gradesTable.getSelectedRow(), 0).toString().equals("")) {
                             gradesTable.setValueAt(0, gradesTable.getSelectedRow(), 0);
+                        } else {
+                            gradesTable.setValueAt(gradesTable.getValueAt(gradesTable.getSelectedRow()
+                                    , 0).toString().replaceAll("[^\\d.]", "")
+                                    , gradesTable.getSelectedRow(), 0);
                         }
                     }
 
