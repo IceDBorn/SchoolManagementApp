@@ -28,6 +28,8 @@ public class schedulePanel extends JFrame {
         setResizable(false);
         setLocation(location);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setIconImage(new ImageIcon("res/school.png").getImage());
+
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         backButton.addActionListener(action -> {

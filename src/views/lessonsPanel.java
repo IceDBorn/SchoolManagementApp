@@ -47,6 +47,7 @@ public class lessonsPanel extends JFrame {
         setResizable(false);
         setLocation(location);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setIconImage(new ImageIcon("res/school.png").getImage());
 
         // Customize table to have no border, disable cell editing and switch single row selection
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));

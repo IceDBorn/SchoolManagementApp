@@ -25,6 +25,7 @@ public class mainPanel extends JFrame {
         setResizable(false);
         setLocation(location);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setIconImage(new ImageIcon("res/school.png").getImage());
 
         if (!User.isAdmin()) {
             classroomsButton.setVisible(false);

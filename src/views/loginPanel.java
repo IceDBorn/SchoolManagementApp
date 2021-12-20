@@ -27,6 +27,7 @@ public class loginPanel extends JFrame {
             setLocation(location);
         }
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setIconImage(new ImageIcon("res/school.png").getImage());
 
         loginButton.addActionListener(action -> {
             String email = usernameTextField.getText();

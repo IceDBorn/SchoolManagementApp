@@ -30,6 +30,7 @@ public class addNewEntryPanel extends JDialog {
         setResizable(false);
         setLocationRelativeTo(getParent());
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setIconImage(new ImageIcon("res/school.png").getImage());
         // Set modality type to block interaction with the main window, until this one is closed
         setModalityType(ModalityType.APPLICATION_MODAL);
 
