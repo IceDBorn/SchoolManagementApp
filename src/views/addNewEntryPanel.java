@@ -17,7 +17,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class addNewEntryPanel extends JFrame {
+public class addNewEntryPanel extends JDialog {
     private JPanel addNewEntryPanel;
     private JLabel messageLabel;
     private JTextField entryTextField;
@@ -30,6 +30,8 @@ public class addNewEntryPanel extends JFrame {
         setResizable(false);
         setLocationRelativeTo(getParent());
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        // Set modality type to block interaction with the main window, until this one is closed
+        setModalityType(ModalityType.APPLICATION_MODAL);
 
         if (isProfession)
             messageLabel.setText("Add new profession");
@@ -76,6 +78,7 @@ public class addNewEntryPanel extends JFrame {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            this.dispose();
         });
 
         // Listen for changes in the lesson name text
