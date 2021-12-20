@@ -8,6 +8,8 @@ import models.User;
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.IOException;
@@ -91,10 +93,24 @@ public class gradesPanel extends JFrame {
 
         gradesTable.getSelectionModel().addListSelectionListener(action -> {
             infoTable.setRowSelectionInterval(gradesTable.getSelectedRow(), gradesTable.getSelectedRow());
+
             if (gradesTable.getValueAt(gradesTable.getSelectedRow(), 0).toString().equals("")) {
                 gradesTable.setDefaultEditor(Object.class, null);
             } else {
                 gradesTable.setDefaultEditor(Object.class, new DefaultCellEditor(new JTextField()));
+                gradesTable.getDefaultEditor(Object.class).addCellEditorListener(new CellEditorListener() {
+                    @Override
+                    public void editingStopped(ChangeEvent e) {
+                        if (gradesTable.getValueAt(gradesTable.getSelectedRow(), 0).toString().equals("")) {
+                            gradesTable.setValueAt(0, gradesTable.getSelectedRow(), 0);
+                        }
+                    }
+
+                    @Override
+                    public void editingCanceled(ChangeEvent e) {
+                        // ignored
+                    }
+                });
             }
         });
 
