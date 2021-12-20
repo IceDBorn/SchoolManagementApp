@@ -122,12 +122,16 @@ public class usersPanel extends JFrame {
                 panelController.createAddNewEntryPanel(isTeacher);
 
                 try {
-                    if (isTeacher)
+                    if (isTeacher) {
                         // Update professionList when a new profession is added to the database
                         panelController.updateList("SELECT name FROM \"Professions\"", professionList, this);
-                    else
+                        updateDetails(true);
+                    }
+                    else {
                         // Update yearList when a new year is added to the database
                         panelController.updateList("SELECT name FROM \"Years\"", yearList, this);
+                        updateDetails(false);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
