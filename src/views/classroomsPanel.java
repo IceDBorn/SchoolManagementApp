@@ -39,6 +39,7 @@ public class classroomsPanel extends JFrame {
 
     public classroomsPanel(Point location) {
         add(classroomsPanel);
+        setTitle("Classrooms");
         setSize(1280, 720);
         setResizable(false);
         setLocation(location);

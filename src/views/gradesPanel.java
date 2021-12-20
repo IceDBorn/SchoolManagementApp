@@ -31,6 +31,7 @@ public class gradesPanel extends JFrame {
 
     public gradesPanel(Point location) {
         add(gradesPanel);
+        setTitle("Grades");
         setSize(1280, 720);
         setResizable(false);
         setLocation(location);
@@ -114,9 +115,7 @@ public class gradesPanel extends JFrame {
             }
         });
 
-        infoTable.getSelectionModel().addListSelectionListener(action -> {
-            gradesTable.setRowSelectionInterval(infoTable.getSelectedRow(), infoTable.getSelectedRow());
-        });
+        infoTable.getSelectionModel().addListSelectionListener(action -> gradesTable.setRowSelectionInterval(infoTable.getSelectedRow(), infoTable.getSelectedRow()));
     }
 
     private void createUIComponents() throws IOException {

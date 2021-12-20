@@ -54,6 +54,7 @@ public class usersPanel extends JFrame {
 
     public usersPanel(Point location) throws IOException {
         add(usersPanel);
+        setTitle("Users");
         setSize(1280, 720);
         setResizable(false);
         setLocation(location);

@@ -40,8 +40,8 @@ public class scheduleMakerPanel extends JFrame {
     private DefaultTableModel scheduleTableModel;
 
     public scheduleMakerPanel(Point location) throws IOException {
-
         add(coursesPanel);
+        setTitle("Schedule Maker");
         setSize(1280, 720);
         setResizable(false);
         setLocation(location);

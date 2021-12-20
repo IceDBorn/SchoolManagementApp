@@ -18,6 +18,7 @@ public class loginPanel extends JFrame {
 
     public loginPanel(Point location) {
         add(loginPanel);
+        setTitle("Login");
         setSize(1280, 720);
         setResizable(false);
         if (location == null) {

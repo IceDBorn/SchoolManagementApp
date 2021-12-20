@@ -20,6 +20,7 @@ public class mainPanel extends JFrame {
 
     public mainPanel(Point location) {
         add(mainPanel);
+        setTitle("Main Menu");
         setSize(1280, 720);
         setResizable(false);
         setLocation(location);

@@ -23,6 +23,7 @@ public class schedulePanel extends JFrame {
 
     public schedulePanel(Point location) {
         add(schedulePanel);
+        setTitle("Schedule");
         setSize(1280, 720);
         setResizable(false);
         setLocation(location);
