@@ -145,12 +145,9 @@ public class lessonsPanel extends JFrame {
             schoolYearComboBox.setSelectedItem(lessonsTable.getValueAt(selectedRow, 2));
             lessonsTable.clearSelection();
 
-            // Store the selected user id, email and type to a global variable
+            // Store the selected user id to a global variable
             try {
-                CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonNameTextField.getText()));
-                lessons.next();
-
-                selectedLessonId = lessons.getInt("id");
+                selectedLessonId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonNameTextField.getText()));
             } catch (SQLException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));

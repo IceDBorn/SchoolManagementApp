@@ -97,7 +97,7 @@ public class gradesPanel extends JFrame {
         if (User.isTeacher()) {
             infoTableColumns = new String[]{"ID", "Student", "Subject"};
             query = String.format("""
-                    SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
+                    SELECT DISTINCT("StudentLessons".id), "Users".name AS username, "Lessons".name AS lesson, "StudentLessons".grade
                     FROM "StudentLessons"
                     INNER JOIN "Courses" ON "StudentLessons"."courseId" = "Courses".id
                     INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
@@ -106,7 +106,7 @@ public class gradesPanel extends JFrame {
         } else {
             infoTableColumns = new String[]{"Subject"};
             query = String.format("""
-                    SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
+                    SELECT DISTINCT("StudentLessons".id), "Lessons".name AS lesson, "StudentLessons".grade
                     FROM "StudentLessons"
                     INNER JOIN "Courses" ON "StudentLessons"."courseId" = "Courses".id
                     INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
@@ -114,7 +114,7 @@ public class gradesPanel extends JFrame {
                     WHERE "studentId" = %d""", User.getId());
 
             // Hide save button if a student account is viewing the grades
-            saveButton.setVisible(false);
+            //saveButton.setVisible(false);
         }
 
         DefaultTableModel infoTableModel = new DefaultTableModel(infoTableColumns, 0);
@@ -132,14 +132,16 @@ public class gradesPanel extends JFrame {
             // Add rows
             Object[] infoRows = new Object[3];
             Object[] gradeRow = new Object[1];
-
             while (lessons.next()) {
-                if (User.isTeacher()) {
-                    infoRows[0] = lessons.getString("\"StudentLessons\".\"id\"");
-                    infoRows[1] = lessons.getString("\"Users\".name");
+                if (!User.isTeacher())
+                    infoRows[0] = lessons.getString("lesson");
+                else {
+                    infoRows[0] = lessons.getString("id");
+                    infoRows[1] = lessons.getString("username");
+                    infoRows[2] = lessons.getString("lesson");
                 }
-                infoRows[2] = lessons.getString("\"Lessons\".name");
-                gradeRow[0] = lessons.getInt("\"StudentLessons\".grade");
+
+                gradeRow[0] = lessons.getInt("grade");
 
                 infoTableModel.addRow(infoRows);
                 gradeTableModel.addRow(gradeRow);
