@@ -1,6 +1,7 @@
 package views;
 
 // TODO: (IceDBorn) Make empty rows un-editable
+// TODO: (IceDBorn) Fix an error that occurs when trying to open this panel
 
 import controllers.databaseController;
 import controllers.fileController;
@@ -63,8 +64,8 @@ public class gradesPanel extends JFrame {
                         preparedStatement.close();
                         connection.close();
 
-                        System.out.printf("userId %d modified studentId: %d grade to %d%n", User.getId(), studentId, studentGrade);
-                        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " modified (" + studentId + ") grade to " + studentGrade + ".");
+                        fileController.saveFile("User (%d) %s modified (%d) grade to %d.".formatted(
+                                User.getId(), User.getName(), studentId, studentGrade));
                     }
 
                     // Checks if the next row has a null id to end the loop
@@ -74,7 +75,7 @@ public class gradesPanel extends JFrame {
             } catch (SQLException | IOException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
-                String message =  errors.toString();
+                String message = errors.toString();
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -96,23 +97,24 @@ public class gradesPanel extends JFrame {
         if (User.isTeacher()) {
             infoTableColumns = new String[]{"ID", "Student", "Subject"};
             query = String.format("""
-                    SELECT DISTINCT("StudentLessons".id), "Users".name, "Lessons".name, "StudentLessons".grade
+                    SELECT DISTINCT("StudentLessons".id), "Users".name AS username, "Lessons".name AS lesson, "StudentLessons".grade
                     FROM "StudentLessons"
-                    INNER JOIN "Courses" ON "StudentLessons"."lessonId" = "Courses"."lessonId"
-                    INNER JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
+                    INNER JOIN "Courses" ON "StudentLessons"."courseId" = "Courses".id
+                    INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
                     INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
-                    WHERE "Courses"."teacherId" = %d""", User.getId());
+                    WHERE "teacherId" = %d""", User.getId());
         } else {
             infoTableColumns = new String[]{"Subject"};
             query = String.format("""
-                    SELECT "Lessons".name, "StudentLessons".grade
+                    SELECT DISTINCT("StudentLessons".id), "Lessons".name AS lesson, "StudentLessons".grade
                     FROM "StudentLessons"
-                    JOIN "Lessons" ON "StudentLessons"."lessonId" = "Lessons".id
-                    JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
+                    INNER JOIN "Courses" ON "StudentLessons"."courseId" = "Courses".id
+                    INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
+                    INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
                     WHERE "studentId" = %d""", User.getId());
 
             // Hide save button if a student account is viewing the grades
-            saveButton.setVisible(false);
+            //saveButton.setVisible(false);
         }
 
         DefaultTableModel infoTableModel = new DefaultTableModel(infoTableColumns, 0);
@@ -130,14 +132,16 @@ public class gradesPanel extends JFrame {
             // Add rows
             Object[] infoRows = new Object[3];
             Object[] gradeRow = new Object[1];
-
             while (lessons.next()) {
-                if (User.isTeacher()) {
-                    infoRows[0] = lessons.getString("\"StudentLessons\".\"id\"");
-                    infoRows[1] = lessons.getString("\"Users\".name");
+                if (!User.isTeacher())
+                    infoRows[0] = lessons.getString("lesson");
+                else {
+                    infoRows[0] = lessons.getString("id");
+                    infoRows[1] = lessons.getString("username");
+                    infoRows[2] = lessons.getString("lesson");
                 }
-                infoRows[2] = lessons.getString("\"Lessons\".name");
-                gradeRow[0] = lessons.getInt("\"StudentLessons\".grade");
+
+                gradeRow[0] = lessons.getInt("grade");
 
                 infoTableModel.addRow(infoRows);
                 gradeTableModel.addRow(gradeRow);
@@ -145,7 +149,7 @@ public class gradesPanel extends JFrame {
         } catch (SQLException err) {
             StringWriter errors = new StringWriter();
             err.printStackTrace(new PrintWriter(errors));
-            String message =  errors.toString();
+            String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
             panelController.createErrorPanel("Something went wrong.", this);

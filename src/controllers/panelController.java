@@ -41,7 +41,7 @@ public class panelController {
         } catch (SQLException err) {
             StringWriter errors = new StringWriter();
             err.printStackTrace(new PrintWriter(errors));
-            String message =  errors.toString();
+            String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
             panelController.createErrorPanel("Something went wrong.", panel);
@@ -95,12 +95,12 @@ public class panelController {
 
     public static int createConfirmationPanel(Component panel) {
         String message = "Any entries associated will be deleted too.";
-        UIManager.put("OptionPane.minimumSize",new Dimension(325,100));
+        UIManager.put("OptionPane.minimumSize", new Dimension(325, 100));
         return JOptionPane.showConfirmDialog(panel, message, "Delete this entry?", JOptionPane.YES_NO_OPTION);
     }
 
     public static void createErrorPanel(String message, Component panel) {
-        UIManager.put("OptionPane.minimumSize",new Dimension(350,100));
-        JOptionPane.showMessageDialog (panel, message, "", JOptionPane.ERROR_MESSAGE);
+        UIManager.put("OptionPane.minimumSize", new Dimension(350, 100));
+        JOptionPane.showMessageDialog(panel, message, "", JOptionPane.ERROR_MESSAGE);
     }
 }

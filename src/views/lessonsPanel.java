@@ -107,13 +107,12 @@ public class lessonsPanel extends JFrame {
                 preparedStatement.close();
                 connection.close();
 
-                fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
-                        + (isAddButton ? " created " : " updated ") + " lesson (" + id + ") "
-                        + name + ".");
+                fileController.saveFile("User (%d) %s%s lesson (%d) %s.".formatted(
+                        User.getId(), User.getName(), isAddButton ? " created " : " updated ", id, name));
             } catch (SQLException | IOException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
-                String message =  errors.toString();
+                String message = errors.toString();
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -146,16 +145,13 @@ public class lessonsPanel extends JFrame {
             schoolYearComboBox.setSelectedItem(lessonsTable.getValueAt(selectedRow, 2));
             lessonsTable.clearSelection();
 
-            // Store the selected user id, email and type to a global variable
+            // Store the selected user id to a global variable
             try {
-                CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonNameTextField.getText()));
-                lessons.next();
-
-                selectedLessonId = lessons.getInt("id");
+                selectedLessonId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonNameTextField.getText()));
             } catch (SQLException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
-                String message =  errors.toString();
+                String message = errors.toString();
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -171,17 +167,14 @@ public class lessonsPanel extends JFrame {
                 // Get the selected row index
                 int selectedRow = lessonsTable.getSelectedRow();
 
-                // Get the selected row's data
-                String name = lessonNameTextField.getText();
-                int professionId = databaseController.findProfessionId(Objects.requireNonNull(professionComboBox.getSelectedItem()).toString());
-                int yearId = databaseController.findYearId(Objects.requireNonNull(schoolYearComboBox.getSelectedItem()).toString());
+                // Get the selected lesson name
+                String name = lessonsTable.getValueAt(selectedRow, 0).toString();
 
-
-                // Get the id of the selected lesson
-                int id = databaseController.selectFirstId(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", name));
+                // Get the selected lesson id
+                int id = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", name));
 
                 // Check how many lessons exist using that lessonId
-                int count = databaseController.selectFirstId(String.format("SELECT COUNT(id) FROM \"Courses\" WHERE \"lessonId\" = '%d'", id));
+                int count = databaseController.selectFirstIntColumn(String.format("SELECT COUNT(id) FROM \"Courses\" WHERE \"lessonId\" = '%d'", id));
 
                 if (count > 0) {
                     if (panelController.createConfirmationPanel(this) == JOptionPane.YES_OPTION) {
@@ -193,8 +186,8 @@ public class lessonsPanel extends JFrame {
                         preparedStatement.close();
                         connection.close();
 
-                        fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName()
-                                + " deleted " + count + " courses, by deleting lesson (" + id + ") " + name + ".");
+                        fileController.saveFile("User (%d) %s deleted %d courses, by deleting lesson (%d) %s.".formatted(
+                                User.getId(), User.getName(), count, id, name));
                     }
                 } else {
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
@@ -205,13 +198,14 @@ public class lessonsPanel extends JFrame {
                     preparedStatement.close();
                     connection.close();
 
-                    fileController.saveFile("User " + "(" + User.getId() + ")" + " " + User.getName() + " deleted lesson (" + id + ") " + name + ".");
+                    fileController.saveFile("User (%d) %s deleted lesson (%d) %s.".formatted(
+                            User.getId(), User.getName(), id, name));
                 }
 
             } catch (SQLException | IOException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
-                String message =  errors.toString();
+                String message = errors.toString();
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -324,7 +318,7 @@ public class lessonsPanel extends JFrame {
         } catch (SQLException err) {
             StringWriter errors = new StringWriter();
             err.printStackTrace(new PrintWriter(errors));
-            String message =  errors.toString();
+            String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
             panelController.createErrorPanel("Something went wrong.", this);
