@@ -48,6 +48,7 @@ public class classroomsPanel extends JFrame {
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         classroomsTable.setDefaultEditor(Object.class, null);
         classroomsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        setIconImage(new ImageIcon("res/school.png").getImage());
 
         SpinnerNumberModel model = new SpinnerNumberModel();
         model.setValue(1);
