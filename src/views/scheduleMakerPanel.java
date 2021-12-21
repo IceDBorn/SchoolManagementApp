@@ -92,7 +92,6 @@ public class scheduleMakerPanel extends JFrame {
 
         // Add course based on the selected data
         addButton.addActionListener(action -> {
-            boolean isAddButton = addButton.getText().equals("Add");
             try {
                 String lessonName = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
                 String teacherName = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
@@ -116,9 +115,12 @@ public class scheduleMakerPanel extends JFrame {
                 if (courseExists)
                     panelController.createErrorPanel("A course using this classroom at the given day and time already exists.", this, 500);
                 else {
+                    boolean isAddButton = addButton.getText().equals("Add");
+
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                    PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"Courses\"(\"lessonId\", \"teacherId\", \"classroomId\", day, time) VALUES (?, ?, ?, ?, ?)",
-                            PreparedStatement.RETURN_GENERATED_KEYS);
+                    PreparedStatement preparedStatement = connection.prepareStatement(isAddButton ?
+                            "INSERT INTO \"Courses\"(\"lessonId\", \"teacherId\", \"classroomId\", day, time) VALUES (?, ?, ?, ?, ?)" :
+                            "DELETE FROM \"Courses\" WHERE \"lessonId\" = ? AND \"teacherId\" = ? AND \"classroomId\" = ? AND day = ? AND time = ?", PreparedStatement.RETURN_GENERATED_KEYS);
                     preparedStatement.setInt(1, lessonId);
                     preparedStatement.setInt(2, teacherId);
                     preparedStatement.setInt(3, classroomId);
@@ -126,7 +128,7 @@ public class scheduleMakerPanel extends JFrame {
                     preparedStatement.setString(5, courseTime);
                     preparedStatement.executeUpdate();
 
-                    // Get the id of the newly inserted course
+                    // Get the id of the inserted or deleted course
                     int id = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
                     preparedStatement.close();
@@ -149,7 +151,6 @@ public class scheduleMakerPanel extends JFrame {
             } finally {
                 try {
                     updateCourses();
-                    panelController.fillEmptyRows(scheduleTableModel);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -241,6 +242,7 @@ public class scheduleMakerPanel extends JFrame {
                 e.printStackTrace();
             }
         });
+
         teachersComboBox.addActionListener(action -> {
             try {
                 updateCourses();
@@ -248,6 +250,7 @@ public class scheduleMakerPanel extends JFrame {
                 e.printStackTrace();
             }
         });
+
         classroomComboBox.addActionListener(action -> {
             try {
                 updateCourses();
@@ -307,6 +310,9 @@ public class scheduleMakerPanel extends JFrame {
             fileController.saveFile("SQL Exception: " + message);
 
             panelController.createErrorPanel("Something went wrong.", this, 220);
+        } finally {
+            panelController.fillEmptyRows(scheduleTableModel);
+            scheduleTable.setModel(scheduleTableModel);
         }
     }
 
