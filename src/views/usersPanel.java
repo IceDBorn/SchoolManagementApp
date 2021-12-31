@@ -128,8 +128,7 @@ public class usersPanel extends JFrame {
                         // Update professionList when a new profession is added to the database
                         panelController.updateList("SELECT name FROM \"Professions\"", professionList, this);
                         updateDetails(true);
-                    }
-                    else {
+                    } else {
                         // Update yearList when a new year is added to the database
                         panelController.updateList("SELECT name FROM \"Years\"", yearList, this);
                         updateDetails(false);
@@ -146,57 +145,74 @@ public class usersPanel extends JFrame {
                     if (userExists && !selectedUserEmail.equals(email))
                         panelController.createErrorPanel("A user with that email already exists", this, 300);
                     else {
-                        boolean isAddButton = addButton.getText().equals("Add");
-
-                        Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                        PreparedStatement preparedStatement = connection.prepareStatement(isAddButton ?
-                                "INSERT INTO \"Users\"(name, gender, birthday, \"isAdmin\", \"isTeacher\", email, password) VALUES (?, ?, ?, ?, ?, ?, ?)" :
-                                "UPDATE \"Users\" SET name = ?, gender = ?, birthday = ?, \"isAdmin\" = ?, \"isTeacher\" = ?, email = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS);
-
                         String username = usernameTextField.getText();
                         String details = Objects.requireNonNull(userDetailsComboBox.getSelectedItem()).toString();
                         Date birthday = new Date(userBirthDayPicker.getDate().getTime());
+                        int id = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Users\" WHERE email = '%s'", email));
                         int gender = genderComboBox.getSelectedIndex();
                         boolean isTeacher = Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher");
                         boolean isAdmin = adminCheckBox.isSelected();
+                        boolean isAddButton = addButton.getText().equals("Add");
 
-                        preparedStatement.setString(1, username);
-                        preparedStatement.setInt(2, gender);
-                        preparedStatement.setDate(3, birthday);
-                        preparedStatement.setBoolean(4, isTeacher && isAdmin);
-                        preparedStatement.setBoolean(5, isTeacher);
-                        preparedStatement.setString(6, email);
+                        // Check how many courses or student lessons exist using that userId
+                        int count = databaseController.selectFirstIntColumn(String.format(isTeacher ?
+                                "SELECT COUNT(id) FROM \"Courses\" WHERE \"teacherId\" = '%d'" :
+                                "SELECT COUNT(id) FROM \"StudentLessons\" WHERE \"studentId\" = '%d'", id));
 
-                        if (isAddButton)
-                            preparedStatement.setString(7, String.valueOf(passwordField.getPassword()));
-                        else
-                            preparedStatement.setInt(7, selectedUserId);
+                        // Check if the user is being used by a course or a student lesson and ask for deletion confirmation
+                        if (count > 0) {
+                            if (panelController.createConfirmationPanel(this) == JOptionPane.YES_OPTION) {
+                                Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                                PreparedStatement preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "DELETE FROM \"Courses\" WHERE \"teacherId\" = ?" : "DELETE FROM \"StudentLessons\" WHERE \"studentId\" = ?");
+                                preparedStatement.setInt(1, id);
+                                preparedStatement.executeUpdate();
+                                preparedStatement.close();
+                                connection.close();
+                            }
+                        } else {
+                            Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                            PreparedStatement preparedStatement = connection.prepareStatement(isAddButton ?
+                                    "INSERT INTO \"Users\"(name, gender, birthday, \"isAdmin\", \"isTeacher\", email, password) VALUES (?, ?, ?, ?, ?, ?, ?)" :
+                                    "UPDATE \"Users\" SET name = ?, gender = ?, birthday = ?, \"isAdmin\" = ?, \"isTeacher\" = ?, email = ? WHERE id = ?");
 
-                        preparedStatement.executeUpdate();
+                            preparedStatement.setString(1, username);
+                            preparedStatement.setInt(2, gender);
+                            preparedStatement.setDate(3, birthday);
+                            preparedStatement.setBoolean(4, isTeacher && isAdmin);
+                            preparedStatement.setBoolean(5, isTeacher);
+                            preparedStatement.setString(6, email);
 
-                        // Get the id of the inserted or updated user
-                        int id = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
-                        preparedStatement.close();
+                            if (isAddButton)
+                                preparedStatement.setString(7, String.valueOf(passwordField.getPassword()));
+                            else
+                                preparedStatement.setInt(7, selectedUserId);
 
-                        // If it's a save button, check whether user was a student or a teacher and delete them from the corresponding table
-                        if (!isAddButton) {
-                            preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
-                            preparedStatement.setInt(1, selectedUserId);
                             preparedStatement.executeUpdate();
                             preparedStatement.close();
+
+                            // Check if it's a save button
+                            if (!isAddButton) {
+                                // Check if the user type is different from the previous one
+                                if (isTeacher != selectedUserIsTeacher) {
+                                    preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
+                                    preparedStatement.setInt(1, selectedUserId);
+                                } else {
+                                    preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "UPDATE \"Teachers\" SET \"professionId\" = ? WHERE id = ?" : "UPDATE \"Years\" SET \"yearId\" = ? WHERE id = ?");
+                                    preparedStatement.setInt(1, selectedUserIsTeacher ? databaseController.findProfessionId(details) : databaseController.findYearId(details));
+                                    preparedStatement.setInt(2, selectedUserId);
+                                }
+                            } else {
+                                // Import the user into their corresponding table type
+                                preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, \"professionId\") VALUES (?, ?)" : "INSERT INTO \"Students\"(id, \"yearId\") VALUES (?, ?)");
+                                preparedStatement.setInt(1, id);
+                                preparedStatement.setInt(2, isTeacher ? databaseController.findProfessionId(details) : databaseController.findYearId(details));
+                            }
+                            preparedStatement.executeUpdate();
+                            connection.close();
+
+                            fileController.saveFile("User (%d) %s%s user (%d) %s.".formatted(
+                                    User.getId(), User.getName(), isAddButton ? " created " : " updated ", id, username));
                         }
-
-                        // Check whether the new user type is a student or a teacher and import them into the corresponding table
-                        preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, \"professionId\") VALUES (?, ?)" : "INSERT INTO \"Students\"(id, \"yearId\") VALUES (?, ?)");
-                        preparedStatement.setInt(1, id);
-                        preparedStatement.setInt(2, isTeacher ? databaseController.findProfessionId(details) : databaseController.findYearId(details));
-
-                        preparedStatement.executeUpdate();
-                        preparedStatement.close();
-                        connection.close();
-
-                        fileController.saveFile("User (%d) %s%s user (%d) %s.".formatted(
-                                User.getId(), User.getName(), isAddButton ? " created " : " updated ", id, username));
                     }
                 } catch (SQLException | IOException err) {
                     StringWriter errors = new StringWriter();
@@ -291,7 +307,7 @@ public class usersPanel extends JFrame {
                 // Check whether the user is a teacher or not
                 boolean isTeacher = usersTable.getValueAt(selectedRow, 2).toString().equals("Teacher");
 
-                // Check how many courses exist using that userId
+                // Check how many courses or student lessons exist using that userId
                 int count = databaseController.selectFirstIntColumn(String.format(isTeacher ?
                         "SELECT COUNT(id) FROM \"Courses\" WHERE \"teacherId\" = '%d'" :
                         "SELECT COUNT(id) FROM \"StudentLessons\" WHERE \"studentId\" = '%d'", id));
@@ -313,7 +329,7 @@ public class usersPanel extends JFrame {
                 } else {
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
 
-                    // Check whether the selected user is a teacher or a student and delete them from the corresponding table
+                    // Delete the user from their corresponding table type
                     PreparedStatement preparedStatement = connection.prepareStatement(isTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
                     preparedStatement.setInt(1, id);
                     preparedStatement.executeUpdate();
