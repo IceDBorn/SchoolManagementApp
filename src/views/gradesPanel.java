@@ -5,7 +5,6 @@ import controllers.fileController;
 import controllers.panelController;
 import models.Database;
 import models.User;
-
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -60,20 +59,20 @@ public class gradesPanel extends JFrame {
             try {
                 // Loop through all the table rows in order to update them one by one.
                 for (int i = 0; i < infoTable.getRowCount(); i++) {
-                    int id = Integer.parseInt(infoTable.getValueAt(i, 0).toString());
-                    float grade = Float.parseFloat(gradesTable.getValueAt(i, 0).toString());
+                    int studentId = Integer.parseInt(infoTable.getValueAt(i, 0).toString());
+                    int studentGrade = Integer.parseInt(gradesTable.getValueAt(i, 0).toString());
 
-                    if (grade <= 20 && grade >= 0) {
+                    if (studentGrade <= 20 && studentGrade >= 0) {
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
                         PreparedStatement preparedStatement = connection.prepareStatement("UPDATE \"StudentLessons\" SET grade = ? WHERE id = ?");
-                        preparedStatement.setFloat(1, grade);
-                        preparedStatement.setInt(2, id);
+                        preparedStatement.setInt(1, studentGrade);
+                        preparedStatement.setInt(2, studentId);
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
                         connection.close();
 
-                        fileController.saveFile("User (%d) %s modified (%d) grade to %.1f.".formatted(
-                                User.getId(), User.getName(), id, grade));
+                        fileController.saveFile("User (%d) %s modified (%d) grade to %d.".formatted(
+                                User.getId(), User.getName(), studentId, studentGrade));
                     }
 
                     // Checks if the next row has a null id to end the loop
@@ -95,24 +94,22 @@ public class gradesPanel extends JFrame {
         });
 
         gradesTable.getSelectionModel().addListSelectionListener(action -> {
-            // Get selected row index
-            int selectedRow = gradesTable.getSelectedRow();
+            infoTable.setRowSelectionInterval(gradesTable.getSelectedRow(), gradesTable.getSelectedRow());
 
-            infoTable.setRowSelectionInterval(selectedRow, selectedRow);
-
-            if (gradesTable.getValueAt(gradesTable.getSelectedRow(), 0).toString().equals(""))
+            if (gradesTable.getValueAt(gradesTable.getSelectedRow(), 0).toString().equals("")) {
                 gradesTable.setDefaultEditor(Object.class, null);
-            else {
+            } else {
                 gradesTable.setDefaultEditor(Object.class, new DefaultCellEditor(new JTextField()));
                 gradesTable.getDefaultEditor(Object.class).addCellEditorListener(new CellEditorListener() {
                     @Override
                     public void editingStopped(ChangeEvent e) {
-                        String grade = gradesTable.getValueAt(selectedRow, 0).toString();
-
-                        if (grade.equals(""))
-                            gradesTable.setValueAt(0, selectedRow, 0);
-                        else
-                            gradesTable.setValueAt(grade.replaceAll("[^\\d.]", ""), selectedRow, 0);
+                        if (gradesTable.getValueAt(gradesTable.getSelectedRow(), 0).toString().equals("")) {
+                            gradesTable.setValueAt(0, gradesTable.getSelectedRow(), 0);
+                        } else {
+                            gradesTable.setValueAt(gradesTable.getValueAt(gradesTable.getSelectedRow()
+                                    , 0).toString().replaceAll("[^\\d.]", "")
+                                    , gradesTable.getSelectedRow(), 0);
+                        }
                     }
 
                     @Override
@@ -176,7 +173,7 @@ public class gradesPanel extends JFrame {
                     infoRows[2] = lessons.getString("lesson");
                 }
 
-                gradeRow[0] = lessons.getFloat("grade");
+                gradeRow[0] = lessons.getInt("grade");
 
                 infoTableModel.addRow(infoRows);
                 gradeTableModel.addRow(gradeRow);

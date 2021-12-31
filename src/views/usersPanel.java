@@ -119,6 +119,7 @@ public class usersPanel extends JFrame {
 
         addButton.addActionListener(action -> {
             if (userDetailsComboBox.getSelectedIndex() == 0) {
+                // TODO: (IceDBorn) Add profession addition panel
                 boolean isTeacher = Objects.requireNonNull(userTypeComboBox.getSelectedItem()).toString().equals("Teacher");
 
                 panelController.createAddNewEntryPanel(isTeacher);
