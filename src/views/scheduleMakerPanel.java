@@ -191,10 +191,18 @@ public class scheduleMakerPanel extends JFrame {
                 if (count > 0) {
                     if (panelController.createConfirmationPanel(this) == JOptionPane.YES_OPTION) {
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
-                        PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" = ?");
-                        preparedStatement.setInt(1, courseId);
-                        preparedStatement.executeUpdate();
 
+                        // Delete all student lessons associated with the selected course
+                        PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" IN (SELECT id FROM \"Courses\" WHERE id = ?)");
+                        preparedStatement.setInt(1, courseId);
+                        preparedStatement.addBatch();
+
+                        // Delete the selected course from the database
+                        preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE id = ?");
+                        preparedStatement.setInt(1, courseId);
+                        preparedStatement.addBatch();
+
+                        preparedStatement.executeBatch();
                         preparedStatement.close();
                         connection.close();
 
