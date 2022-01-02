@@ -40,7 +40,7 @@ public class schedulePanel extends JFrame {
 
     private void createUIComponents() throws IOException {
         // Add columns
-        String[] scheduleTableColumns = {"Classroom", "Subject", "Day", "Time"};
+        String[] scheduleTableColumns = {"Classroom", "Subject", "Day", "Starts", "Ends"};
         DefaultTableModel scheduleTableModel = new DefaultTableModel(scheduleTableColumns, 0);
         scheduleTable = new JTable(scheduleTableModel);
         // Stop users from interacting with the table
@@ -49,7 +49,7 @@ public class schedulePanel extends JFrame {
 
         try {
             ResultSet lessons = databaseController.selectQuery(String.format("""
-                    SELECT "Lessons".name AS lesson, "Classrooms".name AS classroom, "Courses".day, "Courses".time
+                    SELECT "Lessons".name AS lesson, "Classrooms".name AS classroom, day, "startTime", "endTime"
                     FROM "StudentLessons"
                     INNER JOIN "Courses" ON "StudentLessons"."courseId" = "Courses".id
                     INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
@@ -57,13 +57,14 @@ public class schedulePanel extends JFrame {
                     WHERE "StudentLessons"."studentId" = %d""", User.getId()));
 
             // Add rows
-            Object[] row = new Object[4];
+            Object[] row = new Object[5];
 
             while (lessons.next()) {
                 row[0] = lessons.getString("lesson");
                 row[1] = lessons.getString("classroom");
                 row[2] = lessons.getString("day");
-                row[3] = lessons.getString("time");
+                row[3] = lessons.getString("startTime");
+                row[4] = lessons.getString("endTime");
 
                 scheduleTableModel.addRow(row);
             }
