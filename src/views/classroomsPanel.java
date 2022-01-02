@@ -181,10 +181,18 @@ public class classroomsPanel extends JFrame {
                 if (count > 0) {
                     if (panelController.createConfirmationPanel(this) == JOptionPane.YES_OPTION) {
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+
+                        // Delete all courses associated with the selected classroom
                         PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE \"classroomId\" = ?");
+                        preparedStatement.setInt(1, id);
+                        preparedStatement.addBatch();
+
+                        // Delete the selected classroom from the database
+                        preparedStatement = connection.prepareStatement("DELETE FROM \"Classrooms\" WHERE id = ?");
                         preparedStatement.setInt(1, id);
                         preparedStatement.executeUpdate();
 
+                        preparedStatement.executeBatch();
                         preparedStatement.close();
                         connection.close();
 
@@ -193,6 +201,8 @@ public class classroomsPanel extends JFrame {
                     }
                 } else {
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+
+                    // Delete the selected classroom from the database
                     PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Classrooms\" WHERE id = ?");
                     preparedStatement.setInt(1, id);
                     preparedStatement.executeUpdate();
