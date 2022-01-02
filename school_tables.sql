@@ -105,7 +105,8 @@ create table "Courses"
         constraint courses_classrooms_id_fk
             references "Classrooms",
     day           text    not null,
-    time          text    not null
+    "startTime"   text    not null,
+    "endTime"     text
 );
 
 create table "StudentLessons"
