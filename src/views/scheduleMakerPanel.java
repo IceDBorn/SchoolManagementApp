@@ -469,5 +469,7 @@ public class scheduleMakerPanel extends JFrame {
         dayComboBox.setSelectedIndex(0);
         startTime.setSelectedIndex(0);
         endTime.setSelectedIndex(0);
+        addButton.setText("Add");
+        scheduleTable.setEnabled(true);
     }
 }
