@@ -85,7 +85,7 @@ public class databaseController {
      */
     public static int getInsertedRowId(ResultSet resultSet) throws SQLException {
         resultSet.next();
-        int insertedId = resultSet.getInt("id");
+        int insertedId = resultSet.getInt(1);
         resultSet.close();
 
         return insertedId;
