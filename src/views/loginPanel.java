@@ -21,22 +21,25 @@ public class loginPanel extends JFrame {
         setTitle("Login");
         setSize(1280, 720);
         setResizable(false);
-        if (location == null) {
+
+        if (location == null)
             setLocationRelativeTo(null);
-        } else {
+        else
             setLocation(location);
-        }
+
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setIconImage(new ImageIcon("res/school.png").getImage());
 
         loginButton.addActionListener(action -> {
             String email = usernameTextField.getText();
             String password = String.valueOf(passwordField.getPassword());
+
             try {
                 userController.Login(email, password, this);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             if (User.getId() != -1) {
                 panelController.createMainPanel(this.getLocation());
                 this.setVisible(false);

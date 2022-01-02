@@ -84,6 +84,7 @@ public class gradesPanel extends JFrame {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
                 String message = errors.toString();
+
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -100,7 +101,7 @@ public class gradesPanel extends JFrame {
 
             infoTable.setRowSelectionInterval(selectedRow, selectedRow);
 
-            if (gradesTable.getValueAt(gradesTable.getSelectedRow(), 0).toString().equals(""))
+            if (gradesTable.getValueAt(selectedRow, 0).toString().equals(""))
                 gradesTable.setDefaultEditor(Object.class, null);
             else {
                 gradesTable.setDefaultEditor(Object.class, new DefaultCellEditor(new JTextField()));

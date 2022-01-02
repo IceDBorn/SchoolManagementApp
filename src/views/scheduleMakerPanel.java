@@ -209,14 +209,13 @@ public class scheduleMakerPanel extends JFrame {
                         // Delete all student lessons associated with the selected course
                         PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" IN (SELECT id FROM \"Courses\" WHERE id = ?)");
                         preparedStatement.setInt(1, courseId);
-                        preparedStatement.addBatch();
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
 
                         // Delete the selected course from the database
                         preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE id = ?");
                         preparedStatement.setInt(1, courseId);
-                        preparedStatement.addBatch();
-
-                        preparedStatement.executeBatch();
+                        preparedStatement.executeUpdate();
                         preparedStatement.close();
                         connection.close();
 
@@ -398,9 +397,9 @@ public class scheduleMakerPanel extends JFrame {
         // Remove all rows
         IntStream.iterate(scheduleTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> scheduleTableModel.removeRow(i));
 
-        String teacherName = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
-        String lessonName = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
-        String classroomName = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
+        String teacher = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
+        String lesson = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
+        String classroom = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
 
         try {
             CachedRowSet courses = databaseController.selectQuery(String.format("""
@@ -409,7 +408,7 @@ public class scheduleMakerPanel extends JFrame {
                     INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id
                     INNER JOIN "Users" ON "Courses"."teacherId" = "Users".id
                     INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
-                    WHERE "Users".name = '%s' AND "Lessons"."name" = '%s' AND "Classrooms".name = '%s'""", teacherName, lessonName, classroomName));
+                    WHERE "Users".name = '%s' AND "Lessons"."name" = '%s' AND "Classrooms".name = '%s'""", teacher, lesson, classroom));
 
             // Add rows
             Object[] row = new Object[6];
@@ -437,15 +436,20 @@ public class scheduleMakerPanel extends JFrame {
     }
 
     private void enableButtons() {
-        addButton.setEnabled(lessonsComboBox.getSelectedItem() != null && teachersComboBox.getSelectedItem() != null
-                             && classroomComboBox.getSelectedItem() != null && dayComboBox.getSelectedItem() != null
-                             && startTime.getSelectedItem() != null && endTime.getSelectedItem() != null);
+        addButton.setEnabled(
+                lessonsComboBox.getSelectedItem() != null
+                && teachersComboBox.getSelectedItem() != null
+                && classroomComboBox.getSelectedItem() != null
+                && dayComboBox.getSelectedItem() != null
+                && startTime.getSelectedItem() != null
+                && endTime.getSelectedItem() != null);
     }
 
     // Fill end time combobox with items coming after start time combobox selected item
     private void setEndTime() {
         endTime.removeAllItems();
         startTime.getSelectedIndex();
+
         for (int i = startTime.getSelectedIndex() + 1; i < startTime.getItemCount(); i++)
             endTime.addItem(startTime.getItemAt(i));
 
