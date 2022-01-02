@@ -156,7 +156,7 @@ public class usersPanel extends JFrame {
                         int count = 0;
 
                         if (!isAddButton)
-                            count = databaseController.selectFirstIntColumn(String.format(isTeacher ?
+                            count = databaseController.selectFirstIntColumn(String.format(selectedUserIsTeacher ?
                                     "SELECT COUNT(id) FROM \"Courses\" WHERE \"teacherId\" = '%d'" :
                                     "SELECT COUNT(id) FROM \"StudentLessons\" WHERE \"studentId\" = '%d'", selectedUserId));
 
@@ -166,15 +166,13 @@ public class usersPanel extends JFrame {
                                 Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
                                 PreparedStatement preparedStatement;
 
-                                // If the selected user is a teacher, delete all student lessons associated with the selected teacher's courses
-                                if (!isTeacher) {
-                                    preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" IN (SELECT id FROM \"Courses\" WHERE \"teacherId\" = ?)");
-                                    preparedStatement.setInt(1, selectedUserId);
-                                    preparedStatement.addBatch();
-                                }
+                                // Delete all student lessons associated with the selected teacher's courses
+                                preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" IN (SELECT id FROM \"Courses\" WHERE \"teacherId\" = ?)");
+                                preparedStatement.setInt(1, selectedUserId);
+                                preparedStatement.addBatch();
 
                                 // Delete all courses or student lessons associated with the user
-                                preparedStatement = connection.prepareStatement(isTeacher ? "DELETE FROM \"Courses\" WHERE \"teacherId\" = ?" : "DELETE FROM \"StudentLessons\" WHERE \"studentId\" = ?");
+                                preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "DELETE FROM \"Courses\" WHERE \"teacherId\" = ?" : "DELETE FROM \"StudentLessons\" WHERE \"studentId\" = ?");
                                 preparedStatement.setInt(1, selectedUserId);
                                 preparedStatement.addBatch();
 
@@ -189,6 +187,8 @@ public class usersPanel extends JFrame {
                             if (isTeacher != selectedUserIsTeacher) {
                                 preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
                                 preparedStatement.setInt(1, selectedUserId);
+                                preparedStatement.executeUpdate();
+                                preparedStatement.close();
                             }
 
                             preparedStatement = connection.prepareStatement(isAddButton ?
@@ -353,11 +353,9 @@ public class usersPanel extends JFrame {
                         PreparedStatement preparedStatement;
 
                         // If the selected user is a teacher, delete all student lessons associated with the selected teacher's courses
-                        if (!isTeacher) {
-                            preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" IN (SELECT id FROM \"Courses\" WHERE \"teacherId\" = ?)");
-                            preparedStatement.setInt(1, id);
-                            preparedStatement.addBatch();
-                        }
+                        preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" IN (SELECT id FROM \"Courses\" WHERE \"teacherId\" = ?)");
+                        preparedStatement.setInt(1, id);
+                        preparedStatement.addBatch();
 
                         // Check whether the selected user is a teacher or a student and delete them from the corresponding table
                         preparedStatement = connection.prepareStatement(isTeacher ? "DELETE FROM \"Courses\" WHERE \"teacherId\" = ?" : "DELETE FROM \"StudentLessons\" WHERE \"studentId\" = ?");
@@ -378,15 +376,15 @@ public class usersPanel extends JFrame {
                     // Delete the user from their corresponding table type
                     preparedStatement = connection.prepareStatement(isTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
                     preparedStatement.setInt(1, id);
-                    preparedStatement.addBatch();
+                    preparedStatement.executeUpdate();
+                    preparedStatement.close();
 
                     // Delete the user from the database
                     preparedStatement = connection.prepareStatement("DELETE FROM \"Users\" WHERE id = ?");
                     preparedStatement.setInt(1, id);
-                    preparedStatement.addBatch();
-
-                    preparedStatement.executeBatch();
+                    preparedStatement.executeUpdate();
                     preparedStatement.close();
+
                     connection.close();
 
                     fileController.saveFile("User (%d) %s deleted user (%d).".formatted(
