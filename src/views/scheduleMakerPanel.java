@@ -155,6 +155,7 @@ public class scheduleMakerPanel extends JFrame {
                     e.printStackTrace();
                 }
             }
+            revertUIComponents();
         });
 
         // Remove the selected course from the database
@@ -241,6 +242,19 @@ public class scheduleMakerPanel extends JFrame {
             }
 
             scheduleTable.clearSelection();
+        });
+
+        editButton.addActionListener(action -> {
+            addButton.setText("Save");
+            editButton.setEnabled(false);
+            removeButton.setEnabled(false);
+            scheduleTable.setEnabled(false);
+
+            lessonsComboBox.setSelectedItem(scheduleTable.getValueAt(scheduleTable.getSelectedRow(), 0));
+            teachersComboBox.setSelectedItem(scheduleTable.getValueAt(scheduleTable.getSelectedRow(), 1));
+            dayComboBox.setSelectedItem(scheduleTable.getValueAt(scheduleTable.getSelectedRow(), 2));
+            startTime.setSelectedItem(scheduleTable.getValueAt(scheduleTable.getSelectedRow(), 3));
+            endTime.setSelectedItem(scheduleTable.getValueAt(scheduleTable.getSelectedRow(), 4));
         });
 
         lessonsComboBox.addActionListener(action -> {
@@ -378,5 +392,23 @@ public class scheduleMakerPanel extends JFrame {
             endTime.addItem(startTime.getItemAt(i));
 
         endTime.setEnabled(endTime.getItemCount() > 0);
+    }
+
+    private void revertUIComponents() {
+        if (lessonsComboBox.getItemCount() > 0) {
+            lessonsComboBox.setSelectedIndex(0);
+        }
+
+        if (teachersComboBox.getItemCount() > 0) {
+            teachersComboBox.setSelectedIndex(0);
+        }
+
+        if (classroomComboBox.getItemCount() > 0) {
+            classroomComboBox.setSelectedIndex(0);
+        }
+
+        dayComboBox.setSelectedIndex(0);
+        startTime.setSelectedIndex(0);
+        endTime.setSelectedIndex(0);
     }
 }
