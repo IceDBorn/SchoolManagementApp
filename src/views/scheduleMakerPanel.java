@@ -23,7 +23,8 @@ import java.util.Objects;
 import java.util.stream.IntStream;
 
 public class scheduleMakerPanel extends JFrame {
-    private final String[] scheduleTableColumns = {"Lesson", "Teacher", "Day", "Time"};
+    // TODO: (Prionysis) Change row completion code according to the newly added columns
+    private final String[] scheduleTableColumns = {"Lesson", "Teacher", "Classroom", "Day", "Starts", "Ends"};
     private JPanel coursesPanel;
     private JButton addButton;
     private JButton removeButton;
@@ -91,6 +92,7 @@ public class scheduleMakerPanel extends JFrame {
         });
 
         // Add course based on the selected data
+        // TODO: (Prionysis) Change code to save changes instead of just adding an entry
         addButton.addActionListener(action -> {
             try {
                 String lessonName = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
