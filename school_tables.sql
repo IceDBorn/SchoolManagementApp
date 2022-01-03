@@ -50,6 +50,18 @@ create table "Students"
             references "Years"
 );
 
+create table "StudentLessons"
+(
+    id          serial
+        constraint studentlessons_pk
+            primary key,
+    "courseId"  integer                      not null,
+    "studentId" integer                      not null
+        constraint studentlessons_students_id_fk
+            references "Students",
+    grade       double precision default 0.0 not null
+);
+
 create table "Professions"
 (
     id   serial
@@ -108,21 +120,3 @@ create table "Courses"
     "startTime"   text    not null,
     "endTime"     text
 );
-
-create table "StudentLessons"
-(
-    id          serial
-        constraint studentlessons_pk
-            primary key,
-    "courseId"  integer                      not null
-        constraint studentlessons_courses_id_fk
-            references "Courses",
-    "studentId" integer                      not null
-        constraint studentlessons_students_id_fk
-            references "Students",
-    "yearId"    integer                      not null
-        constraint studentlessons_years_id_fk
-            references "Years",
-    grade       double precision default 0.0 not null
-);
-

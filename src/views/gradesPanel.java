@@ -154,7 +154,7 @@ public class gradesPanel extends JFrame {
                     WHERE "studentId" = %d""", User.getId());
 
             // Hide save button if a student account is viewing the grades
-            //saveButton.setVisible(false);
+            saveButton.setVisible(false);
         }
 
         DefaultTableModel infoTableModel = new DefaultTableModel(infoTableColumns, 0);

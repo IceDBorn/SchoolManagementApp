@@ -142,6 +142,12 @@ public class scheduleMakerPanel extends JFrame {
                     int id = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
                     preparedStatement.close();
+
+                    // Upon creating a course, put all students of the same year into that course
+                    if (isAddButton) {
+
+                    }
+
                     connection.close();
 
                     fileController.saveFile("User (%d) %s%s schedule entry (%d).".formatted(
