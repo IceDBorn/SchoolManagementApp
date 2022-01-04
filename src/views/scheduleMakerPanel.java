@@ -138,14 +138,52 @@ public class scheduleMakerPanel extends JFrame {
 
                     preparedStatement.executeUpdate();
 
-                    // Get the id of the inserted or deleted course
+                    // Get the id of the inserted or updated course
                     int id = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
                     preparedStatement.close();
 
                     // Upon creating a course, put all students of the same year into that course
                     if (isAddButton) {
+                        // Gets the year of the inserted course
+                        int year = databaseController.selectFirstIntColumn(String.format("""
+                                SELECT "yearId" FROM "Courses" INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id WHERE "Courses".id = '%d'""", id));
 
+                        // Gets the classroom limit of the inserted course
+                        int count = databaseController.selectFirstIntColumn(String.format("""
+                                SELECT "limit" FROM "Courses" INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id WHERE "Courses".id = '%d'""", id));
+
+                        // Subtract the amount of users in a classroom from its limit to get the amount of available slots
+                        count -= databaseController.selectFirstIntColumn(String.format("""
+                                SELECT COUNT(*)
+                                FROM "Courses"
+                                INNER JOIN "StudentLessons" ON "Courses".id = "StudentLessons"."courseId"
+                                INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id
+                                WHERE "courseId" = '%d'""", id));
+
+                        // Add students to a classroom based on available slots
+                        if (count > 0) {
+                            // Get all students that are not in student lessons
+                            CachedRowSet students = databaseController.selectQuery(String.format("""
+                                    SELECT "studentId" as id, "Users".name as name
+                                    FROM "Students"
+                                    LEFT JOIN "StudentLessons" ON "Students".id = "StudentLessons"."studentId"
+                                    INNER JOIN "Users" ON "Users".id = "Students".id
+                                    WHERE "studentId" IS NULL AND "yearId" = '%d'
+                                    ORDER BY name
+                                    LIMIT '%d'""", year, count));
+
+                            while (students.next()) {
+                                preparedStatement = connection.prepareStatement("INSERT INTO \"StudentLessons\"(\"courseId\", \"studentId\") VALUES (?, ?)");
+                                preparedStatement.setInt(1, id);
+                                preparedStatement.setInt(2, students.getInt("id"));
+                                preparedStatement.addBatch();
+                            }
+
+                            preparedStatement.executeBatch();
+                            preparedStatement.close();
+                        } else
+                            panelController.createErrorPanel("There aren't any available classrooms to put the students in, create another course.", this, 500);
                     }
 
                     connection.close();
