@@ -120,3 +120,4 @@ create table "Courses"
     "startTime"   text    not null,
     "endTime"     text
 );
+
