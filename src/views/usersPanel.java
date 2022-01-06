@@ -221,7 +221,7 @@ public class usersPanel extends JFrame {
                                     preparedStatement.executeUpdate();
                                     preparedStatement.close();
 
-                                    // Import the user into their corresponding table type
+                                    // Insert the user into their corresponding table type
                                     preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, \"professionId\") VALUES (?, ?)" : "INSERT INTO \"Students\"(id, \"yearId\") VALUES (?, ?)");
                                     preparedStatement.setInt(1, id);
                                     preparedStatement.setInt(2, isTeacher ? databaseController.findProfessionId(details) : databaseController.findYearId(details));
@@ -235,7 +235,7 @@ public class usersPanel extends JFrame {
                                     preparedStatement.close();
                                 }
                             } else {
-                                // Import the user into their corresponding table type
+                                // Insert the user into their corresponding table type
                                 preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, \"professionId\") VALUES (?, ?)" : "INSERT INTO \"Students\"(id, \"yearId\") VALUES (?, ?)");
                                 preparedStatement.setInt(1, id);
                                 preparedStatement.setInt(2, isTeacher ? databaseController.findProfessionId(details) : databaseController.findYearId(details));
@@ -244,8 +244,7 @@ public class usersPanel extends JFrame {
 
                                 if (!isTeacher) {
                                     // Select all lessons for the current user's year
-                                    CachedRowSet lessons = databaseController.selectQuery(String.format("""
-                                            SELECT id FROM "Lessons" WHERE "yearId" = '%d'""", databaseController.findYearId(details)));
+                                    CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE \"yearId\" = '%d'", databaseController.findYearId(details)));
 
                                     // Loop through each lesson
                                     while (lessons.next()) {
@@ -258,24 +257,30 @@ public class usersPanel extends JFrame {
 
                                         // Loop through each course to find an available spot
                                         while (courses.next()) {
+                                            boolean courseAvailable = false;
                                             int courseId = courses.getInt("id");
                                             int limit = courses.getInt("limit");
-                                            CachedRowSet studentLessons = databaseController.selectQuery(String.format("""
-                                                    SELECT COUNT(id) as count FROM "StudentLessons" WHERE "courseId" = '%d'""", courseId));
+                                            CachedRowSet studentLessons = databaseController.selectQuery(String.format("SELECT COUNT(id) as count FROM \"StudentLessons\" WHERE \"courseId\" = '%d'", courseId));
 
                                             while (studentLessons.next()) {
                                                 int students = studentLessons.getInt("count");
 
                                                 // If there's an available spot in the course, insert the student into student lessons using that course
                                                 if (students < limit) {
-                                                    preparedStatement = connection.prepareStatement("""
-                                                            INSERT INTO "StudentLessons"("courseId", "studentId") VALUES (?, ?)""");
+                                                    preparedStatement = connection.prepareStatement("INSERT INTO \"StudentLessons\"(\"courseId\", \"studentId\") VALUES (?, ?)");
                                                     preparedStatement.setInt(1, courseId);
                                                     preparedStatement.setInt(2, id);
                                                     preparedStatement.executeUpdate();
                                                     preparedStatement.close();
+
+                                                    fileController.saveFile("Student (%d) %s has been added to schedule entry (%d).".formatted(id, username, courseId));
+                                                    courseAvailable = true;
+                                                    break;
                                                 }
                                             }
+
+                                            if (!courseAvailable)
+                                                panelController.createErrorPanel("There aren't any available courses for lesson (%d)".formatted(lessonId), this, 500);
                                         }
                                     }
                                 }
