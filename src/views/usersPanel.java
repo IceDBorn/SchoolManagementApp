@@ -177,7 +177,6 @@ public class usersPanel extends JFrame {
                                 preparedStatement.setInt(1, selectedUserId);
                                 preparedStatement.executeUpdate();
                                 preparedStatement.close();
-                                preparedStatement.close();
                                 connection.close();
                             }
                         } else {
@@ -242,6 +241,41 @@ public class usersPanel extends JFrame {
                                 preparedStatement.setInt(2, isTeacher ? databaseController.findProfessionId(details) : databaseController.findYearId(details));
                                 preparedStatement.executeUpdate();
                                 preparedStatement.close();
+
+                                if (!isTeacher) {
+                                    // Select all lessons for the current user's year
+                                    CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE \"yearId\" = '%d'", databaseController.findYearId(details)));
+
+                                    // Loop through each lesson
+                                    while (lessons.next()) {
+                                        int lessonId = lessons.getInt("id");
+                                        CachedRowSet courses = databaseController.selectQuery(String.format("""
+                                                SELECT "Courses".id as id, "limit"
+                                                FROM "Courses"
+                                                    INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id
+                                                WHERE "lessonId" = '%d'""", lessonId));
+
+                                        // Loop through each course to find an available spot
+                                        while (courses.next()) {
+                                            int courseId = courses.getInt("id");
+                                            int limit = courses.getInt("limit");
+                                            CachedRowSet studentLessons = databaseController.selectQuery("SELECT COUNT(id) as count FROM \"StudentLessons\" WHERE \"courseId\" = '%d'");
+
+                                            while (studentLessons.next()) {
+                                                int students = studentLessons.getInt("count");
+
+                                                // If there's an available spot in the course, insert the student into student lessons using that course
+                                                if (students < limit) {
+                                                    preparedStatement = connection.prepareStatement("INSERT INTO \"StudentLessons\"(\"courseId\", \"studentId\") VALUES (?, ?)");
+                                                    preparedStatement.setInt(1, courseId);
+                                                    preparedStatement.setInt(2, id);
+                                                    preparedStatement.executeUpdate();
+                                                    preparedStatement.close();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             connection.close();
