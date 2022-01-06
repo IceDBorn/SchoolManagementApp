@@ -167,7 +167,8 @@ public class usersPanel extends JFrame {
                                 PreparedStatement preparedStatement;
 
                                 // Delete all student lessons associated with the selected teacher's courses
-                                preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" IN (SELECT id FROM \"Courses\" WHERE \"teacherId\" = ?)");
+                                preparedStatement = connection.prepareStatement("""
+                                        DELETE FROM "StudentLessons" WHERE "courseId" IN (SELECT id FROM "Courses" WHERE "teacherId" = ?)""");
                                 preparedStatement.setInt(1, selectedUserId);
                                 preparedStatement.executeUpdate();
                                 preparedStatement.close();
@@ -193,7 +194,6 @@ public class usersPanel extends JFrame {
                             preparedStatement = connection.prepareStatement(isAddButton ?
                                     "INSERT INTO \"Users\"(name, gender, birthday, \"isAdmin\", \"isTeacher\", email, password) VALUES (?, ?, ?, ?, ?, ?, ?)" :
                                     "UPDATE \"Users\" SET name = ?, gender = ?, birthday = ?, \"isAdmin\" = ?, \"isTeacher\" = ?, email = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS);
-
                             preparedStatement.setString(1, username);
                             preparedStatement.setInt(2, gender);
                             preparedStatement.setDate(3, birthday);
@@ -244,7 +244,8 @@ public class usersPanel extends JFrame {
 
                                 if (!isTeacher) {
                                     // Select all lessons for the current user's year
-                                    CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE \"yearId\" = '%d'", databaseController.findYearId(details)));
+                                    CachedRowSet lessons = databaseController.selectQuery(String.format("""
+                                            SELECT id FROM "Lessons" WHERE "yearId" = '%d'""", databaseController.findYearId(details)));
 
                                     // Loop through each lesson
                                     while (lessons.next()) {
@@ -259,14 +260,16 @@ public class usersPanel extends JFrame {
                                         while (courses.next()) {
                                             int courseId = courses.getInt("id");
                                             int limit = courses.getInt("limit");
-                                            CachedRowSet studentLessons = databaseController.selectQuery("SELECT COUNT(id) as count FROM \"StudentLessons\" WHERE \"courseId\" = '%d'");
+                                            CachedRowSet studentLessons = databaseController.selectQuery(String.format("""
+                                                    SELECT COUNT(id) as count FROM "StudentLessons" WHERE "courseId" = '%d'""", courseId));
 
                                             while (studentLessons.next()) {
                                                 int students = studentLessons.getInt("count");
 
                                                 // If there's an available spot in the course, insert the student into student lessons using that course
                                                 if (students < limit) {
-                                                    preparedStatement = connection.prepareStatement("INSERT INTO \"StudentLessons\"(\"courseId\", \"studentId\") VALUES (?, ?)");
+                                                    preparedStatement = connection.prepareStatement("""
+                                                            INSERT INTO "StudentLessons"("courseId", "studentId") VALUES (?, ?)""");
                                                     preparedStatement.setInt(1, courseId);
                                                     preparedStatement.setInt(2, id);
                                                     preparedStatement.executeUpdate();
