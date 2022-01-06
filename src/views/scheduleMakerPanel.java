@@ -162,13 +162,13 @@ public class scheduleMakerPanel extends JFrame {
 
                         // Subtract the amount of users in a classroom from its limit to get the amount of available slots
                         count -= databaseController.selectFirstIntColumn(String.format("""
-                                SELECT COUNT(*)
+                                SELECT COUNT("StudentLessons".id)
                                 FROM "Courses"
                                     INNER JOIN "StudentLessons" ON "Courses".id = "StudentLessons"."courseId"
                                     INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id
                                 WHERE "courseId" = '%d'""", id));
 
-                        // Add students to a classroom based on available slots
+                        // Add students to the course based on available slots
                         if (count > 0) {
                             // Get all students that are not in a course with the same lesson
                             CachedRowSet students = databaseController.selectQuery(String.format("""
@@ -184,21 +184,25 @@ public class scheduleMakerPanel extends JFrame {
 
                             // Add each student to the inserted course
                             while (students.next()) {
+                                int studentId = students.getInt("id");
+
                                 preparedStatement = connection.prepareStatement("INSERT INTO \"StudentLessons\"(\"courseId\", \"studentId\") VALUES (?, ?)");
                                 preparedStatement.setInt(1, id);
-                                preparedStatement.setInt(2, students.getInt("id"));
-                                preparedStatement.addBatch();
-                            }
+                                preparedStatement.setInt(2, studentId);
 
-                            preparedStatement.executeBatch();
-                            preparedStatement.close();
+                                preparedStatement.executeUpdate();
+                                preparedStatement.close();
+
+                                fileController.saveFile("Student (%d) has been added to schedule entry (%d).".formatted(
+                                        studentId, id));
+                            }
                         } else
                             panelController.createErrorPanel("There aren't any available classrooms to put the students in, create another course.", this, 500);
 
                         connection.close();
 
-                        fileController.saveFile("User (%d) %s%s schedule entry (%d).".formatted(
-                                User.getId(), User.getName(), isAddButton ? " created " : " updated ", id));
+                        fileController.saveFile("Teacher (%d) %s %s schedule entry (%d).".formatted(
+                                User.getId(), User.getName(), isAddButton ? "created" : "updated", id));
                     }
                 }
             } catch (SQLException | IOException err) {
