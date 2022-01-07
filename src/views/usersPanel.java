@@ -248,6 +248,7 @@ public class usersPanel extends JFrame {
 
                                     // Loop through each lesson
                                     while (lessons.next()) {
+                                        boolean courseAvailable = false;
                                         int lessonId = lessons.getInt("id");
                                         CachedRowSet courses = databaseController.selectQuery(String.format("""
                                                 SELECT "Courses".id as id, "limit"
@@ -257,31 +258,26 @@ public class usersPanel extends JFrame {
 
                                         // Loop through each course to find an available spot
                                         while (courses.next()) {
-                                            boolean courseAvailable = false;
                                             int courseId = courses.getInt("id");
                                             int limit = courses.getInt("limit");
-                                            CachedRowSet studentLessons = databaseController.selectQuery(String.format("SELECT COUNT(id) as count FROM \"StudentLessons\" WHERE \"courseId\" = '%d'", courseId));
+                                            int students = databaseController.selectFirstIntColumn(String.format("SELECT COUNT(id) as count FROM \"StudentLessons\" WHERE \"courseId\" = '%d'", courseId));
 
-                                            while (studentLessons.next()) {
-                                                int students = studentLessons.getInt("count");
+                                            // If there's an available spot in the course, insert the student into student lessons using that course
+                                            if (students < limit) {
+                                                preparedStatement = connection.prepareStatement("INSERT INTO \"StudentLessons\"(\"courseId\", \"studentId\") VALUES (?, ?)");
+                                                preparedStatement.setInt(1, courseId);
+                                                preparedStatement.setInt(2, id);
+                                                preparedStatement.executeUpdate();
+                                                preparedStatement.close();
 
-                                                // If there's an available spot in the course, insert the student into student lessons using that course
-                                                if (students < limit) {
-                                                    preparedStatement = connection.prepareStatement("INSERT INTO \"StudentLessons\"(\"courseId\", \"studentId\") VALUES (?, ?)");
-                                                    preparedStatement.setInt(1, courseId);
-                                                    preparedStatement.setInt(2, id);
-                                                    preparedStatement.executeUpdate();
-                                                    preparedStatement.close();
-
-                                                    fileController.saveFile("Student (%d) %s has been added to schedule entry (%d).".formatted(id, username, courseId));
-                                                    courseAvailable = true;
-                                                    break;
-                                                }
+                                                fileController.saveFile("Student (%d) %s has been added to schedule entry (%d).".formatted(id, username, courseId));
+                                                courseAvailable = true;
+                                                break;
                                             }
-
-                                            if (!courseAvailable)
-                                                panelController.createErrorPanel("There aren't any available courses for lesson (%d)".formatted(lessonId), this, 500);
                                         }
+
+                                        if (!courseAvailable)
+                                            panelController.createErrorPanel("There aren't any available courses for lesson (%d)".formatted(lessonId), this, 500);
                                     }
                                 }
                             }
