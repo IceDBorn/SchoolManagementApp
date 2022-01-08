@@ -48,6 +48,7 @@ public class userController {
         fileController.saveFile("User (%d) %s logged out".formatted(
                 User.getId(), User.getName()));
 
+        // Reset user values
         User.setId(-1);
         User.setSpecificField(-1);
         User.setName("");

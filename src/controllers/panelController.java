@@ -48,6 +48,7 @@ public class panelController {
         }
     }
 
+    // Create panels
     public static void createMainPanel(Point location) {
         mainPanel main = new mainPanel(location);
         main.setVisible(true);
@@ -95,6 +96,7 @@ public class panelController {
 
     public static int createConfirmationPanel(Component panel) {
         String message = "Any entries associated will be deleted too.";
+        // Change panel dimensions to fit the message
         UIManager.put("OptionPane.minimumSize", new Dimension(325, 100));
         return JOptionPane.showConfirmDialog(panel, message, "Delete this entry?", JOptionPane.YES_NO_OPTION);
     }

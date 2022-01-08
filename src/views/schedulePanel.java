@@ -1,10 +1,5 @@
 package views;
 
-import controllers.databaseController;
-import controllers.fileController;
-import controllers.panelController;
-import models.User;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -14,6 +9,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import controllers.databaseController;
+import controllers.fileController;
+import controllers.panelController;
+import models.User;
 
 public class schedulePanel extends JFrame {
     private JTable scheduleTable;

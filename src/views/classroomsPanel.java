@@ -1,11 +1,5 @@
 package views;
 
-import controllers.databaseController;
-import controllers.fileController;
-import controllers.panelController;
-import models.Database;
-import models.User;
-
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,9 +15,14 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.stream.IntStream;
+import controllers.databaseController;
+import controllers.fileController;
+import controllers.panelController;
+import models.Database;
+import models.User;
 
 public class classroomsPanel extends JFrame {
-    DefaultTableModel classroomsTableModel;
+    private DefaultTableModel classroomsTableModel;
     private JPanel classroomsPanel;
     private JTextField classNameTextField;
     private JSpinner classCapacitySpinner;
@@ -39,9 +38,11 @@ public class classroomsPanel extends JFrame {
 
     public classroomsPanel(Point location) {
         add(classroomsPanel);
+        // Set window title
         setTitle("Classrooms");
         setSize(1280, 720);
         setResizable(false);
+        // Set window location based on previous window
         setLocation(location);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         // Customize table to have no border, disable cell editing and switch single row selection
@@ -50,6 +51,7 @@ public class classroomsPanel extends JFrame {
         classroomsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         setIconImage(new ImageIcon("res/school.png").getImage());
 
+        // Create new spinner model with a minimum of 1 and maximum of 99
         SpinnerNumberModel model = new SpinnerNumberModel();
         model.setValue(1);
         model.setMinimum(1);
@@ -57,11 +59,13 @@ public class classroomsPanel extends JFrame {
         classCapacitySpinner.setModel(model);
 
         // Listeners
+        // Return to the previous window and dispose this one by pressing the back button
         backButton.addActionListener(action -> {
             panelController.createMainPanel(this.getLocation());
             this.setVisible(false);
         });
 
+        // Add new classroom to the database
         addButton.addActionListener(action -> {
             try {
                 String name = classNameTextField.getText();
@@ -120,8 +124,10 @@ public class classroomsPanel extends JFrame {
             }
         });
 
+        // Cancel edit
         cancelButton.addActionListener(action -> revertUIComponents());
 
+        // Edit selected entry
         editButton.addActionListener(action -> {
             // Get the selected row's data
             int selectedRow = classroomsTable.getSelectedRow();
@@ -165,6 +171,7 @@ public class classroomsPanel extends JFrame {
 
         });
 
+        // Remove selected entry
         removeButton.addActionListener(action -> {
             try {
                 // Get the selected row index
@@ -265,6 +272,7 @@ public class classroomsPanel extends JFrame {
             }
         });
 
+        // Enable edit and remove buttons based on the selected row
         classroomsTable.getSelectionModel().addListSelectionListener(selection -> {
             // Get selected row index
             int selectedRow = classroomsTable.getSelectedRow();
@@ -281,6 +289,7 @@ public class classroomsPanel extends JFrame {
         });
     }
 
+    // Refresh the classrooms table after an update to the database
     public void updateClassrooms() throws IOException {
         IntStream.iterate(classroomsTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> classroomsTableModel.removeRow(i));
 
