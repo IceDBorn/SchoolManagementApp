@@ -1,12 +1,11 @@
 package views;
 
-import controllers.panelController;
-import controllers.userController;
-import models.User;
-
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import controllers.panelController;
+import controllers.userController;
+import models.User;
 
 public class mainPanel extends JFrame {
     private JPanel mainPanel;
@@ -27,6 +26,7 @@ public class mainPanel extends JFrame {
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setIconImage(new ImageIcon("res/school.png").getImage());
 
+        // Disable buttons based on user type
         if (!User.isAdmin()) {
             classroomsButton.setVisible(false);
             scheduleMakerButton.setVisible(false);
@@ -34,6 +34,7 @@ public class mainPanel extends JFrame {
             usersButton.setVisible(false);
         }
 
+        // Logout by pressing the logout button
         logoutButton.addActionListener(action -> {
             try {
                 userController.Logout();

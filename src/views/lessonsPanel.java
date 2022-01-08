@@ -1,11 +1,5 @@
 package views;
 
-import controllers.databaseController;
-import controllers.fileController;
-import controllers.panelController;
-import models.Database;
-import models.User;
-
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -23,6 +17,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.stream.IntStream;
+import controllers.databaseController;
+import controllers.fileController;
+import controllers.panelController;
+import models.Database;
+import models.User;
 
 public class lessonsPanel extends JFrame {
     DefaultTableModel lessonsTableModel;

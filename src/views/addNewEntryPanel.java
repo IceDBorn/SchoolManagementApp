@@ -1,11 +1,5 @@
 package views;
 
-import controllers.databaseController;
-import controllers.fileController;
-import controllers.panelController;
-import models.Database;
-import models.User;
-
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -16,6 +10,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import controllers.databaseController;
+import controllers.fileController;
+import controllers.panelController;
+import models.Database;
+import models.User;
 
 public class addNewEntryPanel extends JDialog {
     private JPanel addNewEntryPanel;
@@ -27,9 +26,13 @@ public class addNewEntryPanel extends JDialog {
     public addNewEntryPanel(boolean isProfession) {
         add(addNewEntryPanel);
         setSize(400, 200);
+        // Disable resizing of window
         setResizable(false);
+        // Set location based on parent window
         setLocationRelativeTo(getParent());
+        // Do not exit the application when closing this window
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        // Set the application's image
         setIconImage(new ImageIcon("res/school.png").getImage());
         // Set modality type to block interaction with the main window, until this one is closed
         setModalityType(ModalityType.APPLICATION_MODAL);
@@ -39,8 +42,10 @@ public class addNewEntryPanel extends JDialog {
         else
             messageLabel.setText("Add new school year");
 
+        // Close this window by pressing cancel
         cancelButton.addActionListener(action -> this.dispose());
 
+        // Add new profession to the database
         addButton.addActionListener(action -> {
             try {
                 Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());

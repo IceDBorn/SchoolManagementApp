@@ -1,14 +1,13 @@
 package controllers;
 
-import models.Database;
-
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
 import java.sql.*;
+import models.Database;
 
 public class databaseController {
     /**
-     * Returns a CachedRowSet of the specified sql query.
+     * Return a CachedRowSet of the specified sql query.
      */
     public static CachedRowSet selectQuery(String sql) throws SQLException {
         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
@@ -19,6 +18,7 @@ public class databaseController {
         CachedRowSet cachedRowSet = RowSetProvider.newFactory().createCachedRowSet();
         cachedRowSet.populate(resultSet);
 
+        // Close connection
         resultSet.close();
         statement.close();
         connection.close();
@@ -27,7 +27,7 @@ public class databaseController {
     }
 
     /**
-     * Returns the first row column of the specified sql query
+     * Return the first row column of the specified sql query
      */
     public static int selectFirstIntColumn(String sql) throws SQLException {
         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
@@ -45,7 +45,7 @@ public class databaseController {
     }
 
     /**
-     * Returns the name of the specified profession id
+     * Return the name of the specified profession id
      */
     public static String findProfessionName(int id) throws SQLException {
         CachedRowSet professions = selectQuery(String.format("SELECT name FROM \"Professions\" WHERE id = '%d'", id));
@@ -54,7 +54,7 @@ public class databaseController {
     }
 
     /**
-     * Returns the id of the specified profession name
+     * Return the id of the specified profession name
      */
     public static int findProfessionId(String name) throws SQLException {
         CachedRowSet professions = selectQuery(String.format("SELECT id FROM \"Professions\" WHERE name = '%s'", name));
@@ -63,7 +63,7 @@ public class databaseController {
     }
 
     /**
-     * Returns the name of the specified year id
+     * Return the name of the specified year id
      */
     public static String findYearName(int id) throws SQLException {
         CachedRowSet years = selectQuery(String.format("SELECT name FROM \"Years\" WHERE id = '%d'", id));
@@ -72,7 +72,7 @@ public class databaseController {
     }
 
     /**
-     * Returns the id of the specified year name
+     * Return the id of the specified year name
      */
     public static int findYearId(String name) throws SQLException {
         CachedRowSet years = selectQuery(String.format("SELECT id FROM \"Years\" WHERE name = '%s'", name));
@@ -81,7 +81,7 @@ public class databaseController {
     }
 
     /**
-     * Returns the id of the first inserted row
+     * Return the id of the first inserted row
      */
     public static int getInsertedRowId(ResultSet resultSet) throws SQLException {
         resultSet.next();

@@ -1,11 +1,5 @@
 package views;
 
-import controllers.databaseController;
-import controllers.fileController;
-import controllers.panelController;
-import models.Database;
-import models.User;
-
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -20,6 +14,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import controllers.databaseController;
+import controllers.fileController;
+import controllers.panelController;
+import models.Database;
+import models.User;
 
 public class gradesPanel extends JFrame {
     private JPanel gradesPanel;
@@ -59,6 +58,7 @@ public class gradesPanel extends JFrame {
             this.setVisible(false);
         });
 
+        // Save grades by pressing the save button
         saveButton.addActionListener(action -> {
             try {
                 // Loop through all the table rows in order to update them one by one.
