@@ -1,5 +1,10 @@
 package views;
 
+import controllers.databaseController;
+import controllers.fileController;
+import controllers.panelController;
+import models.User;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -9,10 +14,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import controllers.databaseController;
-import controllers.fileController;
-import controllers.panelController;
-import models.User;
 
 public class schedulePanel extends JFrame {
     private JTable scheduleTable;
@@ -40,6 +41,7 @@ public class schedulePanel extends JFrame {
     private void createUIComponents() throws IOException {
         // Add columns
         String[] scheduleTableColumns = {"Classroom", "Subject", "Day", "Starts", "Ends"};
+
         DefaultTableModel scheduleTableModel = new DefaultTableModel(scheduleTableColumns, 0);
         scheduleTable = new JTable(scheduleTableModel);
         // Stop users from interacting with the table
@@ -47,20 +49,32 @@ public class schedulePanel extends JFrame {
         scheduleTable.setEnabled(false);
 
         try {
-            ResultSet lessons = databaseController.selectQuery(String.format("""
-                    SELECT "Lessons".name AS lesson, "Classrooms".name AS classroom, day, "startTime", "endTime"
-                    FROM "StudentLessons"
-                    INNER JOIN "Courses" ON "StudentLessons"."courseId" = "Courses".id
-                    INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
-                    INNER JOIN "Classrooms" ON "Classrooms".id = "Courses"."classroomId"
-                    WHERE "StudentLessons"."studentId" = %d""", User.getId()));
+            String query;
+
+            if (User.isTeacher())
+                query = String.format("""
+                        SELECT "Classrooms".name AS classroom, "Lessons".name AS lesson, day, "startTime", "endTime"
+                        FROM "Courses"
+                            INNER JOIN "Classrooms" on "Courses"."classroomId" = "Classrooms".id
+                            INNER JOIN "Lessons" on "Courses"."lessonId" = "Lessons".id
+                        WHERE "teacherId" = '%d'""", User.getId());
+            else
+                query = String.format("""
+                        SELECT "Classrooms".name AS classroom, "Lessons".name AS lesson, day, "startTime", "endTime"
+                        FROM "StudentLessons"
+                            INNER JOIN "Courses" ON "StudentLessons"."courseId" = "Courses".id
+                            INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
+                            INNER JOIN "Classrooms" ON "Classrooms".id = "Courses"."classroomId"
+                        WHERE "StudentLessons"."studentId" = %d""", User.getId());
+
+            ResultSet lessons = databaseController.selectQuery(query);
 
             // Add rows
             Object[] row = new Object[5];
 
             while (lessons.next()) {
-                row[0] = lessons.getString("lesson");
-                row[1] = lessons.getString("classroom");
+                row[0] = lessons.getString("classroom");
+                row[1] = lessons.getString("lesson");
                 row[2] = lessons.getString("day");
                 row[3] = lessons.getString("startTime");
                 row[4] = lessons.getString("endTime");
@@ -70,7 +84,7 @@ public class schedulePanel extends JFrame {
         } catch (SQLException err) {
             StringWriter errors = new StringWriter();
             err.printStackTrace(new PrintWriter(errors));
-            String message =  errors.toString();
+            String message = errors.toString();
             fileController.saveFile("SQL Exception: " + message);
 
             panelController.createErrorPanel("Something went wrong.", this, 220);
