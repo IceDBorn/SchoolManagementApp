@@ -54,6 +54,8 @@ public class scheduleMakerPanel extends JFrame {
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setIconImage(new ImageIcon("res/school.png").getImage());
 
+        scheduleTable.setDefaultEditor(Object.class, null);
+
         scheduleScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         SpinnerNumberModel model = new SpinnerNumberModel();
         model.setValue(1);
