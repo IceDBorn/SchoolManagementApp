@@ -51,6 +51,9 @@ public class gradesPanel extends JFrame {
         // Sync tables scrolling
         infoScrollPane.getVerticalScrollBar().setModel(gradeScrollPane.getVerticalScrollBar().getModel());
 
+        // Display the save button based on user type
+        saveButton.setVisible(User.isTeacher());
+
         backButton.addActionListener(action -> {
             panelController.createMainPanel(this.getLocation());
             this.setVisible(false);
@@ -60,27 +63,20 @@ public class gradesPanel extends JFrame {
             try {
                 // Loop through all the table rows in order to update them one by one.
                 for (int i = 0; i < infoTable.getRowCount(); i++) {
-                    String lesson = infoTable.getValueAt(i, 0).toString();
+                    int id = Integer.parseInt(infoTable.getValueAt(i, 0).toString());
                     float grade = Float.parseFloat(gradesTable.getValueAt(i, 0).toString());
-                    int lessonId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lesson));
-                    int courseId = databaseController.selectFirstIntColumn(String.format("""
-                            SELECT "Courses".id as id
-                            FROM "StudentLessons"
-                                     INNER JOIN "Courses" on "StudentLessons"."courseId" = "Courses".id
-                                     INNER JOIN "Lessons" on "Courses"."lessonId" = "Lessons".id
-                            WHERE "studentId" = '%d' AND "lessonId" = '%d'""", User.getId(), lessonId));
 
                     if (grade <= 20 && grade >= 0) {
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
                         PreparedStatement preparedStatement = connection.prepareStatement("UPDATE \"StudentLessons\" SET grade = ? WHERE id = ?");
                         preparedStatement.setFloat(1, grade);
-                        preparedStatement.setInt(2, courseId);
+                        preparedStatement.setInt(2, id);
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
                         connection.close();
 
                         fileController.saveFile("User (%d) %s modified (%d) grade to %.1f.".formatted(
-                                User.getId(), User.getName(), courseId, grade));
+                                User.getId(), User.getName(), id, grade));
                     }
 
                     // Checks if the next row has a null id to end the loop
@@ -159,9 +155,6 @@ public class gradesPanel extends JFrame {
                     INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
                     INNER JOIN "Users" ON "StudentLessons"."studentId" = "Users".id
                     WHERE "studentId" = %d""", User.getId());
-
-            // Hide save button if a student account is viewing the grades
-            //saveButton.setVisible(false);
         }
 
         DefaultTableModel infoTableModel = new DefaultTableModel(infoTableColumns, 0);
