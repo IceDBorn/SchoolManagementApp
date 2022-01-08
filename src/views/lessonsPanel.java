@@ -113,6 +113,7 @@ public class lessonsPanel extends JFrame {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
                 String message = errors.toString();
+
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -121,12 +122,13 @@ public class lessonsPanel extends JFrame {
 
                 panelController.createErrorPanel("Something went wrong.", this, 220);
             } finally {
+                revertUIComponents();
+
                 try {
                     updateLessons();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                revertUIComponents();
             }
         });
 
@@ -145,13 +147,14 @@ public class lessonsPanel extends JFrame {
             schoolYearComboBox.setSelectedItem(lessonsTable.getValueAt(selectedRow, 2));
             lessonsTable.clearSelection();
 
-            // Store the selected user id to a global variable
             try {
+                // Store the selected user id to a global variable
                 selectedLessonId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lessonNameTextField.getText()));
             } catch (SQLException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
                 String message = errors.toString();
+
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -180,18 +183,18 @@ public class lessonsPanel extends JFrame {
                 if (count > 0) {
                     if (panelController.createConfirmationPanel(this) == JOptionPane.YES_OPTION) {
                         Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+                        PreparedStatement preparedStatement;
 
                         // Delete all courses associated with the selected lesson
-                        PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE \"lessonId\" = ?");
+                        preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE \"lessonId\" = ?");
                         preparedStatement.setInt(1, id);
-                        preparedStatement.addBatch();
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
 
                         // Delete the selected lesson from the database
                         preparedStatement = connection.prepareStatement("DELETE FROM \"Lessons\" WHERE id = ?");
                         preparedStatement.setInt(1, id);
-                        preparedStatement.addBatch();
-
-                        preparedStatement.executeBatch();
+                        preparedStatement.executeUpdate();
                         preparedStatement.close();
                         connection.close();
 
@@ -217,6 +220,7 @@ public class lessonsPanel extends JFrame {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
                 String message = errors.toString();
+
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -225,12 +229,13 @@ public class lessonsPanel extends JFrame {
 
                 panelController.createErrorPanel("Something went wrong.", this, 220);
             } finally {
+                revertUIComponents();
+
                 try {
                     updateLessons();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                revertUIComponents();
 
                 editButton.setEnabled(false);
                 removeButton.setEnabled(false);
@@ -254,9 +259,12 @@ public class lessonsPanel extends JFrame {
         });
 
         lessonsTable.getSelectionModel().addListSelectionListener(selection -> {
-            if (lessonsTable.getSelectedRow() != -1
-                && !lessonsTable.getValueAt(lessonsTable.getSelectedRow(), 0).toString().equals("")
-                && !lessonsTable.getValueAt(lessonsTable.getSelectedRow(), 1).toString().equals("")) {
+            // Get the selected row index
+            int selectedRow = lessonsTable.getSelectedRow();
+
+            if (selectedRow != -1
+                && !lessonsTable.getValueAt(selectedRow, 0).toString().equals("")
+                && !lessonsTable.getValueAt(selectedRow, 1).toString().equals("")) {
                 editButton.setEnabled(true);
                 removeButton.setEnabled(true);
             } else {
@@ -283,17 +291,15 @@ public class lessonsPanel extends JFrame {
         lessonsTable.setEnabled(true);
         addButton.setText("Add");
 
-        if (professionComboBox.getItemCount() > 1) {
+        if (professionComboBox.getItemCount() > 1)
             professionComboBox.setSelectedIndex(1);
-        } else {
+        else
             professionComboBox.setSelectedIndex(0);
-        }
 
-        if (schoolYearComboBox.getItemCount() > 1) {
+        if (schoolYearComboBox.getItemCount() > 1)
             schoolYearComboBox.setSelectedIndex(1);
-        } else {
+        else
             schoolYearComboBox.setSelectedIndex(0);
-        }
 
         selectedLessonId = -1;
     }

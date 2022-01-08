@@ -70,11 +70,13 @@ public class addNewEntryPanel extends JDialog {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
                 String message = errors.toString();
+
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
                 panelController.createErrorPanel("Something went wrong.", this, 220);
             } catch (IOException e) {
                 e.printStackTrace();

@@ -110,12 +110,13 @@ public class classroomsPanel extends JFrame {
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
+                revertUIComponents();
+
                 try {
                     updateClassrooms();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                revertUIComponents();
             }
         });
 
@@ -131,6 +132,7 @@ public class classroomsPanel extends JFrame {
             try {
                 CachedRowSet classrooms = databaseController.selectQuery(String.format("SELECT id, name FROM \"Classrooms\" WHERE name = '%s'", name));
                 classrooms.next();
+
                 selectedClassroomId = classrooms.getInt("id");
                 selectedClassroomName = classrooms.getString("name");
             } catch (SQLException err) {
@@ -185,14 +187,13 @@ public class classroomsPanel extends JFrame {
                         // Delete all courses associated with the selected classroom
                         PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE \"classroomId\" = ?");
                         preparedStatement.setInt(1, id);
-                        preparedStatement.addBatch();
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
 
                         // Delete the selected classroom from the database
                         preparedStatement = connection.prepareStatement("DELETE FROM \"Classrooms\" WHERE id = ?");
                         preparedStatement.setInt(1, id);
                         preparedStatement.executeUpdate();
-
-                        preparedStatement.executeBatch();
                         preparedStatement.close();
                         connection.close();
 
@@ -218,6 +219,7 @@ public class classroomsPanel extends JFrame {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
                 String message = errors.toString();
+
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -233,6 +235,7 @@ public class classroomsPanel extends JFrame {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
                 revertUIComponents();
 
                 editButton.setEnabled(false);

@@ -40,9 +40,11 @@ public class scheduleMakerPanel extends JFrame {
     private DefaultTableModel scheduleTableModel;
 
     private int selectedCourseId;
+    private int selectedCourseLessonId;
 
     public scheduleMakerPanel(Point location) throws IOException {
         selectedCourseId = -1;
+        selectedCourseLessonId = -1;
 
         add(coursesPanel);
         setTitle("Schedule Maker");
@@ -51,6 +53,8 @@ public class scheduleMakerPanel extends JFrame {
         setLocation(location);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setIconImage(new ImageIcon("res/school.png").getImage());
+
+        scheduleTable.setDefaultEditor(Object.class, null);
 
         scheduleScrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         SpinnerNumberModel model = new SpinnerNumberModel();
@@ -114,8 +118,8 @@ public class scheduleMakerPanel extends JFrame {
                 int classroomId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroom));
 
                 // Check if a course exists with the same classroom, day and time
-                boolean courseExists = databaseController.selectQuery(String.format("SELECT id FROM \"Courses\" WHERE \"classroomId\" = '%d' AND day = '%s' AND \"startTime\" = '%s' AND \"endTime\" = '%s'",
-                        classroomId, day, starts, ends)).isBeforeFirst();
+                boolean courseExists = databaseController.selectQuery(String.format("""
+                        SELECT id FROM "Courses" WHERE "classroomId" = '%d' AND day = '%s' AND "startTime" = '%s' AND "endTime" = '%s'""", classroomId, day, starts, ends)).isBeforeFirst();
 
                 if (courseExists)
                     panelController.createErrorPanel("A course using this classroom at the given day and time already exists.", this, 500);
@@ -138,14 +142,70 @@ public class scheduleMakerPanel extends JFrame {
 
                     preparedStatement.executeUpdate();
 
-                    // Get the id of the inserted or deleted course
+                    // Get the id of the inserted or updated course
                     int id = databaseController.getInsertedRowId(preparedStatement.getGeneratedKeys());
 
-                    preparedStatement.close();
-                    connection.close();
+                    // Delete all student lessons associated with the selected course
+                    if (!isAddButton && lessonId != selectedCourseLessonId) {
+                        preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" IN (SELECT id FROM \"Courses\" WHERE id = ?)");
+                        preparedStatement.setInt(1, id);
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
+                    }
 
-                    fileController.saveFile("User (%d) %s%s schedule entry (%d).".formatted(
-                            User.getId(), User.getName(), isAddButton ? " created " : " updated ", id));
+                    if (isAddButton || lessonId != selectedCourseLessonId) {
+                        // Gets the year of the inserted course
+                        int year = databaseController.selectFirstIntColumn(String.format("""
+                                SELECT "yearId" FROM "Courses" INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id WHERE "Courses".id = '%d'""", id));
+
+                        // Gets the classroom limit of the inserted course
+                        int count = databaseController.selectFirstIntColumn(String.format("""
+                                SELECT "limit" FROM "Courses" INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id WHERE "Courses".id = '%d'""", id));
+
+                        // Subtract the amount of users in a classroom from its limit to get the amount of available slots
+                        count -= databaseController.selectFirstIntColumn(String.format("""
+                                SELECT COUNT("StudentLessons".id)
+                                FROM "Courses"
+                                    INNER JOIN "StudentLessons" ON "Courses".id = "StudentLessons"."courseId"
+                                    INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id
+                                WHERE "courseId" = '%d'""", id));
+
+                        // Add students to the course based on available slots
+                        if (count > 0) {
+                            // Get all students that are not in a course with the same lesson
+                            CachedRowSet students = databaseController.selectQuery(String.format("""
+                                    SELECT "Students".id as id, "Users".name as name
+                                    FROM "Students"
+                                        INNER JOIN "Users" on "Users".id = "Students".id
+                                    WHERE "yearId" = '%d' AND "Students".id NOT IN (
+                                        SELECT COALESCE("studentId", 0)
+                                        FROM "StudentLessons"
+                                            RIGHT JOIN "Courses" on "StudentLessons"."courseId" = "Courses".id
+                                        WHERE "lessonId" = '%d')
+                                    LIMIT '%d'""", year, lessonId, count));
+
+                            // Add each student to the inserted course
+                            while (students.next()) {
+                                int studentId = students.getInt("id");
+
+                                preparedStatement = connection.prepareStatement("INSERT INTO \"StudentLessons\"(\"courseId\", \"studentId\") VALUES (?, ?)");
+                                preparedStatement.setInt(1, id);
+                                preparedStatement.setInt(2, studentId);
+
+                                preparedStatement.executeUpdate();
+                                preparedStatement.close();
+
+                                fileController.saveFile("Student (%d) has been added to schedule entry (%d).".formatted(
+                                        studentId, id));
+                            }
+                        } else
+                            panelController.createErrorPanel("There aren't any available classrooms to put the students in, create another course.", this, 500);
+
+                        connection.close();
+
+                        fileController.saveFile("Teacher (%d) %s %s schedule entry (%d).".formatted(
+                                User.getId(), User.getName(), isAddButton ? "created" : "updated", id));
+                    }
                 }
             } catch (SQLException | IOException err) {
                 StringWriter errors = new StringWriter();
@@ -209,14 +269,13 @@ public class scheduleMakerPanel extends JFrame {
                         // Delete all student lessons associated with the selected course
                         PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" IN (SELECT id FROM \"Courses\" WHERE id = ?)");
                         preparedStatement.setInt(1, courseId);
-                        preparedStatement.addBatch();
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
 
                         // Delete the selected course from the database
                         preparedStatement = connection.prepareStatement("DELETE FROM \"Courses\" WHERE id = ?");
                         preparedStatement.setInt(1, courseId);
-                        preparedStatement.addBatch();
-
-                        preparedStatement.executeBatch();
+                        preparedStatement.executeUpdate();
                         preparedStatement.close();
                         connection.close();
 
@@ -293,9 +352,15 @@ public class scheduleMakerPanel extends JFrame {
                 int classroomId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Classrooms\" WHERE name = '%s'", classroom));
 
                 // Get the courseId using the data from the selected row
-                selectedCourseId = databaseController.selectFirstIntColumn(String.format(
-                        "SELECT id FROM \"Courses\" WHERE \"lessonId\" = '%d' AND \"teacherId\" = '%d' AND \"classroomId\" = '%d' AND day = '%s' AND \"startTime\" = '%s' AND \"endTime\" = '%s'",
+                CachedRowSet course = databaseController.selectQuery(String.format("""
+                                SELECT id, "lessonId" FROM "Courses" WHERE "lessonId" = '%d' AND "teacherId" = '%d' AND "classroomId" = '%d' AND day = '%s' AND "startTime" = '%s' AND "endTime" = '%s'""",
                         lessonId, teacherId, classroomId, day, starts, ends));
+
+                course.next();
+
+                selectedCourseId = course.getInt("id");
+                selectedCourseLessonId = course.getInt("lessonId");
+
             } catch (SQLException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
@@ -398,9 +463,9 @@ public class scheduleMakerPanel extends JFrame {
         // Remove all rows
         IntStream.iterate(scheduleTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> scheduleTableModel.removeRow(i));
 
-        String teacherName = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
-        String lessonName = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
-        String classroomName = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
+        String teacher = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
+        String lesson = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
+        String classroom = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
 
         try {
             CachedRowSet courses = databaseController.selectQuery(String.format("""
@@ -409,7 +474,7 @@ public class scheduleMakerPanel extends JFrame {
                     INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id
                     INNER JOIN "Users" ON "Courses"."teacherId" = "Users".id
                     INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
-                    WHERE "Users".name = '%s' AND "Lessons"."name" = '%s' AND "Classrooms".name = '%s'""", teacherName, lessonName, classroomName));
+                    WHERE "Users".name = '%s' AND "Lessons"."name" = '%s' AND "Classrooms".name = '%s'""", teacher, lesson, classroom));
 
             // Add rows
             Object[] row = new Object[6];
@@ -437,15 +502,20 @@ public class scheduleMakerPanel extends JFrame {
     }
 
     private void enableButtons() {
-        addButton.setEnabled(lessonsComboBox.getSelectedItem() != null && teachersComboBox.getSelectedItem() != null
-                             && classroomComboBox.getSelectedItem() != null && dayComboBox.getSelectedItem() != null
-                             && startTime.getSelectedItem() != null && endTime.getSelectedItem() != null);
+        addButton.setEnabled(
+                lessonsComboBox.getSelectedItem() != null
+                && teachersComboBox.getSelectedItem() != null
+                && classroomComboBox.getSelectedItem() != null
+                && dayComboBox.getSelectedItem() != null
+                && startTime.getSelectedItem() != null
+                && endTime.getSelectedItem() != null);
     }
 
     // Fill end time combobox with items coming after start time combobox selected item
     private void setEndTime() {
         endTime.removeAllItems();
         startTime.getSelectedIndex();
+
         for (int i = startTime.getSelectedIndex() + 1; i < startTime.getItemCount(); i++)
             endTime.addItem(startTime.getItemAt(i));
 
@@ -454,6 +524,7 @@ public class scheduleMakerPanel extends JFrame {
 
     private void revertUIComponents() {
         selectedCourseId = -1;
+        selectedCourseLessonId = -1;
 
         if (lessonsComboBox.getItemCount() > 0)
             lessonsComboBox.setSelectedIndex(0);

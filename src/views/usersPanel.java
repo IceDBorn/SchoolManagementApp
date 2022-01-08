@@ -167,16 +167,16 @@ public class usersPanel extends JFrame {
                                 PreparedStatement preparedStatement;
 
                                 // Delete all student lessons associated with the selected teacher's courses
-                                preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" IN (SELECT id FROM \"Courses\" WHERE \"teacherId\" = ?)");
+                                preparedStatement = connection.prepareStatement("""
+                                        DELETE FROM "StudentLessons" WHERE "courseId" IN (SELECT id FROM "Courses" WHERE "teacherId" = ?)""");
                                 preparedStatement.setInt(1, selectedUserId);
-                                preparedStatement.addBatch();
+                                preparedStatement.executeUpdate();
+                                preparedStatement.close();
 
                                 // Delete all courses or student lessons associated with the user
                                 preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "DELETE FROM \"Courses\" WHERE \"teacherId\" = ?" : "DELETE FROM \"StudentLessons\" WHERE \"studentId\" = ?");
                                 preparedStatement.setInt(1, selectedUserId);
-                                preparedStatement.addBatch();
-
-                                preparedStatement.executeBatch();
+                                preparedStatement.executeUpdate();
                                 preparedStatement.close();
                                 connection.close();
                             }
@@ -194,7 +194,6 @@ public class usersPanel extends JFrame {
                             preparedStatement = connection.prepareStatement(isAddButton ?
                                     "INSERT INTO \"Users\"(name, gender, birthday, \"isAdmin\", \"isTeacher\", email, password) VALUES (?, ?, ?, ?, ?, ?, ?)" :
                                     "UPDATE \"Users\" SET name = ?, gender = ?, birthday = ?, \"isAdmin\" = ?, \"isTeacher\" = ?, email = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS);
-
                             preparedStatement.setString(1, username);
                             preparedStatement.setInt(2, gender);
                             preparedStatement.setDate(3, birthday);
@@ -219,30 +218,70 @@ public class usersPanel extends JFrame {
                                 if (isTeacher != selectedUserIsTeacher) {
                                     preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "DELETE FROM \"Teachers\" WHERE id = ?" : "DELETE FROM \"Students\" WHERE id = ?");
                                     preparedStatement.setInt(1, selectedUserId);
-                                    preparedStatement.addBatch();
+                                    preparedStatement.executeUpdate();
+                                    preparedStatement.close();
 
-                                    // Import the user into their corresponding table type
+                                    // Insert the user into their corresponding table type
                                     preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, \"professionId\") VALUES (?, ?)" : "INSERT INTO \"Students\"(id, \"yearId\") VALUES (?, ?)");
                                     preparedStatement.setInt(1, id);
                                     preparedStatement.setInt(2, isTeacher ? databaseController.findProfessionId(details) : databaseController.findYearId(details));
-                                    preparedStatement.addBatch();
-
-                                    preparedStatement.executeBatch();
+                                    preparedStatement.executeUpdate();
+                                    preparedStatement.close();
                                 } else {
                                     preparedStatement = connection.prepareStatement(selectedUserIsTeacher ? "UPDATE \"Teachers\" SET \"professionId\" = ? WHERE id = ?" : "UPDATE \"Students\" SET \"yearId\" = ? WHERE id = ?");
                                     preparedStatement.setInt(1, selectedUserIsTeacher ? databaseController.findProfessionId(details) : databaseController.findYearId(details));
                                     preparedStatement.setInt(2, selectedUserId);
                                     preparedStatement.executeUpdate();
+                                    preparedStatement.close();
                                 }
                             } else {
-                                // Import the user into their corresponding table type
+                                // Insert the user into their corresponding table type
                                 preparedStatement = connection.prepareStatement(isTeacher ? "INSERT INTO \"Teachers\"(id, \"professionId\") VALUES (?, ?)" : "INSERT INTO \"Students\"(id, \"yearId\") VALUES (?, ?)");
                                 preparedStatement.setInt(1, id);
                                 preparedStatement.setInt(2, isTeacher ? databaseController.findProfessionId(details) : databaseController.findYearId(details));
                                 preparedStatement.executeUpdate();
+                                preparedStatement.close();
+
+                                if (!isTeacher) {
+                                    // Select all lessons for the current user's year
+                                    CachedRowSet lessons = databaseController.selectQuery(String.format("SELECT id FROM \"Lessons\" WHERE \"yearId\" = '%d'", databaseController.findYearId(details)));
+
+                                    // Loop through each lesson
+                                    while (lessons.next()) {
+                                        boolean courseAvailable = false;
+                                        int lessonId = lessons.getInt("id");
+                                        CachedRowSet courses = databaseController.selectQuery(String.format("""
+                                                SELECT "Courses".id as id, "limit"
+                                                FROM "Courses"
+                                                    INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id
+                                                WHERE "lessonId" = '%d'""", lessonId));
+
+                                        // Loop through each course to find an available spot
+                                        while (courses.next()) {
+                                            int courseId = courses.getInt("id");
+                                            int limit = courses.getInt("limit");
+                                            int students = databaseController.selectFirstIntColumn(String.format("SELECT COUNT(id) as count FROM \"StudentLessons\" WHERE \"courseId\" = '%d'", courseId));
+
+                                            // If there's an available spot in the course, insert the student into student lessons using that course
+                                            if (students < limit) {
+                                                preparedStatement = connection.prepareStatement("INSERT INTO \"StudentLessons\"(\"courseId\", \"studentId\") VALUES (?, ?)");
+                                                preparedStatement.setInt(1, courseId);
+                                                preparedStatement.setInt(2, id);
+                                                preparedStatement.executeUpdate();
+                                                preparedStatement.close();
+
+                                                fileController.saveFile("Student (%d) %s has been added to schedule entry (%d).".formatted(id, username, courseId));
+                                                courseAvailable = true;
+                                                break;
+                                            }
+                                        }
+
+                                        if (!courseAvailable)
+                                            panelController.createErrorPanel("There aren't any available courses for lesson (%d)".formatted(lessonId), this, 500);
+                                    }
+                                }
                             }
 
-                            preparedStatement.close();
                             connection.close();
 
                             fileController.saveFile("User (%d) %s%s user (%d) %s.".formatted(
@@ -253,6 +292,7 @@ public class usersPanel extends JFrame {
                     StringWriter errors = new StringWriter();
                     err.printStackTrace(new PrintWriter(errors));
                     String message = errors.toString();
+
                     try {
                         fileController.saveFile("SQL Exception: " + message);
                     } catch (IOException e) {
@@ -261,13 +301,14 @@ public class usersPanel extends JFrame {
 
                     panelController.createErrorPanel("Something went wrong.", this, 220);
                 } finally {
+                    revertUIComponents();
                     updateDetails(true);
+
                     try {
                         updateUsers();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    revertUIComponents();
                 }
             }
         });
@@ -290,6 +331,7 @@ public class usersPanel extends JFrame {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
                 String message = errors.toString();
+
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -355,14 +397,13 @@ public class usersPanel extends JFrame {
                         // If the selected user is a teacher, delete all student lessons associated with the selected teacher's courses
                         preparedStatement = connection.prepareStatement("DELETE FROM \"StudentLessons\" WHERE \"courseId\" IN (SELECT id FROM \"Courses\" WHERE \"teacherId\" = ?)");
                         preparedStatement.setInt(1, id);
-                        preparedStatement.addBatch();
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
 
                         // Check whether the selected user is a teacher or a student and delete them from the corresponding table
                         preparedStatement = connection.prepareStatement(isTeacher ? "DELETE FROM \"Courses\" WHERE \"teacherId\" = ?" : "DELETE FROM \"StudentLessons\" WHERE \"studentId\" = ?");
                         preparedStatement.setInt(1, id);
-                        preparedStatement.addBatch();
-
-                        preparedStatement.executeBatch();
+                        preparedStatement.executeUpdate();
                         preparedStatement.close();
                         connection.close();
 
@@ -394,6 +435,7 @@ public class usersPanel extends JFrame {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
                 String message = errors.toString();
+
                 try {
                     fileController.saveFile("SQL Exception: " + message);
                 } catch (IOException e) {
@@ -402,16 +444,15 @@ public class usersPanel extends JFrame {
 
                 panelController.createErrorPanel("Something went wrong.", this, 220);
             } finally {
+                editButton.setEnabled(false);
+                removeButton.setEnabled(false);
+                usersTable.getSelectionModel().clearSelection();
+
                 try {
                     updateUsers();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                revertUIComponents();
-
-                editButton.setEnabled(false);
-                removeButton.setEnabled(false);
-                usersTable.getSelectionModel().clearSelection();
             }
         });
 
@@ -466,9 +507,12 @@ public class usersPanel extends JFrame {
         });
 
         usersTable.getSelectionModel().addListSelectionListener(selection -> {
-            if (usersTable.getSelectedRow() != -1
-                && !usersTable.getValueAt(usersTable.getSelectedRow(), 0).toString().equals("")
-                && !usersTable.getValueAt(usersTable.getSelectedRow(), 1).toString().equals("")) {
+            // Get the selected row index
+            int selectedRow = usersTable.getSelectedRow();
+
+            if (selectedRow != -1
+                && !usersTable.getValueAt(selectedRow, 0).toString().equals("")
+                && !usersTable.getValueAt(selectedRow, 1).toString().equals("")) {
                 editButton.setEnabled(true);
                 removeButton.setEnabled(true);
             } else {
@@ -485,14 +529,12 @@ public class usersPanel extends JFrame {
         userDetailsComboBox.removeAllItems();
         userDetailsComboBox.addItem("Add new");
 
-        if (showProfessions) {
+        if (showProfessions)
             for (String profession : professionList)
                 userDetailsComboBox.addItem(profession);
-
-        } else {
+        else
             for (String year : yearList)
                 userDetailsComboBox.addItem(year);
-        }
 
         if (userDetailsComboBox.getItemCount() > 1)
             userDetailsComboBox.setSelectedIndex(1);
@@ -551,7 +593,8 @@ public class usersPanel extends JFrame {
      * Enable or disable the add button based on class name text
      */
     private void enableButtons() {
-        if (!usernameTextField.getText().equals("") && !emailTextField.getText().equals("")
+        if (!usernameTextField.getText().equals("")
+            && !emailTextField.getText().equals("")
             && !(passwordField.getPassword().length == 0 && passwordField.isEnabled())
             && !userBirthDayPicker.getDate().toString().equals("")) {
             addButton.setEnabled(true);
