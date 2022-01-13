@@ -378,11 +378,9 @@ public class scheduleMakerPanel extends JFrame {
             }
         });
 
+        // Update teachersComboBox with teachers that have the same profession as the selected lesson
         lessonsComboBox.addActionListener(action -> {
-
             try {
-                updateCourses();
-
                 // Get the name of the selected lesson
                 String lesson = lessonsComboBox.getItemAt(lessonsComboBox.getSelectedIndex());
 
@@ -397,8 +395,7 @@ public class scheduleMakerPanel extends JFrame {
                 while (teachers.next())
                     teachersComboBox.addItem(teachers.getString("name"));
 
-
-            } catch (SQLException | IOException err) {
+            } catch (SQLException err) {
                 StringWriter errors = new StringWriter();
                 err.printStackTrace(new PrintWriter(errors));
                 String message = errors.toString();
@@ -410,20 +407,6 @@ public class scheduleMakerPanel extends JFrame {
                 }
 
                 panelController.createErrorPanel("Something went wrong.", this, 220);
-            } finally {
-                try {
-                    updateCourses();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        teachersComboBox.addActionListener(action -> {
-            try {
-                updateCourses();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         });
 
