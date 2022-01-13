@@ -127,6 +127,7 @@ public class scheduleMakerPanel extends JFrame {
                     boolean isAddButton = addButton.getText().equals("Add");
 
                     Connection connection = DriverManager.getConnection(Database.getURL(), Database.getUser(), Database.getPass());
+
                     PreparedStatement preparedStatement = connection.prepareStatement(isAddButton ?
                             "INSERT INTO \"Courses\"(\"lessonId\", \"teacherId\", \"classroomId\", day, \"startTime\", \"endTime\") VALUES (?, ?, ?, ?, ?, ?)" :
                             "UPDATE \"Courses\" SET \"lessonId\" = ?, \"teacherId\" = ?, \"classroomId\" = ?, day = ?, \"startTime\" = ?, \"endTime\" = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS);
@@ -184,27 +185,30 @@ public class scheduleMakerPanel extends JFrame {
                                         WHERE "lessonId" = '%d')
                                     LIMIT '%d'""", year, lessonId, count));
 
-                            // Add each student to the inserted course
-                            while (students.next()) {
-                                int studentId = students.getInt("id");
+                            if (students.isBeforeFirst()) {
+                                // Add each student to the inserted course
+                                while (students.next()) {
+                                    int studentId = students.getInt("id");
 
-                                preparedStatement = connection.prepareStatement("INSERT INTO \"StudentLessons\"(\"courseId\", \"studentId\") VALUES (?, ?)");
-                                preparedStatement.setInt(1, id);
-                                preparedStatement.setInt(2, studentId);
+                                    preparedStatement = connection.prepareStatement("INSERT INTO \"StudentLessons\"(\"courseId\", \"studentId\") VALUES (?, ?)");
+                                    preparedStatement.setInt(1, id);
+                                    preparedStatement.setInt(2, studentId);
 
-                                preparedStatement.executeUpdate();
-                                preparedStatement.close();
+                                    preparedStatement.executeUpdate();
+                                    preparedStatement.close();
 
-                                fileController.saveFile("Student (%d) has been added to schedule entry (%d).".formatted(
-                                        studentId, id));
-                            }
+                                    fileController.saveFile("Student (%d) has been added to schedule entry (%d).".formatted(
+                                            studentId, id));
+                                }
+
+                                fileController.saveFile("Teacher (%d) %s %s schedule entry (%d).".formatted(
+                                        User.getId(), User.getName(), isAddButton ? "created" : "updated", id));
+                            } else
+                                panelController.createErrorPanel("There aren't any available students to add.\nPlease create more users or delete this course.", this, 350);
                         } else
                             panelController.createErrorPanel("There aren't any available classrooms to put the students in, create another course.", this, 500);
 
                         connection.close();
-
-                        fileController.saveFile("Teacher (%d) %s %s schedule entry (%d).".formatted(
-                                User.getId(), User.getName(), isAddButton ? "created" : "updated", id));
                     }
                 }
             } catch (SQLException | IOException err) {
