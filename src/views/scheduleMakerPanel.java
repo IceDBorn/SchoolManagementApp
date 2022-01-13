@@ -19,7 +19,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.stream.IntStream;
 
 public class scheduleMakerPanel extends JFrame {
@@ -495,8 +494,6 @@ public class scheduleMakerPanel extends JFrame {
         // Remove all rows
         IntStream.iterate(scheduleTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> scheduleTableModel.removeRow(i));
 
-        String teacher = teachersComboBox.getItemAt(teachersComboBox.getSelectedIndex());
-        String lesson = lessonsComboBox.getItemAt(lessonsComboBox.getSelectedIndex());
         String classroom = classroomComboBox.getItemAt(classroomComboBox.getSelectedIndex());
 
         try {
@@ -506,7 +503,7 @@ public class scheduleMakerPanel extends JFrame {
                     INNER JOIN "Classrooms" ON "Courses"."classroomId" = "Classrooms".id
                     INNER JOIN "Users" ON "Courses"."teacherId" = "Users".id
                     INNER JOIN "Lessons" ON "Courses"."lessonId" = "Lessons".id
-                    WHERE "Users".name = '%s' AND "Lessons"."name" = '%s' AND "Classrooms".name = '%s'""", teacher, lesson, classroom));
+                    WHERE "Classrooms".name = '%s'""", classroom));
 
             // Add rows
             Object[] row = new Object[6];
