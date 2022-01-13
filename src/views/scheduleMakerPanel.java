@@ -1,5 +1,11 @@
 package views;
 
+import controllers.databaseController;
+import controllers.fileController;
+import controllers.panelController;
+import models.Database;
+import models.User;
+
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -15,11 +21,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.IntStream;
-import controllers.databaseController;
-import controllers.fileController;
-import controllers.panelController;
-import models.Database;
-import models.User;
 
 public class scheduleMakerPanel extends JFrame {
     private final String[] scheduleTableColumns = {"Lesson", "Teacher", "Classroom", "Day", "Starts", "Ends"};
@@ -69,7 +70,7 @@ public class scheduleMakerPanel extends JFrame {
                 lessonsComboBox.addItem(lessons.getString("name"));
 
             // Select all teacher names and display them in teachersComboBox
-            CachedRowSet teachers = databaseController.selectQuery("SELECT name FROM \"Users\" WHERE \"isTeacher\" = true");
+            CachedRowSet teachers = databaseController.selectQuery("SELECT name FROM \"Users\" INNER JOIN \"Teachers\" ON \"Users\".id = \"Teachers\".id");
             while (teachers.next())
                 teachersComboBox.addItem(teachers.getString("name"));
 
@@ -100,12 +101,13 @@ public class scheduleMakerPanel extends JFrame {
         // Add course based on the selected data
         addButton.addActionListener(action -> {
             try {
-                String lesson = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
-                String teacher = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
-                String classroom = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
-                String day = Objects.requireNonNull(dayComboBox.getSelectedItem()).toString();
-                String starts = Objects.requireNonNull(startTime.getSelectedItem()).toString();
-                String ends = Objects.requireNonNull(endTime.getSelectedItem()).toString();
+
+                String lesson = lessonsComboBox.getItemAt(lessonsComboBox.getSelectedIndex());
+                String teacher = teachersComboBox.getItemAt(teachersComboBox.getSelectedIndex());
+                String classroom = classroomComboBox.getItemAt(classroomComboBox.getSelectedIndex());
+                String day = dayComboBox.getItemAt(dayComboBox.getSelectedIndex());
+                String starts = startTime.getItemAt(startTime.getSelectedIndex());
+                String ends = endTime.getItemAt(endTime.getSelectedIndex());
 
                 // Get the lessonId using the selected lesson
                 int lessonId = databaseController.selectFirstIntColumn(String.format("SELECT id FROM \"Lessons\" WHERE name = '%s'", lesson));
@@ -219,8 +221,6 @@ public class scheduleMakerPanel extends JFrame {
 
                 panelController.createErrorPanel("Something went wrong.", this, 220);
             } finally {
-                revertUIComponents();
-
                 try {
                     updateCourses();
                 } catch (IOException e) {
@@ -376,10 +376,43 @@ public class scheduleMakerPanel extends JFrame {
         });
 
         lessonsComboBox.addActionListener(action -> {
+
             try {
                 updateCourses();
-            } catch (IOException e) {
-                e.printStackTrace();
+
+                // Get the name of the selected lesson
+                String lesson = lessonsComboBox.getItemAt(lessonsComboBox.getSelectedIndex());
+
+                // Get the profession id of the selected lesson
+                int professionId = databaseController.selectFirstIntColumn(String.format("SELECT \"professionId\" FROM \"Lessons\" WHERE name = '%s'", lesson));
+
+                // Select all teachers that have the same profession id
+                CachedRowSet teachers = databaseController.selectQuery(String.format("""
+                        SELECT name FROM "Users" INNER JOIN "Teachers" ON "Users".id = "Teachers".id WHERE "professionId" = '%d'""", professionId));
+
+                teachersComboBox.removeAllItems();
+                while (teachers.next())
+                    teachersComboBox.addItem(teachers.getString("name"));
+
+
+            } catch (SQLException | IOException err) {
+                StringWriter errors = new StringWriter();
+                err.printStackTrace(new PrintWriter(errors));
+                String message = errors.toString();
+
+                try {
+                    fileController.saveFile("SQL Exception: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                panelController.createErrorPanel("Something went wrong.", this, 220);
+            } finally {
+                try {
+                    updateCourses();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -462,9 +495,9 @@ public class scheduleMakerPanel extends JFrame {
         // Remove all rows
         IntStream.iterate(scheduleTableModel.getRowCount() - 1, i -> i > -1, i -> i - 1).forEach(i -> scheduleTableModel.removeRow(i));
 
-        String teacher = Objects.requireNonNull(teachersComboBox.getSelectedItem()).toString();
-        String lesson = Objects.requireNonNull(lessonsComboBox.getSelectedItem()).toString();
-        String classroom = Objects.requireNonNull(classroomComboBox.getSelectedItem()).toString();
+        String teacher = teachersComboBox.getItemAt(teachersComboBox.getSelectedIndex());
+        String lesson = lessonsComboBox.getItemAt(lessonsComboBox.getSelectedIndex());
+        String classroom = classroomComboBox.getItemAt(classroomComboBox.getSelectedIndex());
 
         try {
             CachedRowSet courses = databaseController.selectQuery(String.format("""
@@ -519,25 +552,5 @@ public class scheduleMakerPanel extends JFrame {
             endTime.addItem(startTime.getItemAt(i));
 
         endTime.setEnabled(endTime.getItemCount() > 0);
-    }
-
-    private void revertUIComponents() {
-        selectedCourseId = -1;
-        selectedCourseLessonId = -1;
-
-        if (lessonsComboBox.getItemCount() > 0)
-            lessonsComboBox.setSelectedIndex(0);
-
-        if (teachersComboBox.getItemCount() > 0)
-            teachersComboBox.setSelectedIndex(0);
-
-        if (classroomComboBox.getItemCount() > 0)
-            classroomComboBox.setSelectedIndex(0);
-
-        dayComboBox.setSelectedIndex(0);
-        startTime.setSelectedIndex(0);
-        endTime.setSelectedIndex(0);
-        addButton.setText("Add");
-        scheduleTable.setEnabled(true);
     }
 }
